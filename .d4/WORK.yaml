@@ -121,7 +121,7 @@ batons:
     requirements:
     - REQ-003
   execution:
-    state: draft
+    state: completed
     owner: agent-role/frontend-implementer
     depends_on:
     - BATON-001
@@ -131,6 +131,8 @@ batons:
       in src/client.
     quadrant: Q1
     milestone: REL-001
+    lease_owner: null
+    lease_expires_at: null
   capabilities:
     network_policy: deny
     filesystem_scope:

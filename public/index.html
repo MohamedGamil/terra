@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terra — High-Performance Territorial Conquest Engine</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar Control Panel -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">T</div>
+        <div>
+          <div class="brand-title">TERRA</div>
+          <span class="brand-badge">D4 Prototype v0.1</span>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Card -->
+      <div class="card">
+        <div class="card-title">Live Simulation Metrics</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-label">Active Entities</div>
+            <div class="stat-value highlight-cyan" id="stat-active-bots">500</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Territory Claimed</div>
+            <div class="stat-value highlight-emerald" id="stat-territory-pct">0.1%</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Total Pixels</div>
+            <div class="stat-value" id="stat-total-pixels">500</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Map Resolution</div>
+            <div class="stat-value highlight-amber">1000×1000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GATE-001 Benchmark Panel -->
+      <div class="card">
+        <div class="card-title">GATE-001 Performance Benchmark</div>
+        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">
+          Executes 1,000 frames benchmark of 1000×1000 Canvas pixel rendering under 500 active territories.
+        </p>
+        <button class="btn btn-primary" id="btn-run-benchmark">
+          ⚡ Run GATE-001 Benchmark
+        </button>
+        <button class="btn btn-secondary" id="btn-reset-map">
+          🔄 Reset Simulation
+        </button>
+      </div>
+
+      <!-- Player Combat & Expansion Controls -->
+      <div class="card">
+        <div class="card-title">Combat & Interest Controls</div>
+        <div class="control-group">
+          <div class="control-label">
+            <span>Attack Force Allocation</span>
+            <span id="attack-val" style="font-family: var(--font-mono); color: var(--accent-cyan);">25%</span>
+          </div>
+          <input type="range" id="attack-slider" min="1" max="100" value="25">
+        </div>
+
+        <div class="control-group" style="margin-top: 8px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
+            <input type="checkbox" id="border-toggle" checked style="accent-color: var(--accent-cyan);">
+            Draw Territory Frontier Borders
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Canvas Viewport -->
+    <main class="viewport-container">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Floating HUD Overlay -->
+      <div class="hud-overlay">
+        <div class="hud-panel fps-badge">
+          <div class="status-indicator" id="fps-indicator"></div>
+          <span id="hud-fps">60.0 FPS</span>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);" id="hud-render-ms">1.2ms</span>
+        </div>
+      </div>
+
+      <!-- Benchmark Result Modal Card -->
+      <div class="benchmark-card" id="benchmark-modal">
+        <div class="benchmark-header">
+          <h3 style="font-size: 18px; font-weight: 700;">GATE-001 Benchmark Evaluation</h3>
+          <span class="result-badge result-pass" id="modal-result-badge">GATE-001 PASSED</span>
+        </div>
+
+        <p id="benchmark-status" style="font-size: 13px; color: var(--text-secondary);">
+          Running benchmark test suite...
+        </p>
+        <div style="font-size: 12px; font-family: var(--font-mono); color: var(--accent-cyan);" id="benchmark-progress"></div>
+
+        <div class="benchmark-metrics">
+          <div class="metric-box">
+            <div class="metric-title">Average FPS</div>
+            <div class="metric-val highlight-emerald" id="val-avg-fps">60.0</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Render Time</div>
+            <div class="metric-val highlight-cyan" id="val-render-ms">1.1ms</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">p99 Latency</div>
+            <div class="metric-val highlight-amber" id="val-p99-ms">2.4ms</div>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary" id="btn-close-modal" style="margin-top: 8px;">
+          Close Results
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

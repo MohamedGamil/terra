@@ -1,0 +1,14 @@
+{
+  "name": "terra",
+  "version": "0.1.0",
+  "description": "Browser-based territorial conquest game (Territorial.io clone)",
+  "type": "module",
+  "scripts": {
+    "dev": "npx -y vite public --port 3000 --host",
+    "build": "npx -y vite build public",
+    "test:benchmark": "node scripts/benchmark-cli.js"
+  },
+  "keywords": [],
+  "author": "mgamil.dev@gmail.com",
+  "license": "MIT"
+}
