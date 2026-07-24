@@ -1,30 +1,70 @@
 # EVIDENCE.yaml — claims, sources, observations, hypotheses, and freshness (SPEC §15).
-# Every consequential claim carries its class, source, applicability boundary and freshness.
 evidence:
   - id: EV-001
     kind: primary-source
-    summary: Example cited source. Replace with a real primary source and exact citation.
+    summary: Territorial.io Game Loop & Economy Mechanics (0.5s interest tick rate, 5s income cycle, 100x red interest decay, 2:1 defender ratio).
     state: admissible
     source:
-      url: https://example.com/exact-page
-      citation: "Section 3.2, para 4"
-      accessed: 2026-01-01
-    applicability: Where this evidence is relevant to THIS project.
+      url: https://territorial.io.fandom.com/
+      citation: Game Mechanics section & Tick System specification
+      accessed: 2026-07-24
+    applicability: Core economy calculations, interest decay, and combat resolution for Terra.
+    freshness:
+      volatile: false
+
+  - id: EV-002
+    kind: primary-source
+    summary: Pixel-based Territory Grid & Canvas Rendering Architecture (1000x1000 map grid, color-coded ownership, spatial partitioning).
+    state: admissible
+    source:
+      url: https://territorial.io/
+      citation: Canvas rendering and map format specification
+      accessed: 2026-07-24
+    applicability: Canvas renderer design and spatial grid data structures for Terra.
+    freshness:
+      volatile: false
+
+  - id: EV-003
+    kind: primary-source
+    summary: Client-Server WebSocket Networking & Delta State Compression (Support for 512+ entities in single lobby).
+    state: admissible
+    source:
+      url: https://territorial.io/
+      citation: Multiplayer session & lobby architecture
+      accessed: 2026-07-24
+    applicability: Real-time network sync for Terra multiplayer lobbies.
+    freshness:
+      volatile: false
+
+  - id: EV-004
+    kind: primary-source
+    summary: Bot AI & Game Modes (Singleplayer with Easy/Hard/Impossible bot scaling, 1v1, Battle Royale, Team Mode, Custom PNG maps).
+    state: admissible
+    source:
+      url: https://territorial.io.fandom.com/
+      citation: Game modes & AI difficulty modes
+      accessed: 2026-07-24
+    applicability: Singleplayer bot expansion behavior and game mode rules for Terra.
     freshness:
       volatile: false
 
 claims:
   - id: CL-001
-    statement: An example claim this project depends on.
-    claim_class: hypothesis
-    supported_by: [EV-001]
+    statement: Real-time territorial conquest requires low-latency server tick sync and efficient pixel grid territory expansion.
+    claim_class: observed
+    supported_by: [EV-001, EV-003]
+
+  - id: CL-002
+    statement: Smooth HTML5 2D Canvas rendering of a 1000x1000 map grid with 500+ entities requires offscreen pixel buffer rendering.
+    claim_class: observed
+    supported_by: [EV-002]
 
 hypotheses:
   - id: HY-001
-    statement: Target users will do X when given Y.
+    statement: A TypeScript HTML5 Canvas frontend with Node.js WebSocket backend can simulate 500 active bot/player territories at 60 FPS with < 50ms tick latency.
     status: open
-    test: A concierge test with 5 target users.
-    threshold: ">= 3 of 5 complete the job unaided"
-    owner: you@example.com
-    due: 2026-03-01
+    test: Benchmark prototypal canvas renderer (GATE-001) and server tick engine (GATE-002).
+    threshold: Canvas >= 60 FPS with 500 active territories; server tick execution < 15ms per 500ms interest tick
+    owner: mgamil.dev@gmail.com
+    due: 2026-08-15
     gate: GATE-001

@@ -1,43 +1,75 @@
 # RISKS_AND_GATES.yaml — uncertainties, gates, risks, thresholds, kill criteria (SPEC §15).
 uncertainties:
   - id: UNC-001
-    proposition: The single biggest thing we do not yet know.
-    class: desirability
-    decision_affected: [DEC-001]
+    proposition: Can HTML5 2D Canvas render dynamic territory expansion for 1000x1000 grids at 60 FPS on standard desktop browsers?
+    class: feasibility
+    decision_affected: [DEC-001, DEC-002]
+    risk_exposure: high
+    decision_criticality: 5
+    expected_information_gain: 5
+    validation_cost: 2
+    test_options:
+      - Benchmark prototypal HTML5 2D Canvas territory renderer with 500 active color-coded expanding regions.
+    reversibility: reversible
+    threshold: "Pass if canvas render loop maintains >= 60 FPS with 500 active territories; fail if < 45 FPS."
+    stop_rule: Stop benchmark after 10,000 frames or 3 minutes.
+    owner: mgamil.dev@gmail.com
+    status: open
+
+  - id: UNC-002
+    proposition: Can a Node.js WebSocket server tick engine comfortably process 500 concurrent bot/player expansion calculations per 0.5s interest tick without event loop delay?
+    class: feasibility
+    decision_affected: [DEC-001, DEC-002]
     risk_exposure: high
     decision_criticality: 5
     expected_information_gain: 4
     validation_cost: 2
     test_options:
-      - Concierge test with target users.
+      - Stress-test headless Node.js game tick loop simulating 500 bot expansion vectors every 500ms tick.
     reversibility: reversible
-    threshold: "Pass if >= 3/5 complete the job unaided; fail if <= 1/5; else inconclusive."
-    stop_rule: Stop after 5 sessions or 2 weeks, whichever first.
-    owner: you@example.com
+    threshold: "Pass if tick execution time is < 15ms per tick; fail if > 50ms."
+    stop_rule: Stop test after 1,000 server ticks.
+    owner: mgamil.dev@gmail.com
     status: open
 
 gates:
   - id: GATE-001
-    question: Do target users actually complete the core job with our approach?
+    question: Does the prototypal HTML5 Canvas renderer maintain >= 60 FPS under 500 active expanding territories?
     reduces: UNC-001
     hardness: hard
     status: open
     protocol:
       frozen: true
-      fixtures: 5 pre-recruited target users; fixed task script.
-      rubric: Blind pass/fail per session against pre-declared job-completion criteria.
-      blind_scored: true
-      stop_rules: Stop after 5 sessions.
+      fixtures: 1000x1000 grid map benchmark with 500 synthetic expanding territories.
+      rubric: Automated frame time counter measuring average and 99th percentile FPS over 60 seconds.
+      blind_scored: false
+      stop_rules: Stop benchmark after 60 seconds.
       tie_is_failure: true
-    threshold: ">= 3 of 5 unaided completions"
+    threshold: ">= 60 FPS average render speed"
     blocks: [DEC-001]
-    owner: you@example.com
+    owner: mgamil.dev@gmail.com
+
+  - id: GATE-002
+    question: Does the Node.js server tick engine execute 500-entity game state ticks in < 15ms per 500ms interest cycle?
+    reduces: UNC-002
+    hardness: hard
+    status: open
+    protocol:
+      frozen: true
+      fixtures: Headless 500-bot server instance running at 20 ticks/sec.
+      rubric: HR-time duration metrics per tick over 1,000 ticks.
+      blind_scored: false
+      stop_rules: Stop test after 1,000 ticks.
+      tie_is_failure: true
+    threshold: Average tick computation duration < 15ms
+    blocks: [DEC-002]
+    owner: mgamil.dev@gmail.com
 
 risks:
   - id: RISK-001
-    risk: We build the wrong thing before validating demand.
-    early_signal: Fewer than 3/5 users complete the core job in the concierge test.
-    response: Narrow or return to discovery; do NOT add features.
-    kill_criterion: Two consecutive failed desirability gates.
+    risk: Network bandwidth saturation from broadcasting full map state every tick instead of delta-encoded updates.
+    early_signal: Server outgoing network throughput > 2 MB/s for 50 connected clients.
+    response: Implement binary delta encoding (bitmask of modified pixel coordinates) and spatial interest management.
+    kill_criterion: Inability to keep bandwidth < 100 KB/s per client in full 500-player lobby.
     status: open
-    owner: you@example.com
+    owner: mgamil.dev@gmail.com

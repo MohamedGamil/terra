@@ -1,8 +1,8 @@
 project:
   id: PRJ-001
   name: Terra
-  codename: my-project
-  one_line_scope: One sentence describing what this delivers and for whom.
+  codename: terra-clone
+  one_line_scope: High-performance browser-based multiplayer territorial conquest game with real-time troop expansion, Interest economy, and bot AI.
   profile:
     governance: solo-lite
     state: greenfield
@@ -16,4 +16,4 @@ project:
   - Pause any sharing surface on a confirmed disclosure.
   version: 0.1.0
   product_version: 0.0.0
-  created: 2026-01-01
+  created: 2026-07-24

@@ -1,20 +1,31 @@
 # DECISIONS.yaml — accepted, proposed, rejected, and superseded decisions (SPEC §15).
-# The single authority by which a recommendation becomes "accepted". Keep rejected options.
 decisions:
   - id: DEC-001
-    statement: Example decision that is still proposed pending its gate.
+    statement: Architecture tech stack for Terra MVP (TypeScript + HTML5 Canvas frontend, Node.js + WebSockets backend).
     state: proposed
-    kind: product
-    boundary: Applies to the MVP only.
+    kind: architecture
+    boundary: Applies to Terra MVP core engine and networking.
     gate: GATE-001
     options_considered:
-      - option: Option A
+      - option: TypeScript + HTML5 2D Canvas + Node.js WebSockets
         verdict: selected
-        rationale: Cheapest reversible way to answer the first uncertainty.
-      - option: Option B
+        rationale: High browser accessibility, zero heavy plugin overhead, fast canvas pixel buffer manipulation.
+      - option: Unity WebGL / C#
         verdict: rejected
-        rationale: Higher lock-in; kept here to explain future pivots.
+        rationale: Heavy bundle size, longer load times, less suitable for custom fast pixel grid manipulation.
 
-# Scope Decision Records: a missed checkpoint MUST NOT silently alter committed scope —
-# it MUST trigger one of these (continue|narrow|defer|substitute|return-to-discovery|terminate).
+  - id: DEC-002
+    statement: Territory Ownership & Expansion Data Structure (Uint32Array Bitset Grid with Delta Synchronization).
+    state: proposed
+    kind: architecture
+    boundary: Core game state representation in memory and network format.
+    gate: GATE-002
+    options_considered:
+      - option: Flat Uint32Array 1000x1000 grid buffer with delta coordinate packets
+        verdict: selected
+        rationale: Direct memory alignment, fast canvas ImageData transfer, minimal network serialization cost.
+      - option: Object graph / quadtree per player
+        verdict: rejected
+        rationale: Higher memory allocation churn during high-frequency expansion ticks.
+
 scope_decisions: []
