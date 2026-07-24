@@ -167,7 +167,7 @@ batons:
     - REQ-001
     - REQ-002
   execution:
-    state: draft
+    state: completed
     owner: agent-role/backend-implementer
     depends_on:
     - BATON-002
@@ -176,6 +176,8 @@ batons:
     resume_pointer: Wait for GATE-002 execution; scaffold server tick engine in src/server.
     quadrant: Q1
     milestone: REL-001
+    lease_owner: null
+    lease_expires_at: null
   capabilities:
     network_policy: deny
     filesystem_scope:
@@ -212,13 +214,15 @@ batons:
     - DEC-001
     - DEC-002
   execution:
-    state: draft
+    state: completed
     owner: agent-role/fullstack-implementer
     depends_on:
     - BATON-003
     resume_pointer: Integrate client canvas renderer with server game engine for REL-001.
     quadrant: Q2
     milestone: REL-001
+    lease_owner: null
+    lease_expires_at: null
   capabilities:
     network_policy: deny
     filesystem_scope:

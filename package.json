@@ -4,9 +4,13 @@
   "description": "Browser-based territorial conquest game (Territorial.io clone)",
   "type": "module",
   "scripts": {
-    "dev": "npx -y vite public --port 3000 --host",
-    "build": "npx -y vite build public",
-    "test:benchmark": "node scripts/benchmark-cli.js"
+    "dev": "vite public --port 3000 --host",
+    "build": "vite build public",
+    "test:benchmark": "node scripts/benchmark-cli.js",
+    "test:server": "node scripts/server-benchmark.js"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
   },
   "keywords": [],
   "author": "mgamil.dev@gmail.com",
