@@ -14,7 +14,7 @@ uncertainties:
     threshold: "Pass if canvas render loop maintains >= 60 FPS with 500 active territories; fail if < 45 FPS."
     stop_rule: Stop benchmark after 10,000 frames or 3 minutes.
     owner: mgamil.dev@gmail.com
-    status: open
+    status: passed
 
   - id: UNC-002
     proposition: Can a Node.js WebSocket server tick engine comfortably process 500 concurrent bot/player expansion calculations per 0.5s interest tick without event loop delay?
@@ -30,6 +30,22 @@ uncertainties:
     threshold: "Pass if tick execution time is < 15ms per tick; fail if > 50ms."
     stop_rule: Stop test after 1,000 server ticks.
     owner: mgamil.dev@gmail.com
+    status: passed
+
+  - id: UNC-003
+    proposition: Can the combat engine accurately calculate 2:1 defender loss ratios, 1.17% land attack tax, 3.125% boat deployment tax, and Red Interest decay thresholds across 1000x1000 grids?
+    class: feasibility
+    decision_affected: [DEC-003, DEC-004]
+    risk_exposure: high
+    decision_criticality: 5
+    expected_information_gain: 5
+    validation_cost: 2
+    test_options:
+      - Run automated combat math test suite verifying defender ratios, tax deductions, and state transitions.
+    reversibility: reversible
+    threshold: "Pass if 100% of combat unit test assertions pass; fail if any tax or ratio mismatch occurs."
+    stop_rule: Stop after test execution.
+    owner: mgamil.dev@gmail.com
     status: open
 
 gates:
@@ -37,7 +53,7 @@ gates:
     question: Does the prototypal HTML5 Canvas renderer maintain >= 60 FPS under 500 active expanding territories?
     reduces: UNC-001
     hardness: hard
-    status: open
+    status: passed
     protocol:
       frozen: true
       fixtures: 1000x1000 grid map benchmark with 500 synthetic expanding territories.
@@ -53,7 +69,7 @@ gates:
     question: Does the Node.js server tick engine execute 500-entity game state ticks in < 15ms per 500ms interest cycle?
     reduces: UNC-002
     hardness: hard
-    status: open
+    status: passed
     protocol:
       frozen: true
       fixtures: Headless 500-bot server instance running at 20 ticks/sec.
@@ -63,6 +79,22 @@ gates:
       tie_is_failure: true
     threshold: Average tick computation duration < 15ms
     blocks: [DEC-002]
+    owner: mgamil.dev@gmail.com
+
+  - id: GATE-003
+    question: Does the automated combat test suite verify 100% accuracy for 2:1 defender advantage, 1.17% attack tax, 3.125% boat tax, and Red Interest decay thresholds?
+    reduces: UNC-003
+    hardness: hard
+    status: open
+    protocol:
+      frozen: true
+      fixtures: Headless combat simulation unit tests.
+      rubric: Deterministic pass/fail assertions for combat math and state machine transitions.
+      blind_scored: false
+      stop_rules: Stop test after test suite completion.
+      tie_is_failure: true
+    threshold: 100% test suite pass rate
+    blocks: [DEC-003, DEC-004]
     owner: mgamil.dev@gmail.com
 
 risks:

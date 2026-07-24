@@ -2,7 +2,7 @@
 decisions:
   - id: DEC-001
     statement: Architecture tech stack for Terra MVP (TypeScript + HTML5 Canvas frontend, Node.js + WebSockets backend).
-    state: proposed
+    state: accepted
     kind: architecture
     boundary: Applies to Terra MVP core engine and networking.
     gate: GATE-001
@@ -16,7 +16,7 @@ decisions:
 
   - id: DEC-002
     statement: Territory Ownership & Expansion Data Structure (Uint32Array Bitset Grid with Delta Synchronization).
-    state: proposed
+    state: accepted
     kind: architecture
     boundary: Core game state representation in memory and network format.
     gate: GATE-002
@@ -27,5 +27,33 @@ decisions:
       - option: Object graph / quadtree per player
         verdict: rejected
         rationale: Higher memory allocation churn during high-frequency expansion ticks.
+
+  - id: DEC-003
+    statement: Client Game Flow State Machine (LOBBY -> SPAWN_PICK -> PLAYING -> GAME_OVER).
+    state: proposed
+    kind: product
+    boundary: Client UX lifecycle and session state transitions.
+    gate: GATE-003
+    options_considered:
+      - option: Explicit 4-phase state machine
+        verdict: selected
+        rationale: Matches authentic Territorial.io game lobby, spawn selection phase, and post-match screens.
+      - option: Direct auto-spawn into active game
+        verdict: rejected
+        rationale: Lacks player spawn location choice and lobby customization.
+
+  - id: DEC-004
+    statement: Player Attack Vector Protocol (Target Locking + % Force Slider + Naval Boat Attack Tax).
+    state: proposed
+    kind: product
+    boundary: User combat interactions and action tax formulas.
+    gate: GATE-003
+    options_considered:
+      - option: Target crosshair ring + percentage slider (1%-100%) + 1.17% land tax + 3.125% boat tax
+        verdict: selected
+        rationale: Authentic Territorial.io combat tax formulas and tactical force allocation controls.
+      - option: Unrestricted instant area click
+        verdict: rejected
+        rationale: Removes tactical troop allocation and tax risk management.
 
 scope_decisions: []

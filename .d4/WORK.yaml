@@ -58,6 +58,68 @@ requirements:
   scope_state: committed
   release: REL-001
   priority_quadrant: Q2
+- id: REQ-005
+  statement: Main Lobby Menu with Player Name, Color Picker, Map Selector (World,
+    Archipelago, Black Arena), Bot Count, and Bot Difficulty settings.
+  kind: functional
+  authorized_by:
+  - DEC-003
+  traces_to:
+  - HY-001
+  acceptance:
+  - Player can customize name and color before match start.
+  - Player can select map layout (World, Archipelago, Black Arena).
+  - Player can set bot count (10 to 500) and difficulty tier.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-006
+  statement: Interactive Spawn Selection Phase displaying map grid with 10-second
+    timer where player picks starting spawn location before bot spawn.
+  kind: functional
+  authorized_by:
+  - DEC-003
+  traces_to:
+  - HY-001
+  acceptance:
+  - 10-second spawn countdown timer runs before game tick start.
+  - Player clicks land pixel to place spawn marker.
+  - AI bots spawn avoiding 50-pixel player spawn radius buffer.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-007
+  statement: Interactive Player Combat Controls featuring target crosshair locking,
+    1%-100% Force Allocation Slider, Full Send button, and 1.17% attack tax.
+  kind: functional
+  authorized_by:
+  - DEC-004
+  traces_to:
+  - HY-001
+  acceptance:
+  - Clicking enemy/neutral land locks attack target crosshair.
+  - Force slider and quick buttons (25%, 50%, 75%, Full Send) assign attack troop
+    allocation.
+  - Attack execution deducts 1.17% balance tax and applies 2:1 defender loss ratio.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-008
+  statement: Naval Boat Attacks across water cells with 3.125% deployment tax, plus
+    Win/Defeat resolution and match statistics modal.
+  kind: functional
+  authorized_by:
+  - DEC-004
+  traces_to:
+  - HY-001
+  acceptance:
+  - Targeting across ocean cells launches naval boat transport with 3.125% deployment
+    tax.
+  - Game Over Victory screen displays when player conquers 100% of territory.
+  - Defeat screen displays when player territory drops to 0.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
 batons:
 - id: BATON-001
   version: 1
@@ -88,8 +150,6 @@ batons:
     resume_pointer: Validate .d4 YAML records via d4 validate and d4 lint.
     quadrant: Q1
     milestone: REL-001
-    lease_owner: null
-    lease_expires_at: null
   capabilities:
     network_policy: allowlist
     side_effect_class: A0
@@ -131,8 +191,6 @@ batons:
       in src/client.
     quadrant: Q1
     milestone: REL-001
-    lease_owner: null
-    lease_expires_at: null
   capabilities:
     network_policy: deny
     filesystem_scope:
@@ -176,8 +234,6 @@ batons:
     resume_pointer: Wait for GATE-002 execution; scaffold server tick engine in src/server.
     quadrant: Q1
     milestone: REL-001
-    lease_owner: null
-    lease_expires_at: null
   capabilities:
     network_policy: deny
     filesystem_scope:
@@ -218,11 +274,11 @@ batons:
     owner: agent-role/fullstack-implementer
     depends_on:
     - BATON-003
+    unblocks:
+    - BATON-005
     resume_pointer: Integrate client canvas renderer with server game engine for REL-001.
     quadrant: Q2
     milestone: REL-001
-    lease_owner: null
-    lease_expires_at: null
   capabilities:
     network_policy: deny
     filesystem_scope:
@@ -236,6 +292,219 @@ batons:
     - end-to-end tests pass
     reviewer_checks:
     - Full walkthrough written
+    rollback_verified: false
+- id: BATON-005
+  version: 1
+  type: research
+  title: Design & Formalize Main Lobby Menu & Procedural Map Generation Specification
+  objective: Specify Main Lobby UX, Name/Color customization, and 3 procedural map
+    generators (World, Archipelago, Black Arena).
+  scope:
+    include:
+    - Design Main Lobby screen layout
+    - specify procedural map layout algorithms
+    - detail REQ-005
+    exclude:
+    - Code execution
+  authority:
+    requirements:
+    - REQ-005
+    decisions:
+    - DEC-003
+  execution:
+    state: completed
+    owner: mgamil.dev@gmail.com
+    depends_on:
+    - BATON-004
+    unblocks:
+    - BATON-006
+    resume_pointer: Finalize lobby and map generation specifications.
+    quadrant: Q1
+    milestone: REL-002
+    lease_owner: null
+    lease_expires_at: null
+  capabilities:
+    network_policy: allowlist
+    side_effect_class: A0
+    approval_policy: none
+  acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - d4 lint pass
+    reviewer_checks:
+    - Lobby and map specs verified
+    required_artifacts: []
+    rollback_verified: false
+- id: BATON-006
+  version: 1
+  type: implementation
+  title: Implement Main Lobby Menu & Procedural Map Generator
+  objective: Build Main Lobby UI screen and procedural map generator (World, Archipelago,
+    Black Arena).
+  scope:
+    include:
+    - Lobby HTML/CSS UI overlay
+    - map generator module
+    - map preview canvas
+    exclude:
+    - Spawn phase timer
+  authority:
+    requirements:
+    - REQ-005
+    decisions:
+    - DEC-003
+  execution:
+    state: draft
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-005
+    unblocks:
+    - BATON-007
+    resume_pointer: Wait for BATON-005 completion; implement public/src/map-generator.js.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Lobby UI and map generation functional
+    rollback_verified: false
+- id: BATON-007
+  version: 1
+  type: implementation
+  title: Implement Interactive Spawn Selection Phase & Placement Logic
+  objective: Build 10-second spawn selection countdown phase and 50-pixel bot buffer
+    placement logic.
+  scope:
+    include:
+    - Spawn selection phase timer
+    - canvas click-to-spawn marker
+    - bot spawn radius buffer
+    exclude:
+    - Naval attacks
+  authority:
+    requirements:
+    - REQ-006
+    decisions:
+    - DEC-003
+  execution:
+    state: draft
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-006
+    unblocks:
+    - BATON-008
+    resume_pointer: Implement SPAWN_PICK state in simulation and client UI.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    - src/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Spawn selection phase verified
+    rollback_verified: false
+- id: BATON-008
+  version: 1
+  type: implementation
+  title: Implement Player Combat Controls, Force Allocation Slider & Target Locking
+  objective: Build click-to-target crosshair locking, force percentage slider (1%-100%),
+    and 1.17% attack tax math.
+  scope:
+    include:
+    - Target selection crosshair ring
+    - force slider UI
+    - 1.17% attack tax deduction
+    exclude:
+    - Naval attacks
+  authority:
+    requirements:
+    - REQ-007
+    decisions:
+    - DEC-004
+  execution:
+    state: draft
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-007
+    unblocks:
+    - BATON-009
+    resume_pointer: Implement targeted attack vectors and force slider controls.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Targeting and force slider verified
+    rollback_verified: false
+- id: BATON-009
+  version: 1
+  type: implementation
+  title: Implement Naval Boat Attacks, Win/Defeat Resolution & GATE-003 Combat Test
+    Suite
+  objective: Implement boat attacks (3.125% tax across water), victory/defeat screen,
+    and execute GATE-003 combat test suite.
+  scope:
+    include:
+    - Naval boat transport
+    - 3.125% boat tax
+    - Victory/Defeat modal
+    - scripts/combat-test.js
+    exclude:
+    - Multiplayer WebSocket sync
+  authority:
+    gates:
+    - GATE-003
+    requirements:
+    - REQ-008
+    decisions:
+    - DEC-004
+  execution:
+    state: draft
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-008
+    unblocks: []
+    resume_pointer: Build boat attack transport and scripts/combat-test.js for GATE-003.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    - src/
+    - scripts/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    - GATE-003 combat test pass
+    reviewer_checks:
+    - Full authentic game loop verified
     rollback_verified: false
 releases:
 - id: REL-001
@@ -256,5 +525,29 @@ releases:
   - BATON-002
   - BATON-003
   - BATON-004
+  delivery_form: deployable
+  status: released
+- id: REL-002
+  version: 0.2.0
+  name: Terra Authentic Game Loop & Player Combat Controls
+  is_mvp: false
+  exit_criteria:
+  - Main Lobby Menu allows setting Name, Color, Bot Count, Difficulty, and Map (World,
+    Archipelago, Black Arena).
+  - Interactive Spawn Selection Phase lets player click land location with 10s timer.
+  - Player Combat Controls allow click-to-target, force slider (1%-100%), and 1.17%
+    attack tax.
+  - Naval Boat Attacks execute across ocean cells with 3.125% deployment tax.
+  - GATE-003 automated combat test suite passes 100%.
+  requirements:
+  - REQ-005
+  - REQ-006
+  - REQ-007
+  - REQ-008
+  batons:
+  - BATON-006
+  - BATON-007
+  - BATON-008
+  - BATON-009
   delivery_form: deployable
   status: planned
