@@ -1,33 +1,35 @@
 /**
- * Pre-calculated Color Palette for 500+ Players & Bots.
- * Converts HSL to 32-bit Packed ABGR Uint32 integers for direct ImageData array manipulation.
+ * Pre-calculated Color Palette for Player 1 & 500+ Bots.
+ * Converts HSL and Hex to 32-bit Packed ABGR Uint32 integers.
  */
 
 export class ColorPalette {
-  constructor(count = 500) {
+  constructor(count = 500, playerHexColor = '#00f2fe') {
     this.count = count;
-    this.colors = []; // Array of { r, g, b, hex, abgr, rgba }
-    this.generatePalette(count);
+    this.colors = [];
+    this.generatePalette(count, playerHexColor);
   }
 
-  generatePalette(count) {
-    // Player 0 is Unclaimed Neutral (Dark Charcoal / Slate)
+  generatePalette(count, playerHexColor = '#00f2fe') {
+    // Player 0 is Unclaimed Neutral (Dark Slate)
     this.colors[0] = {
       r: 24, g: 30, b: 40,
       hex: '#181e28',
-      // ABGR format for little-endian Uint32Array on canvas: (A << 24) | (B << 16) | (G << 8) | R
       abgr: (255 << 24) | (40 << 16) | (30 << 8) | 24,
       isNeutral: true
     };
 
-    // Golden Ratio hue distribution for 500+ visually distinct player colors
-    const goldenRatio = 0.618033988749895;
-    let hue = 0.15;
+    // Player 1 is Human Player (custom chosen color)
+    this.setPlayerColor(1, playerHexColor);
 
-    for (let i = 1; i <= count; i++) {
+    // Bot Players (2..count)
+    const goldenRatio = 0.618033988749895;
+    let hue = 0.25;
+
+    for (let i = 2; i <= count; i++) {
       hue = (hue + goldenRatio) % 1;
-      const saturation = 0.75 + (i % 3) * 0.1; // 75% - 95%
-      const lightness = 0.45 + (i % 4) * 0.08; // 45% - 69%
+      const saturation = 0.75 + (i % 3) * 0.08;
+      const lightness = 0.45 + (i % 4) * 0.07;
 
       const { r, g, b } = this.hslToRgb(hue, saturation, lightness);
       const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
@@ -35,6 +37,16 @@ export class ColorPalette {
 
       this.colors[i] = { r, g, b, hex, abgr, isNeutral: false };
     }
+  }
+
+  setPlayerColor(ownerId, hexColor) {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 242;
+    const b = parseInt(hex.substring(4, 6), 16) || 254;
+
+    const abgr = (255 << 24) | (b << 16) | (g << 8) | r;
+    this.colors[ownerId] = { r, g, b, hex: `#${hex}`, abgr, isNeutral: false };
   }
 
   getABGR(ownerId) {

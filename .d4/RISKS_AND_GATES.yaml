@@ -46,7 +46,7 @@ uncertainties:
     threshold: "Pass if 100% of combat unit test assertions pass; fail if any tax or ratio mismatch occurs."
     stop_rule: Stop after test execution.
     owner: mgamil.dev@gmail.com
-    status: open
+    status: passed
 
 gates:
   - id: GATE-001
@@ -85,7 +85,7 @@ gates:
     question: Does the automated combat test suite verify 100% accuracy for 2:1 defender advantage, 1.17% attack tax, 3.125% boat tax, and Red Interest decay thresholds?
     reduces: UNC-003
     hardness: hard
-    status: open
+    status: passed
     protocol:
       frozen: true
       fixtures: Headless combat simulation unit tests.

@@ -8,76 +8,158 @@
 </head>
 <body>
   <div id="app">
+    <!-- Main Lobby Menu Overlay -->
+    <div id="lobby-screen" class="lobby-overlay">
+      <div class="lobby-card">
+        <div class="brand-header">
+          <div class="brand-icon">T</div>
+          <div>
+            <div class="brand-title">TERRA</div>
+            <span class="brand-badge">Territorial Conquest</span>
+          </div>
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Player Name & Color</label>
+          <div class="player-custom-row">
+            <input type="text" id="input-player-name" class="text-input" value="Commander" placeholder="Enter name...">
+            <input type="color" id="input-player-color" class="color-picker" value="#00f2fe">
+          </div>
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Select Map Layout</label>
+          <div class="map-selector-grid">
+            <div class="map-card active" data-map="world">
+              <div class="map-icon">🌍</div>
+              <div class="map-title">World</div>
+              <div class="map-desc">Continents & Seas</div>
+            </div>
+            <div class="map-card" data-map="archipelago">
+              <div class="map-icon">🏝️</div>
+              <div class="map-title">Archipelago</div>
+              <div class="map-desc">Islands & Channels</div>
+            </div>
+            <div class="map-card" data-map="arena">
+              <div class="map-icon">⚔️</div>
+              <div class="map-title">Black Arena</div>
+              <div class="map-desc">Solid Continent</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lobby-section">
+          <div class="control-label">
+            <span>Bot Count</span>
+            <span id="lbl-bot-count" style="color: var(--accent-cyan); font-family: var(--font-mono);">100 Bots</span>
+          </div>
+          <input type="range" id="slider-bot-count" min="10" max="500" value="100" step="10">
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Bot Difficulty</label>
+          <div class="diff-btn-group">
+            <button class="btn-diff active" data-diff="easy">Easy</button>
+            <button class="btn-diff" data-diff="hard">Hard</button>
+            <button class="btn-diff" data-diff="impossible">Impossible</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-large" id="btn-start-match">
+          ⚔️ ENTER MATCH
+        </button>
+      </div>
+    </div>
+
     <!-- Sidebar Control Panel -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon">T</div>
         <div>
           <div class="brand-title">TERRA</div>
-          <span class="brand-badge">D4 Prototype v0.1</span>
+          <span class="brand-badge">D4 Phase 2</span>
         </div>
       </div>
 
       <!-- Quick Metrics Card -->
       <div class="card">
-        <div class="card-title">Live Simulation Metrics</div>
+        <div class="card-title">Match Telemetry</div>
         <div class="stat-grid">
           <div class="stat-box">
-            <div class="stat-label">Active Entities</div>
-            <div class="stat-value highlight-cyan" id="stat-active-bots">500</div>
+            <div class="stat-label">Active Bots</div>
+            <div class="stat-value highlight-cyan" id="stat-active-bots">100</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Territory Claimed</div>
-            <div class="stat-value highlight-emerald" id="stat-territory-pct">0.1%</div>
+            <div class="stat-value highlight-emerald" id="stat-territory-pct">0.0%</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Total Pixels</div>
-            <div class="stat-value" id="stat-total-pixels">500</div>
+            <div class="stat-label">Your Balance</div>
+            <div class="stat-value highlight-amber" id="stat-player-troops">500</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Map Resolution</div>
-            <div class="stat-value highlight-amber">1000×1000</div>
+            <div class="stat-label">Your Land</div>
+            <div class="stat-value" id="stat-player-land">1 px</div>
           </div>
         </div>
       </div>
 
-      <!-- GATE-001 Benchmark Panel -->
-      <div class="card">
-        <div class="card-title">GATE-001 Performance Benchmark</div>
-        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">
-          Executes 1,000 frames benchmark of 1000×1000 Canvas pixel rendering under 500 active territories.
-        </p>
-        <button class="btn btn-primary" id="btn-run-benchmark">
-          ⚡ Run GATE-001 Benchmark
-        </button>
-        <button class="btn btn-secondary" id="btn-reset-map">
-          🔄 Reset Simulation
-        </button>
+      <!-- Target Selection Info Card -->
+      <div class="card" id="target-info-card">
+        <div class="card-title">Attack Target</div>
+        <div id="target-status-text" style="font-size: 13px; color: var(--text-secondary);">
+          Click any territory on the map to target an attack vector.
+        </div>
       </div>
 
-      <!-- Player Combat & Expansion Controls -->
+      <!-- Player Combat & Force Allocation Controls -->
       <div class="card">
-        <div class="card-title">Combat & Interest Controls</div>
+        <div class="card-title">Attack Force Allocation</div>
         <div class="control-group">
           <div class="control-label">
-            <span>Attack Force Allocation</span>
-            <span id="attack-val" style="font-family: var(--font-mono); color: var(--accent-cyan);">25%</span>
+            <span>Force Committed</span>
+            <span id="attack-val" style="font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 700;">25%</span>
           </div>
           <input type="range" id="attack-slider" min="1" max="100" value="25">
         </div>
 
-        <div class="control-group" style="margin-top: 8px;">
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
-            <input type="checkbox" id="border-toggle" checked style="accent-color: var(--accent-cyan);">
-            Draw Territory Frontier Borders
-          </label>
+        <div class="quick-force-grid">
+          <button class="btn-quick" data-force="25">25%</button>
+          <button class="btn-quick" data-force="50">50%</button>
+          <button class="btn-quick" data-force="75">75%</button>
+          <button class="btn-quick btn-fullsend" data-force="100">FULL SEND</button>
         </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <button class="btn btn-primary" id="btn-attack-execute" style="flex: 1;">
+            ⚔️ ATTACK
+          </button>
+          <button class="btn btn-secondary" id="btn-boat-execute" style="flex: 1;" title="Launch Boat Attack Across Water (3.125% Tax)">
+            ⛵ BOAT
+          </button>
+        </div>
+      </div>
+
+      <!-- GATE Benchmarks & Utility Buttons -->
+      <div class="card">
+        <button class="btn btn-secondary" id="btn-run-benchmark">⚡ Run GATE-001 Benchmark</button>
+        <button class="btn btn-secondary" id="btn-leave-match" style="margin-top: 6px;">🚪 Exit to Lobby</button>
       </div>
     </aside>
 
     <!-- Canvas Viewport -->
     <main class="viewport-container">
       <canvas id="game-canvas"></canvas>
+
+      <!-- Spawn Selection Phase Banner -->
+      <div class="spawn-pick-banner" id="spawn-banner" style="display: none;">
+        <div class="banner-title">PICK YOUR STARTING SPAWN LOCATION</div>
+        <div class="banner-timer" id="spawn-timer">10s</div>
+        <div class="banner-sub">Click anywhere on neutral land to set your spawn point</div>
+        <button class="btn btn-primary" id="btn-confirm-spawn" style="margin-top: 10px; width: auto; padding: 8px 24px;">
+          ✓ LOCK SPAWN
+        </button>
+      </div>
 
       <!-- Floating HUD Overlay -->
       <div class="hud-overlay">
@@ -88,36 +170,51 @@
         </div>
       </div>
 
-      <!-- Benchmark Result Modal Card -->
+      <!-- Game Over / Victory Modal -->
+      <div class="benchmark-card" id="gameover-modal">
+        <div class="benchmark-header">
+          <h3 style="font-size: 20px; font-weight: 800;" id="gameover-title">VICTORY!</h3>
+          <span class="result-badge result-pass" id="gameover-badge">CONQUEROR</span>
+        </div>
+
+        <p id="gameover-desc" style="font-size: 13px; color: var(--text-secondary);">
+          You have successfully conquered all territories on the map!
+        </p>
+
+        <div class="benchmark-metrics">
+          <div class="metric-box">
+            <div class="metric-title">Territory %</div>
+            <div class="metric-val highlight-emerald" id="gov-final-pct">100%</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Peak Troops</div>
+            <div class="metric-val highlight-cyan" id="gov-peak-troops">1.2M</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Bots Defeated</div>
+            <div class="metric-val highlight-amber" id="gov-bots-killed">100</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-restart-game" style="margin-top: 12px;">
+          🔄 PLAY AGAIN
+        </button>
+      </div>
+
+      <!-- GATE Benchmark Result Modal -->
       <div class="benchmark-card" id="benchmark-modal">
         <div class="benchmark-header">
           <h3 style="font-size: 18px; font-weight: 700;">GATE-001 Benchmark Evaluation</h3>
           <span class="result-badge result-pass" id="modal-result-badge">GATE-001 PASSED</span>
         </div>
-
-        <p id="benchmark-status" style="font-size: 13px; color: var(--text-secondary);">
-          Running benchmark test suite...
-        </p>
+        <p id="benchmark-status" style="font-size: 13px; color: var(--text-secondary);">Running benchmark...</p>
         <div style="font-size: 12px; font-family: var(--font-mono); color: var(--accent-cyan);" id="benchmark-progress"></div>
-
         <div class="benchmark-metrics">
-          <div class="metric-box">
-            <div class="metric-title">Average FPS</div>
-            <div class="metric-val highlight-emerald" id="val-avg-fps">60.0</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">Render Time</div>
-            <div class="metric-val highlight-cyan" id="val-render-ms">1.1ms</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-title">p99 Latency</div>
-            <div class="metric-val highlight-amber" id="val-p99-ms">2.4ms</div>
-          </div>
+          <div class="metric-box"><div class="metric-title">Average FPS</div><div class="metric-val highlight-emerald" id="val-avg-fps">60.0</div></div>
+          <div class="metric-box"><div class="metric-title">Render Time</div><div class="metric-val highlight-cyan" id="val-render-ms">1.1ms</div></div>
+          <div class="metric-box"><div class="metric-title">p99 Latency</div><div class="metric-val highlight-amber" id="val-p99-ms">2.4ms</div></div>
         </div>
-
-        <button class="btn btn-secondary" id="btn-close-modal" style="margin-top: 8px;">
-          Close Results
-        </button>
+        <button class="btn btn-secondary" id="btn-close-modal" style="margin-top: 8px;">Close Results</button>
       </div>
     </main>
   </div>

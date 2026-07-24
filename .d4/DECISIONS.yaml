@@ -30,7 +30,7 @@ decisions:
 
   - id: DEC-003
     statement: Client Game Flow State Machine (LOBBY -> SPAWN_PICK -> PLAYING -> GAME_OVER).
-    state: proposed
+    state: accepted
     kind: product
     boundary: Client UX lifecycle and session state transitions.
     gate: GATE-003
@@ -43,8 +43,8 @@ decisions:
         rationale: Lacks player spawn location choice and lobby customization.
 
   - id: DEC-004
-    statement: Player Attack Vector Protocol (Target Locking + % Force Slider + Naval Boat Attack Tax).
-    state: proposed
+    statement: Player Attack Vector Protocol (Target Locking + % Force Allocation Slider + Naval Boat Attack Tax).
+    state: accepted
     kind: product
     boundary: User combat interactions and action tax formulas.
     gate: GATE-003
