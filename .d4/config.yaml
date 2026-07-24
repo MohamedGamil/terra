@@ -1,0 +1,29 @@
+d4:
+  spec_version: '0.2'
+  schema_version: '0.2'
+profile:
+  governance: solo-lite
+  state: greenfield
+conformance_target: C1
+collections:
+  project: .d4/PROJECT.yaml
+  evidence: .d4/EVIDENCE.yaml
+  claims: .d4/EVIDENCE.yaml
+  hypotheses: .d4/EVIDENCE.yaml
+  decisions: .d4/DECISIONS.yaml
+  scope_decisions: .d4/DECISIONS.yaml
+  uncertainties: .d4/RISKS_AND_GATES.yaml
+  gates: .d4/RISKS_AND_GATES.yaml
+  risks: .d4/RISKS_AND_GATES.yaml
+  requirements: .d4/WORK.yaml
+  batons: .d4/WORK.yaml
+  releases: .d4/WORK.yaml
+  approvals: .d4/WORK.yaml
+  agent_runs: .d4/WORK.yaml
+  evaluations: .d4/WORK.yaml
+  artifacts: .d4/WORK.yaml
+  workflows: .d4/WORKFLOWS.yaml
+ui:
+  auth:
+    username: mohamed
+    password_hash: scrypt:92e44cbe27904acb1b64f33b5ceef7fd:fc3a594d99d68921575f88bdf8ec8e50f388f5f93f5ea7cb285c8f13c5620b46

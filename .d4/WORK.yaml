@@ -1,0 +1,80 @@
+# WORK.yaml — requirements, BATONs, dependencies, acceptance, releases (SPEC §15).
+requirements:
+  - id: REQ-001
+    statement: The MVP lets a user complete the core job end to end.
+    kind: functional
+    authorized_by: [DEC-001]
+    traces_to: [HY-001]
+    acceptance:
+      - A user can complete the core job without assistance.
+    scope_state: committed
+    release: REL-001
+    priority_quadrant: Q2
+
+batons:
+  - id: BATON-001
+    version: 1
+    type: experiment
+    title: Run the desirability concierge test
+    objective: >
+      Answer GATE-001: do target users complete the core job with our approach?
+    scope:
+      include: [Recruit 5 users, run fixed task script, blind-score outcomes]
+      exclude: [Any product build]
+    authority:
+      gates: [GATE-001]
+      requirements: [REQ-001]
+    execution:
+      state: eligible
+      owner: human/founder
+      depends_on: []
+      unblocks: [BATON-002]
+      resume_pointer: Draft the recruitment message for 5 target users.
+      quadrant: Q1
+      milestone: REL-001
+    capabilities:
+      network_policy: allowlist
+      side_effect_class: A0
+      approval_policy: none
+    acceptance:
+      deterministic_checks: []
+      reviewer_checks: [Blind-scored session sheets exist for all 5 users]
+      required_artifacts: []
+      rollback_verified: false
+
+  - id: BATON-002
+    version: 1
+    type: implementation
+    title: Build the MVP walking skeleton
+    objective: Stand up the thinnest end-to-end path once desirability passes.
+    authority:
+      requirements: [REQ-001]
+      decisions: [DEC-001]
+    execution:
+      state: draft
+      owner: agent-role/backend-implementer
+      depends_on: [BATON-001]
+      resume_pointer: Wait for GATE-001; then scaffold the smallest end-to-end path.
+      quadrant: Q2
+      milestone: REL-001
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [src/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint, unit tests pass]
+      reviewer_checks: [Walkthrough written]
+      rollback_verified: false
+
+releases:
+  - id: REL-001
+    version: 1.0.0
+    name: MVP
+    is_mvp: true
+    exit_criteria:
+      - A user can complete the core job end to end.
+    requirements: [REQ-001]
+    batons: [BATON-002]
+    delivery_form: deployable
+    status: planned

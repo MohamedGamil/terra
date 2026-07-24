@@ -1,0 +1,20 @@
+# DECISIONS.yaml — accepted, proposed, rejected, and superseded decisions (SPEC §15).
+# The single authority by which a recommendation becomes "accepted". Keep rejected options.
+decisions:
+  - id: DEC-001
+    statement: Example decision that is still proposed pending its gate.
+    state: proposed
+    kind: product
+    boundary: Applies to the MVP only.
+    gate: GATE-001
+    options_considered:
+      - option: Option A
+        verdict: selected
+        rationale: Cheapest reversible way to answer the first uncertainty.
+      - option: Option B
+        verdict: rejected
+        rationale: Higher lock-in; kept here to explain future pivots.
+
+# Scope Decision Records: a missed checkpoint MUST NOT silently alter committed scope —
+# it MUST trigger one of these (continue|narrow|defer|substitute|return-to-discovery|terminate).
+scope_decisions: []

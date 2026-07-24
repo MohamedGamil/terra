@@ -1,0 +1,43 @@
+# RISKS_AND_GATES.yaml — uncertainties, gates, risks, thresholds, kill criteria (SPEC §15).
+uncertainties:
+  - id: UNC-001
+    proposition: The single biggest thing we do not yet know.
+    class: desirability
+    decision_affected: [DEC-001]
+    risk_exposure: high
+    decision_criticality: 5
+    expected_information_gain: 4
+    validation_cost: 2
+    test_options:
+      - Concierge test with target users.
+    reversibility: reversible
+    threshold: "Pass if >= 3/5 complete the job unaided; fail if <= 1/5; else inconclusive."
+    stop_rule: Stop after 5 sessions or 2 weeks, whichever first.
+    owner: you@example.com
+    status: open
+
+gates:
+  - id: GATE-001
+    question: Do target users actually complete the core job with our approach?
+    reduces: UNC-001
+    hardness: hard
+    status: open
+    protocol:
+      frozen: true
+      fixtures: 5 pre-recruited target users; fixed task script.
+      rubric: Blind pass/fail per session against pre-declared job-completion criteria.
+      blind_scored: true
+      stop_rules: Stop after 5 sessions.
+      tie_is_failure: true
+    threshold: ">= 3 of 5 unaided completions"
+    blocks: [DEC-001]
+    owner: you@example.com
+
+risks:
+  - id: RISK-001
+    risk: We build the wrong thing before validating demand.
+    early_signal: Fewer than 3/5 users complete the core job in the concierge test.
+    response: Narrow or return to discovery; do NOT add features.
+    kill_criterion: Two consecutive failed desirability gates.
+    status: open
+    owner: you@example.com

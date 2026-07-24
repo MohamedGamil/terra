@@ -1,0 +1,19 @@
+project:
+  id: PRJ-001
+  name: Terra
+  codename: my-project
+  one_line_scope: One sentence describing what this delivers and for whom.
+  profile:
+    governance: solo-lite
+    state: greenfield
+  posture: discovery
+  project_governance:
+    owner: mgamil.dev@gmail.com
+    risk_tolerance: medium
+    data_sensitivity: internal
+  hard_guardrails:
+  - No real user data before legal + threat-model readiness exists.
+  - Pause any sharing surface on a confirmed disclosure.
+  version: 0.1.0
+  product_version: 0.0.0
+  created: 2026-01-01

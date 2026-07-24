@@ -1,0 +1,30 @@
+# EVIDENCE.yaml — claims, sources, observations, hypotheses, and freshness (SPEC §15).
+# Every consequential claim carries its class, source, applicability boundary and freshness.
+evidence:
+  - id: EV-001
+    kind: primary-source
+    summary: Example cited source. Replace with a real primary source and exact citation.
+    state: admissible
+    source:
+      url: https://example.com/exact-page
+      citation: "Section 3.2, para 4"
+      accessed: 2026-01-01
+    applicability: Where this evidence is relevant to THIS project.
+    freshness:
+      volatile: false
+
+claims:
+  - id: CL-001
+    statement: An example claim this project depends on.
+    claim_class: hypothesis
+    supported_by: [EV-001]
+
+hypotheses:
+  - id: HY-001
+    statement: Target users will do X when given Y.
+    status: open
+    test: A concierge test with 5 target users.
+    threshold: ">= 3 of 5 complete the job unaided"
+    owner: you@example.com
+    due: 2026-03-01
+    gate: GATE-001
