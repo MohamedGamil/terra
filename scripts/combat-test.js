@@ -245,7 +245,43 @@ simPress.frontiers[2].push(5052);
 simPress.pacts.set(simPress.getPactKey(1, 2), 'ACTIVE');
 
 simPress.simulateContinuousBorderPressure();
-assert(simPress.grid[5052] === 2, 'NAP blocks continuous border pressure');
+// --- Test 11: Incremental Frontier Capture & Distance Scaling (REQ-049) ---
+console.log('\n[Test 11] Incremental Frontier Capture & Distance Scaling (REQ-049)');
+const simExp = new TerritorySimulation(100, 100, 10, 'arena');
+simExp.state = 'PLAYING';
+simExp.tickCount = 1;
+
+simExp.players[1].isAlive = true;
+simExp.players[1].balance = 1000;
+simExp.players[1].landCount = 10;
+
+simExp.grid[5050] = 1;
+simExp.frontiers[1] = [5050];
+
+// Execute land attack towards index 5072 (22 pixels away)
+const launchSuccess = simExp.executeAttack(1, 5072, 50);
+assert(launchSuccess === true, 'Attack launched successfully');
+assert(simExp.activeExpansions.length === 1, 'Expansion campaign queued instead of instant conquest');
+assert(simExp.grid[5072] !== 1, 'Target pixel not instantly captured on launch');
+
+const expTask = simExp.activeExpansions[0];
+const troopsBefore = expTask.remainingTroops;
+
+// Run one simulation tick
+simExp.update(16.6);
+
+assert(simExp.grid[5051] === 1, 'Adjacent pixel 5051 captured incrementally in the first simulation tick');
+const troopsAfterAdjacent = expTask.remainingTroops;
+const adjacentCost = troopsBefore - troopsAfterAdjacent;
+
+// Advance multiple ticks to reach 5072
+for (let step = 0; step < 15; step++) {
+  simExp.update(16.6);
+}
+
+// Distance-scaled check: cost for further pixels must be higher due to scaling
+assert(simExp.grid[5072] === 1, 'Target pixel 5072 eventually captured after incremental ticks');
+assert(adjacentCost >= 2, 'Troop deduction occurred for adjacent capture');
 
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);

@@ -40,6 +40,7 @@ export class TerritorySimulation {
     }
 
     this.boats = [];
+    this.activeExpansions = [];
     this.spawnTimer = 10.0;
     this.humanSpawnIdx = null;
 
@@ -211,7 +212,33 @@ export class TerritorySimulation {
       this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
     }
 
-    this.advanceFrontierTowards(attackerId, targetX, targetY, forceTroops);
+    const frontier = this.frontiers[attackerId];
+    let launchX = targetX;
+    let launchY = targetY;
+    if (frontier && frontier.length > 0) {
+      let minDist = Infinity;
+      for (let i = 0; i < frontier.length; i++) {
+        const idx = frontier[i];
+        const fx = idx % this.width;
+        const fy = Math.floor(idx / this.width);
+        const dist = Math.hypot(fx - targetX, fy - targetY);
+        if (dist < minDist) {
+          minDist = dist;
+          launchX = fx;
+          launchY = fy;
+        }
+      }
+    }
+
+    this.activeExpansions.push({
+      ownerId: attackerId,
+      targetX: targetX,
+      targetY: targetY,
+      launchX: launchX,
+      launchY: launchY,
+      remainingTroops: forceTroops,
+      isCounterPush: false
+    });
     return true;
   }
 
@@ -537,6 +564,149 @@ export class TerritorySimulation {
     return bestPixel;
   }
 
+  updateExpansions(deltaTimeMs) {
+    const width = this.width;
+    const height = this.height;
+
+    for (let idx = this.activeExpansions.length - 1; idx >= 0; idx--) {
+      const exp = this.activeExpansions[idx];
+      const player = this.players[exp.ownerId];
+
+      if (!player || !player.isAlive || exp.remainingTroops <= 2) {
+        this.activeExpansions.splice(idx, 1);
+        continue;
+      }
+
+      const frontier = this.frontiers[exp.ownerId];
+      if (!frontier || frontier.length === 0) {
+        this.activeExpansions.splice(idx, 1);
+        continue;
+      }
+
+      const frontierSet = new Set(frontier);
+      let stepCount = 0;
+      const stepLimit = 20;
+      let expandedAny = false;
+
+      while (exp.remainingTroops > 2 && stepCount < stepLimit) {
+        let bestIdx = -1;
+        let minDist = Infinity;
+        let bestArrayIdx = -1;
+
+        for (let i = frontier.length - 1; i >= 0; i--) {
+          const fIdx = frontier[i];
+          const fx = fIdx % width;
+          const fy = Math.floor(fIdx / width);
+          const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
+          if (distSq < minDist) {
+            minDist = distSq;
+            bestIdx = fIdx;
+            bestArrayIdx = i;
+          }
+        }
+
+        if (bestIdx < 0) break;
+
+        const cx = bestIdx % width;
+        const cy = Math.floor(bestIdx / width);
+
+        const neighbors = [
+          cy > 0 ? bestIdx - width : -1,
+          cy < height - 1 ? bestIdx + width : -1,
+          cx > 0 ? bestIdx - 1 : -1,
+          cx < width - 1 ? bestIdx + 1 : -1
+        ];
+
+        let localExpanded = false;
+
+        for (const nIdx of neighbors) {
+          if (nIdx < 0) continue;
+          if (this.terrainGrid[nIdx] === 0 || this.terrainGrid[nIdx] === 2) continue;
+
+          const defenderOwner = this.grid[nIdx];
+
+          if (defenderOwner === 0) {
+            const nx = nIdx % width;
+            const ny = Math.floor(nIdx / width);
+            const distToLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
+            const scaleMultiplier = 1.0 + (distToLaunch * 0.002);
+            const cost = Math.ceil(2 * scaleMultiplier);
+
+            if (exp.remainingTroops >= cost) {
+              exp.remainingTroops -= cost;
+              player.landCount++;
+              this.grid[nIdx] = exp.ownerId;
+
+              if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+                frontier.push(nIdx);
+                frontierSet.add(nIdx);
+              }
+              localExpanded = true;
+              stepCount++;
+            }
+          }
+          else if (defenderOwner !== exp.ownerId) {
+            if (this.hasPact(exp.ownerId, defenderOwner)) continue;
+            const defender = this.players[defenderOwner];
+
+            const nx = nIdx % width;
+            const ny = Math.floor(nIdx / width);
+            const distToLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
+            const scaleMultiplier = 1.0 + (distToLaunch * 0.002);
+
+            const baseCost = 4;
+            const fortBonus = (defender && defender.balance > player.balance * 0.5) ? 2 : 0;
+            const totalCost = Math.ceil((baseCost * 2 + fortBonus) * scaleMultiplier);
+
+            if (exp.remainingTroops >= totalCost) {
+              exp.remainingTroops -= totalCost;
+              if (defender) defender.balance = Math.max(0, defender.balance - baseCost);
+              player.landCount++;
+              if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
+              this.grid[nIdx] = exp.ownerId;
+
+              if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+                frontier.push(nIdx);
+                frontierSet.add(nIdx);
+              }
+              localExpanded = true;
+              stepCount++;
+
+              if (!exp.isCounterPush && defender && defender.isAlive && defender.balance > 300 && Math.random() < 0.2) {
+                const counterTroops = Math.min(Math.floor(defender.balance * 0.1), 500);
+                if (counterTroops > 20) {
+                  defender.balance -= counterTroops;
+                  this.activeExpansions.push({
+                    ownerId: defenderOwner,
+                    targetX: cx,
+                    targetY: cy,
+                    launchX: nx,
+                    launchY: ny,
+                    remainingTroops: counterTroops,
+                    isCounterPush: true
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        if (localExpanded) {
+          expandedAny = true;
+        }
+
+        if (!localExpanded || !this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+          frontierSet.delete(bestIdx);
+          frontier.splice(bestArrayIdx, 1);
+        }
+      }
+
+      if (!expandedAny && stepCount === 0) {
+        this.activeExpansions.splice(idx, 1);
+      }
+    }
+  }
+
   advanceFrontierTowards(ownerId, targetX, targetY, troops, isCounterPush = false) {
     const width = this.width;
     const height = this.height;
@@ -676,6 +846,7 @@ export class TerritorySimulation {
     this.updateRadarPulses(deltaTimeMs);
     this.checkPlayerEliminations();
     this.simulateContinuousBorderPressure();
+    this.updateExpansions(deltaTimeMs);
     this.updateBots();
 
     if (this.tickCount % 5 === 0) {
@@ -894,7 +1065,32 @@ export class TerritorySimulation {
     }
 
     if (remainingTroops > 10) {
-      this.advanceFrontierTowards(ownerId, targetX, targetY, remainingTroops);
+      let launchX = cx;
+      let launchY = cy;
+      if (frontier && frontier.length > 0) {
+        let minDist = Infinity;
+        for (let i = 0; i < frontier.length; i++) {
+          const idx = frontier[i];
+          const fx = idx % width;
+          const fy = Math.floor(idx / width);
+          const dist = Math.hypot(fx - cx, fy - cy);
+          if (dist < minDist) {
+            minDist = dist;
+            launchX = fx;
+            launchY = fy;
+          }
+        }
+      }
+
+      this.activeExpansions.push({
+        ownerId: ownerId,
+        targetX: targetX,
+        targetY: targetY,
+        launchX: launchX,
+        launchY: launchY,
+        remainingTroops: remainingTroops,
+        isCounterPush: false
+      });
     }
   }
 

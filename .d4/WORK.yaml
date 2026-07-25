@@ -2079,8 +2079,10 @@ batons:
     - BATON-051
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-051
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-052
   objective: Implement Incremental Frontier Capture & Distance Scaling (REQ-049).
   title: Incremental Frontier Capture & Distance Scaling
@@ -2571,6 +2573,13 @@ evaluations:
 - id: EVAL-051
   layer: outcome
   target: BATON-051
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-052
+  layer: outcome
+  target: BATON-052
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
