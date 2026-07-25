@@ -453,6 +453,22 @@ requirements:
   kind: functional
   statement: The procedural map generator MUST normalize land bridges and connected
     continents to prevent pixel-level shredding or tearing.
+- id: REQ-063
+  kind: functional
+  statement: The multiplayer WebSocket server MUST support room creation and joining
+    using 6-character room codes.
+- id: REQ-064
+  kind: functional
+  statement: The client application MUST synchronize player lists and host controls
+    in the lobby state in real-time.
+- id: REQ-065
+  kind: functional
+  statement: The multiplayer engine MUST support synchronized starting spawn position
+    picking across all connected clients.
+- id: REQ-066
+  kind: functional
+  statement: The server MUST stream game state updates at 20Hz using delta-encoded
+    binary packets to clients.
 batons:
 - id: BATON-001
   version: 1
@@ -2341,8 +2357,8 @@ batons:
     lease_owner: null
     lease_expires_at: null
 - id: BATON-063
-  title: Readable Troop UI Formatting & Map Normalization
-  objective: Implement human-friendly troop formatting and smooth/normalize map continents.
+  title: Readable Troop UI Formatting
+  objective: Implement human-friendly troop formatting.
   type: implementation
   acceptance:
     deterministic_checks:
@@ -2351,7 +2367,6 @@ batons:
     gates: []
     requirements:
     - REQ-061
-    - REQ-062
   execution:
     depends_on:
     - BATON-062
@@ -2359,6 +2374,91 @@ batons:
     quadrant: Q2
     resume_pointer: Draft
     state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-064
+  title: World Map Generation Normalization & Smoothing
+  objective: Implement advanced multi-polygon landmass normalization, filling tearing
+    gaps, and smoothing coastlines during GeoJSON world map generation.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-062
+  execution:
+    depends_on:
+    - BATON-063
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: leased
+    lease_owner: agent-role/fullstack-implementer
+    lease_expires_at: null
+- id: BATON-065
+  title: WebSocket Server Infrastructure & Room Codes
+  objective: Implement Node.js WebSocket server supporting room creation and 6-character
+    room codes.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:server
+  authority:
+    gates: []
+    requirements:
+    - REQ-063
+  execution:
+    depends_on:
+    - BATON-064
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: draft
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-066
+  title: Synchronized Player Lobby & Client Spawn Pick
+  objective: Implement real-time lobby state sync, player listing, host start control,
+    and synchronized client spawn location selection.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:server
+  authority:
+    gates: []
+    requirements:
+    - REQ-064
+    - REQ-065
+  execution:
+    depends_on:
+    - BATON-065
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: draft
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-067
+  title: 20Hz Binary Delta State Broadcast & Game End Broker
+  objective: Implement 20Hz game loop broadcasting delta-encoded binary packets and
+    managing game end criteria.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:server
+  authority:
+    gates: []
+    requirements:
+    - REQ-066
+  execution:
+    depends_on:
+    - BATON-066
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: draft
     lease_owner: null
     lease_expires_at: null
 releases:
@@ -2457,6 +2557,28 @@ releases:
   - BATON-018
   delivery_form: deployable
   status: released
+- id: REL-005
+  version: 0.5.0
+  name: Terra Real-Time WebSocket Multiplayer Lobbies & Active Session Broker
+  is_mvp: false
+  exit_criteria:
+  - WebSocket server supports room creation, player listings, and synchronized client
+    lobbies.
+  - Multi-client match start and synchronized spawn selection phase works.
+  - Server streams 20Hz binary delta-encoded state sync packets.
+  requirements:
+  - REQ-062
+  - REQ-063
+  - REQ-064
+  - REQ-065
+  - REQ-066
+  batons:
+  - BATON-064
+  - BATON-065
+  - BATON-066
+  - BATON-067
+  delivery_form: deployable
+  status: draft
 evaluations:
 - id: EVAL-001
   layer: outcome
