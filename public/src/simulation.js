@@ -664,7 +664,7 @@ export class TerritorySimulation {
       if (dist < 8) {
         const owner = this.players[boat.ownerId];
         if (owner && owner.isAlive) {
-          this.advanceFrontierTowards(boat.ownerId, boat.targetX, boat.targetY, boat.troops);
+          this.resolveNavalLanding(boat.ownerId, boat.targetX, boat.targetY, boat.troops);
         }
         this.boats.splice(i, 1);
       } else {
@@ -672,6 +672,93 @@ export class TerritorySimulation {
         boat.x += (dx / dist) * step;
         boat.y += (dy / dist) * step;
       }
+    }
+  }
+
+  resolveNavalLanding(ownerId, targetX, targetY, troops) {
+    const owner = this.players[ownerId];
+    if (!owner || !owner.isAlive) return;
+
+    const width = this.width;
+    const height = this.height;
+    let landingIdx = Math.floor(targetY) * width + Math.floor(targetX);
+
+    if (this.terrainGrid[landingIdx] !== 1) {
+      let closestLand = -1;
+      let minLandDist = Infinity;
+      const tx = Math.floor(targetX);
+      const ty = Math.floor(targetY);
+
+      for (let dy = -10; dy <= 10; dy++) {
+        const ny = ty + dy;
+        if (ny < 0 || ny >= height) continue;
+        for (let dx = -10; dx <= 10; dx++) {
+          const nx = tx + dx;
+          if (nx < 0 || nx >= width) continue;
+          const idx = ny * width + nx;
+          if (this.terrainGrid[idx] === 1) {
+            const dSq = dx * dx + dy * dy;
+            if (dSq < minLandDist) {
+              minLandDist = dSq;
+              closestLand = idx;
+            }
+          }
+        }
+      }
+
+      if (closestLand >= 0) landingIdx = closestLand;
+    }
+
+    if (this.terrainGrid[landingIdx] !== 1) return;
+
+    const cx = landingIdx % width;
+    const cy = Math.floor(landingIdx / width);
+    const radius = 4;
+    const rSq = radius * radius;
+
+    if (!this.frontiers[ownerId]) this.frontiers[ownerId] = [];
+    const frontier = this.frontiers[ownerId];
+    const frontierSet = new Set(frontier);
+    let remainingTroops = troops;
+
+    for (let dy = -radius; dy <= radius; dy++) {
+      const ny = cy + dy;
+      if (ny < 0 || ny >= height) continue;
+      for (let dx = -radius; dx <= radius; dx++) {
+        const nx = cx + dx;
+        if (nx < 0 || nx >= width) continue;
+
+        if (dx * dx + dy * dy <= rSq) {
+          const idx = ny * width + nx;
+          if (this.terrainGrid[idx] === 1) {
+            const defOwner = this.grid[idx];
+            if (defOwner !== ownerId) {
+              const cost = defOwner === 0 ? 2 : 8;
+              if (remainingTroops >= cost) {
+                remainingTroops -= cost;
+                this.grid[idx] = ownerId;
+                owner.landCount++;
+                if (defOwner > 0 && this.players[defOwner]) {
+                  this.players[defOwner].landCount = Math.max(0, this.players[defOwner].landCount - 1);
+                }
+
+                if (!frontierSet.has(idx)) {
+                  frontier.push(idx);
+                  frontierSet.add(idx);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (ownerId === 1) {
+      this.addToast('⛵ Naval landing successful! Established foothold on island territory.', 'success');
+    }
+
+    if (remainingTroops > 10) {
+      this.advanceFrontierTowards(ownerId, targetX, targetY, remainingTroops);
     }
   }
 

@@ -1828,14 +1828,16 @@ batons:
   authority:
     gates: []
     requirements:
-    - REQ-038
+    - REQ-039
   execution:
     depends_on:
     - BATON-041
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-041
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-042
   objective: Fix naval transport landing bug on islands by establishing direct island
     seed frontiers upon arrival (REQ-039).
@@ -2244,6 +2246,13 @@ evaluations:
 - id: EVAL-040
   layer: outcome
   target: BATON-041
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-041
+  layer: outcome
+  target: BATON-042
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
