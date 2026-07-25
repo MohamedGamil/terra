@@ -1292,8 +1292,10 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Ready after BATON-024
-    state: draft
+    state: completed
     unblocks: []
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-023
   objective: Build match replay chart and APM leaderboard dashboard.
   scope:
@@ -1529,6 +1531,13 @@ evaluations:
 - id: EVAL-019
   layer: outcome
   target: BATON-024
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-020
+  layer: outcome
+  target: BATON-023
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

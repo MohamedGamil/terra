@@ -3,6 +3,8 @@ import { TerritoryRenderer } from './renderer.js';
 import { TerritorySimulation } from './simulation.js';
 import { MinimapRenderer } from './minimap.js';
 import { BenchmarkRunner } from './benchmark.js';
+import { MatchRecorder } from './match-recorder.js';
+import { StatsDashboard } from './stats-dashboard.js';
 
 class TerraApp {
   constructor() {
@@ -20,10 +22,14 @@ class TerraApp {
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
     this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
 
+    this.recorder = new MatchRecorder(1.0);
+    this.dashboard = new StatsDashboard('post-match-overlay', 'chart-canvas');
+
     this.isRunning = true;
     this.lastTime = performance.now();
     this.fpsHistory = [];
     this.targetPixelIdx = -1;
+    this.matchElapsedSec = 0;
 
     this.initMinimapEvents();
     this.initLobbyUI();
@@ -334,6 +340,8 @@ class TerraApp {
         overlay.style.display = 'none';
 
         this.simulation.confirmSpawnsAndStart();
+        this.recorder.start();
+        this.matchElapsedSec = 0;
       }
     }, 600);
   }
@@ -389,6 +397,15 @@ class TerraApp {
       this.simulation.update(delta);
       this.renderer.boats = this.simulation.boats;
 
+      if (this.simulation.state === 'PLAYING') {
+        this.matchElapsedSec += delta / 1000;
+        let totalLandPixels = 0;
+        for (let i = 0; i < this.simulation.terrainGrid.length; i++) {
+          if (this.simulation.terrainGrid[i] === 1) totalLandPixels++;
+        }
+        this.recorder.sample(this.matchElapsedSec, this.simulation.players, totalLandPixels);
+      }
+
       const renderMs = this.renderer.render(this.simulation.grid, this.simulation.terrainGrid, true);
       this.minimap.render(this.simulation.grid, this.simulation.terrainGrid, this.renderer);
 
@@ -415,16 +432,22 @@ class TerraApp {
       }
 
       if (this.simulation.state === 'GAME_OVER' && this.simulation.gameResult) {
-        const modal = document.getElementById('gameover-modal');
-        if (!modal.classList.contains('active')) {
-          modal.classList.add('active');
-          const res = this.simulation.gameResult;
-          document.getElementById('gameover-title').textContent = res.outcome === 'VICTORY' ? 'VICTORY!' : 'DEFEATED';
-          document.getElementById('gameover-badge').textContent = res.outcome === 'VICTORY' ? 'CONQUEROR' : 'ELIMINATED';
-          document.getElementById('gameover-badge').className = res.outcome === 'VICTORY' ? 'result-badge result-pass' : 'result-badge result-fail';
-          document.getElementById('gov-final-pct').textContent = res.finalLandPct;
-          document.getElementById('gov-peak-troops').textContent = res.peakTroops.toLocaleString();
-          document.getElementById('gov-bots-killed').textContent = res.botsKilled;
+        const overlay = document.getElementById('post-match-overlay');
+        if (overlay && overlay.style.display === 'none') {
+          const summary = this.recorder.getSummary();
+          this.dashboard.show(
+            summary,
+            () => {
+              // Play Again
+              document.getElementById('lobby-screen').style.display = 'none';
+              this.openSpawnSelectionPhase();
+            },
+            () => {
+              // Back to Lobby
+              document.getElementById('lobby-screen').style.display = 'flex';
+              this.simulation.state = 'LOBBY';
+            }
+          );
         }
       }
 

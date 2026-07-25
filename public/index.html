@@ -180,6 +180,69 @@
         <canvas id="minimap-canvas"></canvas>
       </div>
 
+      <!-- Full Post-Match Replay & Statistics Dashboard Overlay -->
+      <div id="post-match-overlay" class="post-match-modal" style="display: none;">
+        <div class="post-match-card">
+          <div class="pm-header">
+            <div class="pm-title-group">
+              <span class="pm-crown">👑</span>
+              <div>
+                <h2 class="pm-title">MATCH COMPLETED</h2>
+                <div class="pm-winner-subtitle">Winner: <span id="match-winner-name" style="font-weight: 700;">Commander</span></div>
+              </div>
+            </div>
+            <div class="pm-rank-badge" id="match-human-rank">#1 of 100</div>
+          </div>
+
+          <!-- Highlight Cards Grid -->
+          <div class="pm-stats-grid">
+            <div class="pm-stat-card">
+              <div class="pm-stat-label">Match Duration</div>
+              <div class="pm-stat-val" id="match-duration-val">02:45</div>
+            </div>
+            <div class="pm-stat-card">
+              <div class="pm-stat-label">Actions / Min</div>
+              <div class="pm-stat-val highlight-cyan" id="match-apm-val">142 APM</div>
+            </div>
+            <div class="pm-stat-card">
+              <div class="pm-stat-label">Peak Land %</div>
+              <div class="pm-stat-val highlight-emerald" id="match-peak-land-val">100%</div>
+            </div>
+          </div>
+
+          <!-- Interactive 2D Canvas Territory Expansion Chart -->
+          <div class="pm-chart-section">
+            <div class="pm-chart-header">
+              <span>📈 Territory Expansion Timeline (Top Competitors)</span>
+              <span style="font-size: 11px; opacity: 0.6;">Hover chart for timestamp details</span>
+            </div>
+            <canvas id="chart-canvas" class="pm-chart-canvas"></canvas>
+          </div>
+
+          <!-- Leaderboard Standings Table -->
+          <div class="pm-leaderboard-section">
+            <table class="pm-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player</th>
+                  <th>Peak Land</th>
+                  <th>Peak Balance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pm-actions">
+            <button class="btn btn-primary btn-large" id="btn-play-again">🔄 PLAY AGAIN (SAME SEED)</button>
+            <button class="btn btn-secondary" id="btn-back-lobby">🏠 BACK TO LOBBY</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Game Over / Victory Modal -->
       <div class="benchmark-card" id="gameover-modal">
         <div class="benchmark-header">
