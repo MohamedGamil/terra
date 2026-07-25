@@ -645,6 +645,21 @@ class TerraApp {
         }
       }
     };
+
+    this.renderer.onCanvasDoubleClick = (coords, e) => {
+      if (this.simulation && this.simulation.state === 'PLAYING') {
+        const idx = coords.idx;
+        this.targetPixelIdx = idx;
+        this.renderer.targetPixelIdx = idx;
+
+        const terrainType = this.simulation.terrainGrid[idx];
+        if (terrainType === 0) {
+          this.simulation.launchBoatAttack(1, idx, this.selectedForcePercent);
+        } else if (terrainType === 1) {
+          this.simulation.executeAttack(1, idx, this.selectedForcePercent);
+        }
+      }
+    };
   }
 
   initContextMenuUI() {

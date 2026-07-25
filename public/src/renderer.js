@@ -46,6 +46,7 @@ export class TerritoryRenderer {
     this.fogOfWarEnabled = true;
 
     this.onCanvasClick = null; // Callback: (coords, mouseButton) => void
+    this.onCanvasDoubleClick = null; // Callback: (coords, e) => void
 
     this.setupInteractions();
     this.resizeCanvas();
@@ -95,6 +96,16 @@ export class TerritoryRenderer {
         const coords = this.screenToMapCoords(e.clientX, e.clientY);
         if (coords) {
           this.onCanvasClick(coords, 'left', e);
+        }
+      }
+    });
+
+    this.canvas.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      if (this.onCanvasDoubleClick) {
+        const coords = this.screenToMapCoords(e.clientX, e.clientY);
+        if (coords) {
+          this.onCanvasDoubleClick(coords, e);
         }
       }
     });

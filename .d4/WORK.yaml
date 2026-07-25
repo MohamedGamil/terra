@@ -1741,13 +1741,19 @@ batons:
 - acceptance:
     deterministic_checks:
     - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-035
   execution:
     depends_on:
     - BATON-037
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-037
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-038
   objective: Implement double-click event listener executing instant land/naval attacks
     at clicked map coordinates (REQ-035).
@@ -2188,6 +2194,13 @@ evaluations:
 - id: EVAL-036
   layer: outcome
   target: BATON-037
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-037
+  layer: outcome
+  target: BATON-038
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
