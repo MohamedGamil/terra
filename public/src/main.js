@@ -694,6 +694,20 @@ class TerraApp {
         const isTargeted = (targetOwner !== 0);
         const terrainType = this.simulation.terrainGrid[idx];
 
+        const tx = idx % this.simulation.width;
+        const ty = Math.floor(idx / this.simulation.width);
+        const crosshairX = this.renderer.panX + (tx + 0.5) * this.renderer.zoom;
+        const crosshairY = this.renderer.panY + (ty + 0.5) * this.renderer.zoom;
+
+        console.log('[DOUBLE-CLICK DEBUG]', {
+          screenClick: { x: e.clientX, y: e.clientY },
+          mapClickRaw: { x: coords.mapX, y: coords.mapY },
+          snappedTargetMap: { x: tx, y: ty },
+          crosshairScreen: { x: crosshairX, y: crosshairY },
+          zoom: this.renderer.zoom,
+          pan: { x: this.renderer.panX, y: this.renderer.panY }
+        });
+
         if (this.particles) {
           const tx = idx % this.simulation.width;
           const ty = Math.floor(idx / this.simulation.width);
@@ -875,6 +889,12 @@ class TerraApp {
       }
     };
 
+    if (this.renderer) {
+      this.renderer.destroy();
+    }
+    if (this.minimap) {
+      this.minimap.destroy();
+    }
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
     this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
     this.initMinimapEvents();

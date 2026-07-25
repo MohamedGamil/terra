@@ -145,8 +145,8 @@ export class ParticleSystem {
 
     for (const p of this.activeParticles) {
       // Transform world coordinates (p.x, p.y) to screen coordinates
-      const screenX = (p.x - panX) * zoom;
-      const screenY = (p.y - panY) * zoom;
+      const screenX = panX + p.x * zoom;
+      const screenY = panY + p.y * zoom;
 
       if (p.type === 'SHOCKWAVE') {
         ctx.strokeStyle = p.color;

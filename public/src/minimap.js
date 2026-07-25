@@ -32,7 +32,7 @@ export class MinimapRenderer {
   }
 
   setupInteractions() {
-    const handleNav = (e) => {
+    this.boundHandleNav = (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
@@ -48,18 +48,28 @@ export class MinimapRenderer {
       }
     };
 
-    this.canvas.addEventListener('mousedown', (e) => {
+    this.boundMousedown = (e) => {
       this.isDragging = true;
-      handleNav(e);
-    });
+      this.boundHandleNav(e);
+    };
 
-    window.addEventListener('mousemove', (e) => {
-      if (this.isDragging) handleNav(e);
-    });
+    this.boundMousemove = (e) => {
+      if (this.isDragging) this.boundHandleNav(e);
+    };
 
-    window.addEventListener('mouseup', () => {
+    this.boundMouseup = () => {
       this.isDragging = false;
-    });
+    };
+
+    this.canvas.addEventListener('mousedown', this.boundMousedown);
+    window.addEventListener('mousemove', this.boundMousemove);
+    window.addEventListener('mouseup', this.boundMouseup);
+  }
+
+  destroy() {
+    this.canvas.removeEventListener('mousedown', this.boundMousedown);
+    window.removeEventListener('mousemove', this.boundMousemove);
+    window.removeEventListener('mouseup', this.boundMouseup);
   }
 
   render(grid, terrainGrid, mainRenderer) {

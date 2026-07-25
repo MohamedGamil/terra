@@ -560,6 +560,16 @@ requirements:
   statement: The canvas interface MUST spawn a visual particle click effect (shockwave,
     sparks, and floating text) at the target coordinates when the player performs
     a double click.
+- id: REQ-087
+  kind: functional
+  statement: The particle system MUST compute rendering screen coordinates using standard
+    forward viewport translation (pan + coordinate * zoom), preventing off-center
+    visual click indicators.
+- id: REQ-088
+  kind: functional
+  statement: The renderer and minimap engines MUST implement and invoke destroy()
+    to clean up all event listeners from canvas and window upon lobby transitions,
+    preventing handler duplication.
 batons:
 - id: BATON-001
   version: 1
@@ -2903,6 +2913,45 @@ batons:
     target click effects.
   title: Land Pathfinder Traversal & Double Click Effect
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-087
+  execution:
+    depends_on:
+    - BATON-084
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-085
+  objective: Fix particle coordinate offset calculation to align visual elements with
+    viewport.
+  title: Particle Viewport Alignment
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-088
+  execution:
+    depends_on:
+    - BATON-085
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-086
+  objective: Clean up duplicate event listeners in renderer and minimap on game start/recreate.
+  title: Listener Memory Leak Fix
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3690,6 +3739,20 @@ evaluations:
 - id: EVAL-084
   layer: outcome
   target: BATON-084
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-085
+  layer: outcome
+  target: BATON-085
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-086
+  layer: outcome
+  target: BATON-086
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

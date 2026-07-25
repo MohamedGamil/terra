@@ -95,37 +95,30 @@ export class TerritoryRenderer {
   }
 
   setupInteractions() {
-    window.addEventListener('resize', () => this.resizeCanvas());
-
-    this.canvas.addEventListener('mousedown', (e) => {
+    this.boundResizeCanvas = () => this.resizeCanvas();
+    this.boundMousedown = (e) => {
       const coords = this.getCanvasContentCoords(e.clientX, e.clientY);
-
       this.isMouseDown = true;
       this.isDragging = false;
       this.mouseDownX = e.clientX;
       this.mouseDownY = e.clientY;
       this.dragStartX = coords.x - this.panX;
       this.dragStartY = coords.y - this.panY;
-    });
-
-    window.addEventListener('mousemove', (e) => {
+    };
+    this.boundMousemove = (e) => {
       if (!this.isMouseDown) return;
-
       const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
       if (dist > 5) {
         this.isDragging = true;
         const coords = this.getCanvasContentCoords(e.clientX, e.clientY);
-
         this.panX = coords.x - this.dragStartX;
         this.panY = coords.y - this.dragStartY;
       }
-    });
-
-    window.addEventListener('mouseup', () => {
+    };
+    this.boundMouseup = () => {
       this.isMouseDown = false;
-    });
-
-    this.canvas.addEventListener('click', (e) => {
+    };
+    this.boundClick = (e) => {
       const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
       if (dist <= 6 && this.onCanvasClick) {
         const coords = this.screenToMapCoords(e.clientX, e.clientY);
@@ -133,9 +126,8 @@ export class TerritoryRenderer {
           this.onCanvasClick(coords, 'left', e);
         }
       }
-    });
-
-    this.canvas.addEventListener('dblclick', (e) => {
+    };
+    this.boundDblclick = (e) => {
       e.preventDefault();
       if (this.onCanvasDoubleClick) {
         const coords = this.screenToMapCoords(e.clientX, e.clientY);
@@ -143,9 +135,8 @@ export class TerritoryRenderer {
           this.onCanvasDoubleClick(coords, e);
         }
       }
-    });
-
-    this.canvas.addEventListener('contextmenu', (e) => {
+    };
+    this.boundContextmenu = (e) => {
       e.preventDefault();
       const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
       if (dist <= 6 && this.onCanvasClick) {
@@ -154,19 +145,36 @@ export class TerritoryRenderer {
           this.onCanvasClick(coords, 'right', e);
         }
       }
-    });
-
-    this.canvas.addEventListener('wheel', (e) => {
+    };
+    this.boundWheel = (e) => {
       e.preventDefault();
       const coords = this.getCanvasContentCoords(e.clientX, e.clientY);
-
       const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
       const newZoom = Math.min(Math.max(0.2, this.zoom * zoomFactor), 8.0);
-      
       this.panX = coords.x - (coords.x - this.panX) * (newZoom / this.zoom);
       this.panY = coords.y - (coords.y - this.panY) * (newZoom / this.zoom);
       this.zoom = newZoom;
-    }, { passive: false });
+    };
+
+    window.addEventListener('resize', this.boundResizeCanvas);
+    this.canvas.addEventListener('mousedown', this.boundMousedown);
+    window.addEventListener('mousemove', this.boundMousemove);
+    window.addEventListener('mouseup', this.boundMouseup);
+    this.canvas.addEventListener('click', this.boundClick);
+    this.canvas.addEventListener('dblclick', this.boundDblclick);
+    this.canvas.addEventListener('contextmenu', this.boundContextmenu);
+    this.canvas.addEventListener('wheel', this.boundWheel, { passive: false });
+  }
+
+  destroy() {
+    window.removeEventListener('resize', this.boundResizeCanvas);
+    this.canvas.removeEventListener('mousedown', this.boundMousedown);
+    window.removeEventListener('mousemove', this.boundMousemove);
+    window.removeEventListener('mouseup', this.boundMouseup);
+    this.canvas.removeEventListener('click', this.boundClick);
+    this.canvas.removeEventListener('dblclick', this.boundDblclick);
+    this.canvas.removeEventListener('contextmenu', this.boundContextmenu);
+    this.canvas.removeEventListener('wheel', this.boundWheel);
   }
 
   centerOnPixel(pixelIdx, targetZoom = 2.5) {
