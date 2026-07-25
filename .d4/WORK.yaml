@@ -2415,8 +2415,8 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Draft
-    state: leased
-    lease_owner: agent-role/fullstack-implementer
+    state: completed
+    lease_owner: null
     lease_expires_at: null
 - id: BATON-066
   title: Synchronized Player Lobby & Client Spawn Pick
@@ -2437,7 +2437,7 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Draft
-    state: draft
+    state: completed
     lease_owner: null
     lease_expires_at: null
 - id: BATON-067
@@ -2458,7 +2458,7 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Draft
-    state: draft
+    state: completed
     lease_owner: null
     lease_expires_at: null
 releases:
@@ -3024,6 +3024,27 @@ evaluations:
 - id: EVAL-064
   layer: outcome
   target: BATON-064
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-065
+  layer: outcome
+  target: BATON-065
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-066
+  layer: outcome
+  target: BATON-066
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-067
+  layer: outcome
+  target: BATON-067
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
