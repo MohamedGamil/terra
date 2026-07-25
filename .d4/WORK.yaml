@@ -1498,8 +1498,10 @@ batons:
     - BATON-023
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-023
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-029
   objective: Implement ELO calculation based on standings, rank badges (Bronze ->
     Grandmaster), and local storage persistence.
@@ -2279,6 +2281,13 @@ evaluations:
 - id: EVAL-043
   layer: outcome
   target: BATON-044
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-044
+  layer: outcome
+  target: BATON-029
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

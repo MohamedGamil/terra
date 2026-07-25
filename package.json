@@ -12,7 +12,8 @@
     "test:combat": "node scripts/combat-test.js",
     "test:diplomacy": "node scripts/diplomacy-test.js",
     "test:fog": "node scripts/fog-radar-benchmark.js",
-    "test:map": "node scripts/map-minimap-benchmark.js"
+    "test:map": "node scripts/map-minimap-benchmark.js",
+    "test:progression": "node scripts/progression-test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"
