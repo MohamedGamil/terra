@@ -1361,8 +1361,9 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Ready after BATON-019
-    state: leased
-    lease_owner: mgamil.dev@gmail.com
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-025
   objective: Implement WebSocket room code creation, match joining, and multi-human
     client state synchronization.
@@ -2003,6 +2004,13 @@ evaluations:
 - id: EVAL-032
   layer: outcome
   target: BATON-028
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-033
+  layer: outcome
+  target: BATON-025
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

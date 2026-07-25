@@ -17,6 +17,25 @@
             <div class="brand-title">TERRA</div>
             <span class="brand-badge">Tactical Conquest</span>
           </div>
+        <div class="lobby-section">
+          <div class="diff-btn-group" style="margin-bottom: 12px;">
+            <button class="btn-diff active" id="tab-mode-single" data-mode="single">🎮 Singleplayer vs Bots</button>
+            <button class="btn-diff" id="tab-mode-multi" data-mode="multi">🌐 Online Multiplayer</button>
+          </div>
+        </div>
+
+        <!-- Online Room Code Section -->
+        <div id="multiplayer-room-section" class="lobby-section hidden" style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.2); padding: 12px; border-radius: 8px;">
+          <label class="input-label" style="color: var(--accent-cyan);">Multiplayer Room Code</label>
+          <div class="player-custom-row">
+            <input type="text" id="input-room-code" class="text-input" placeholder="TERRA-XXXX" style="font-family: var(--font-mono); text-transform: uppercase;">
+            <button class="btn btn-primary" id="btn-join-room" style="width: auto; padding: 10px 16px;">🔑 Join Room</button>
+            <button class="btn btn-secondary" id="btn-create-room" style="width: auto; padding: 10px 16px;">🌐 Create Room</button>
+          </div>
+          <div id="online-room-badge" style="display: none; margin-top: 8px; font-size: 13px; font-family: var(--font-mono); color: var(--accent-emerald);">
+            Active Room: <strong id="lbl-active-room-code">TERRA-8F92</strong> (<span id="lbl-room-player-count">1</span> Players)
+          </div>
+          <div id="online-players-list" style="margin-top: 6px; font-size: 12px; color: var(--text-secondary);"></div>
         </div>
 
         <div class="lobby-section">

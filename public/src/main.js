@@ -8,6 +8,7 @@ import { StatsDashboard } from './stats-dashboard.js';
 import { ParticleSystem } from './particles.js';
 import { SoundEngine } from './audio.js';
 import { MapEditor } from './map-editor.js';
+import { NetworkClient } from './network-client.js';
 
 class TerraApp {
   constructor() {
@@ -21,6 +22,7 @@ class TerraApp {
     this.playerColorHex = '#00f2fe';
     this.selectedForcePercent = 25;
     this.customMapData = null;
+    this.gameMode = 'single'; // 'single' | 'multi'
 
     this.sound = new SoundEngine();
     this.palette = new ColorPalette(500, this.playerColorHex);
@@ -32,6 +34,7 @@ class TerraApp {
     this.recorder = new MatchRecorder(1.0);
     this.dashboard = new StatsDashboard('post-match-overlay', 'chart-canvas');
     this.mapEditor = new MapEditor(1000, 1000);
+    this.netClient = new NetworkClient();
 
     this.isRunning = true;
     this.lastTime = performance.now();
@@ -43,6 +46,7 @@ class TerraApp {
     this.initParticleEvents();
     this.initMinimapEvents();
     this.initLobbyUI();
+    this.initMultiplayerUI();
     this.initMapEditorUI();
     this.initCombatUI();
     this.initSpawnButtons();
@@ -148,6 +152,93 @@ class TerraApp {
       this.closeContextMenu();
       this.simulation.state = 'LOBBY';
     });
+  }
+
+  initMultiplayerUI() {
+    const tabSingle = document.getElementById('tab-mode-single');
+    const tabMulti = document.getElementById('tab-mode-multi');
+    const multiSection = document.getElementById('multiplayer-room-section');
+    const createBtn = document.getElementById('btn-create-room');
+    const joinBtn = document.getElementById('btn-join-room');
+    const roomInput = document.getElementById('input-room-code');
+
+    if (tabSingle && tabMulti) {
+      tabSingle.addEventListener('click', () => {
+        tabSingle.classList.add('active');
+        tabMulti.classList.remove('active');
+        this.gameMode = 'single';
+        if (multiSection) multiSection.classList.add('hidden');
+      });
+
+      tabMulti.addEventListener('click', () => {
+        tabMulti.classList.add('active');
+        tabSingle.classList.remove('active');
+        this.gameMode = 'multi';
+        if (multiSection) multiSection.classList.remove('hidden');
+        this.netClient.connect();
+      });
+    }
+
+    const updatePlayersListUI = (players) => {
+      const badge = document.getElementById('online-room-badge');
+      const codeLbl = document.getElementById('lbl-active-room-code');
+      const countLbl = document.getElementById('lbl-room-player-count');
+      const listEl = document.getElementById('online-players-list');
+
+      if (badge && codeLbl && countLbl) {
+        badge.style.display = 'block';
+        codeLbl.textContent = this.netClient.roomCode || 'TERRA-ROOM';
+        countLbl.textContent = players.length;
+      }
+
+      if (listEl) {
+        listEl.innerHTML = players.map(p => `<div>👤 ${p.name || 'Player'} (${p.isHost ? 'Host' : 'Member'})</div>`).join('');
+      }
+    };
+
+    this.netClient.onRoomCreated = (data) => {
+      updatePlayersListUI(data.players || []);
+    };
+
+    this.netClient.onRoomJoined = (data) => {
+      updatePlayersListUI(data.players || []);
+    };
+
+    this.netClient.onPlayerJoined = (data) => {
+      updatePlayersListUI(data.players || []);
+    };
+
+    this.netClient.onPlayerLeft = (data) => {
+      updatePlayersListUI(data.players || []);
+    };
+
+    if (createBtn) {
+      createBtn.addEventListener('click', () => {
+        this.netClient.connect();
+        const playerName = document.getElementById('input-player-name').value || 'Commander';
+        this.netClient.createRoom(
+          playerName,
+          this.playerColorHex,
+          this.selectedMap,
+          this.botCount,
+          this.botDifficulty,
+          this.mapSeed
+        );
+      });
+    }
+
+    if (joinBtn && roomInput) {
+      joinBtn.addEventListener('click', () => {
+        const code = roomInput.value.trim();
+        if (!code) {
+          alert('Please enter a valid 6-character room code!');
+          return;
+        }
+        this.netClient.connect();
+        const playerName = document.getElementById('input-player-name').value || 'Commander';
+        this.netClient.joinRoom(code, playerName, this.playerColorHex);
+      });
+    }
   }
 
   initMapEditorUI() {
