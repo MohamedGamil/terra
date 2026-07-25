@@ -217,6 +217,7 @@ export class TerritorySimulation {
     const frontier = this.frontiers[attackerId];
     let launchX = targetX;
     let launchY = targetY;
+    let launchIdx = targetPixelIdx;
     if (frontier && frontier.length > 0) {
       let minDist = Infinity;
       for (let i = 0; i < frontier.length; i++) {
@@ -228,8 +229,17 @@ export class TerritorySimulation {
           minDist = dist;
           launchX = fx;
           launchY = fy;
+          launchIdx = idx;
         }
       }
+    }
+
+    const path = this.findLandPath(launchIdx, targetPixelIdx);
+    if (!path) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ No contiguous land path to target! Use a Naval Attack.', 'warning');
+      }
+      return false;
     }
 
     this.activeExpansions.push({
@@ -239,7 +249,8 @@ export class TerritorySimulation {
       launchX: launchX,
       launchY: launchY,
       remainingTroops: forceTroops,
-      isCounterPush: false
+      isCounterPush: false,
+      path: path
     });
     return true;
   }
@@ -619,6 +630,58 @@ export class TerritorySimulation {
     return bestPixel;
   }
 
+  findLandPath(startIdx, endIdx) {
+    if (startIdx === endIdx) return [startIdx];
+    const width = this.width;
+    const height = this.height;
+    
+    const queue = [startIdx];
+    const parent = new Map();
+    parent.set(startIdx, -1);
+    
+    let found = false;
+    let iterations = 0;
+    const maxIterations = 5000;
+
+    while (queue.length > 0 && iterations++ < maxIterations) {
+      const curr = queue.shift();
+      if (curr === endIdx) {
+        found = true;
+        break;
+      }
+
+      const cx = curr % width;
+      const cy = Math.floor(curr / width);
+
+      const neighbors = [
+        cy > 0 ? curr - width : -1,
+        cy < height - 1 ? curr + width : -1,
+        cx > 0 ? curr - 1 : -1,
+        cx < width - 1 ? curr + 1 : -1
+      ];
+
+      for (const n of neighbors) {
+        if (n >= 0 && !parent.has(n)) {
+          const terrain = this.terrainGrid[n];
+          if (terrain !== 0 && terrain !== 2) {
+            parent.set(n, curr);
+            queue.push(n);
+          }
+        }
+      }
+    }
+
+    if (!found) return null;
+
+    const path = [];
+    let curr = endIdx;
+    while (curr !== -1) {
+      path.push(curr);
+      curr = parent.get(curr);
+    }
+    return path.reverse();
+  }
+
   updateExpansions(deltaTimeMs) {
     const width = this.width;
     const height = this.height;
@@ -643,33 +706,48 @@ export class TerritorySimulation {
       const stepLimit = 20;
       let expandedAny = false;
 
-      while (exp.remainingTroops > 2 && stepCount < stepLimit) {
-        let bestIdx = -1;
+      // Fallback path if it's missing (e.g. from legacy state or bots in tests)
+      if (!exp.path || exp.path.length === 0) {
+        let startIdx = frontier[0];
+        const targetIdx = Math.floor(exp.targetY) * width + Math.floor(exp.targetX);
         let minDist = Infinity;
-        let bestArrayIdx = -1;
-
-        for (let i = frontier.length - 1; i >= 0; i--) {
-          const fIdx = frontier[i];
+        for (const fIdx of frontier) {
           const fx = fIdx % width;
           const fy = Math.floor(fIdx / width);
-          const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
-          if (distSq < minDist) {
-            minDist = distSq;
-            bestIdx = fIdx;
-            bestArrayIdx = i;
+          const dist = Math.hypot(fx - exp.targetX, fy - exp.targetY);
+          if (dist < minDist) {
+            minDist = dist;
+            startIdx = fIdx;
+          }
+        }
+        exp.path = this.findLandPath(startIdx, targetIdx) || [startIdx];
+      }
+
+      while (exp.remainingTroops > 2 && stepCount < stepLimit) {
+        let progress = -1;
+        for (let i = 0; i < exp.path.length; i++) {
+          if (this.grid[exp.path[i]] === exp.ownerId) {
+            progress = i;
+          } else {
+            break;
           }
         }
 
-        if (bestIdx < 0) break;
+        if (progress === exp.path.length - 1) {
+          break;
+        }
 
-        const cx = bestIdx % width;
-        const cy = Math.floor(bestIdx / width);
+        const tipIdx = progress >= 0 ? exp.path[progress] : exp.path[0];
+        const nextIdx = exp.path[progress + 1];
 
+        const cx = tipIdx % width;
+        const cy = Math.floor(tipIdx / width);
         const neighbors = [
-          cy > 0 ? bestIdx - width : -1,
-          cy < height - 1 ? bestIdx + width : -1,
-          cx > 0 ? bestIdx - 1 : -1,
-          cx < width - 1 ? bestIdx + 1 : -1
+          nextIdx,
+          cy > 0 ? tipIdx - width : -1,
+          cy < height - 1 ? tipIdx + width : -1,
+          cx > 0 ? tipIdx - 1 : -1,
+          cx < width - 1 ? tipIdx + 1 : -1
         ];
 
         let localExpanded = false;
@@ -679,6 +757,7 @@ export class TerritorySimulation {
           if (this.terrainGrid[nIdx] === 0 || this.terrainGrid[nIdx] === 2) continue;
 
           const defenderOwner = this.grid[nIdx];
+          if (defenderOwner === exp.ownerId) continue;
 
           if (defenderOwner === 0) {
             const nx = nIdx % width;
@@ -698,9 +777,11 @@ export class TerritorySimulation {
               }
               localExpanded = true;
               stepCount++;
+              expandedAny = true;
+              break;
             }
           }
-          else if (defenderOwner !== exp.ownerId) {
+          else {
             if (this.hasPact(exp.ownerId, defenderOwner)) continue;
             const defender = this.players[defenderOwner];
 
@@ -729,11 +810,13 @@ export class TerritorySimulation {
               }
               localExpanded = true;
               stepCount++;
+              expandedAny = true;
 
               if (!exp.isCounterPush && defender && defender.isAlive && defender.balance > 300 && Math.random() < 0.2) {
                 const counterTroops = Math.min(Math.floor(defender.balance * 0.1), 500);
                 if (counterTroops > 20) {
                   defender.balance -= counterTroops;
+                  const counterPath = [nIdx, tipIdx];
                   this.activeExpansions.push({
                     ownerId: defenderOwner,
                     targetX: cx,
@@ -741,21 +824,26 @@ export class TerritorySimulation {
                     launchX: nx,
                     launchY: ny,
                     remainingTroops: counterTroops,
-                    isCounterPush: true
+                    isCounterPush: true,
+                    path: counterPath
                   });
                 }
               }
+              break;
             }
           }
         }
 
-        if (localExpanded) {
-          expandedAny = true;
+        if (!localExpanded) {
+          break;
         }
+      }
 
-        if (!localExpanded || !this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
-          frontierSet.delete(bestIdx);
-          frontier.splice(bestArrayIdx, 1);
+      // Prune inland frontier pixels from owner frontier
+      for (let i = frontier.length - 1; i >= 0; i--) {
+        const fIdx = frontier[i];
+        if (!this.aiEngine.isBorderPixel(fIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+          frontier.splice(i, 1);
         }
       }
 

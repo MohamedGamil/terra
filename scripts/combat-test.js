@@ -487,6 +487,43 @@ assert(snapLaunchOk === true, 'Radial snapping successfully mapped target to clo
 assert(simSnap.boats.length === 1, 'Naval boat successfully spawned');
 assert(simSnap.boats[0].targetX === 80 && simSnap.boats[0].targetY === 80, `Boat target snapped correctly to x=80, y=80 (Actual Target: x=${simSnap.boats[0].targetX}, y=${simSnap.boats[0].targetY})`);
 
+// --- Test 17: Incremental Area Expansion Routing (REQ-055) ---
+console.log('\n[Test 17] Incremental Area Expansion Routing (REQ-055)');
+
+const simRoute = new TerritorySimulation(100, 100, 10, 'arena');
+simRoute.state = 'PLAYING';
+
+// Set up Player 1 at x=10, y=10 (idx 1010)
+simRoute.players[1].balance = 1000;
+simRoute.spawnCircularSeed(1, 1010, 2);
+simRoute.frontiers[1] = [1010];
+
+// Make the entire terrain grid land (1)
+simRoute.terrainGrid.fill(1);
+
+// 1. Target is a disconnected island across a water wall (x=20 is water)
+for (let y = 0; y < 100; y++) {
+  simRoute.terrainGrid[y * 100 + 20] = 0; // water wall
+}
+
+const disconnectedTargetIdx = 10 * 100 + 30; // x=30, y=10 (across the water wall)
+const landAttackBlocked = simRoute.executeAttack(1, disconnectedTargetIdx, 25);
+assert(landAttackBlocked === false, 'Land attack targeting disconnected landmass was blocked on launch');
+
+// 2. Target is connected (clear the water wall at y=10)
+simRoute.terrainGrid[10 * 100 + 20] = 1; // restore land bridge at y=10
+
+const connectedTargetIdx = 10 * 100 + 30; // x=30, y=10
+const landAttackOk = simRoute.executeAttack(1, connectedTargetIdx, 25);
+assert(landAttackOk === true, 'Land attack targeting connected landmass was successfully launched');
+assert(simRoute.activeExpansions.length === 1, 'Active expansion successfully queued');
+assert(simRoute.activeExpansions[0].path !== undefined, 'Expansion path successfully populated');
+
+// 3. Update expansions incrementally along the path corridor
+simRoute.updateExpansions(100);
+// Check that we captured pixels along the path (e.g. x=20, y=10, which was unowned neutral land)
+assert(simRoute.grid[10 * 100 + 20] === 1, 'Expansion successfully captured intermediate path pixel (x=20, y=10) incrementally');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

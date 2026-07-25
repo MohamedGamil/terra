@@ -2217,8 +2217,10 @@ batons:
     - BATON-057
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-057
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-058
   title: Incremental Area Expansion Routing
   objective: Branch and expand land capture incrementally along the path leading to
@@ -2716,6 +2718,13 @@ evaluations:
 - id: EVAL-057
   layer: outcome
   target: BATON-057
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-058
+  layer: outcome
+  target: BATON-058
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
