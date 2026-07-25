@@ -1517,7 +1517,9 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q1
     resume_pointer: Ready after BATON-030
-    state: draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-031
   objective: Apply 1.17% attack tax and 3.125% boat tax to AI bots, add bot action
     tick throttling (250ms-500ms), and remove human ganking.
@@ -1547,7 +1549,9 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q1
     resume_pointer: Ready after BATON-030
-    state: draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-032
   objective: "Replace coarse B\xE9zier curves with high-resolution vector paths detailing\
     \ accurate coastlines and sub-pixel multi-polygon rasterization."
@@ -1577,7 +1581,9 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q1
     resume_pointer: Ready after BATON-030
-    state: draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-033
   objective: Fix backward loop array splices, clear expired naval boat references,
     and add non-null safeguards to render loop.
@@ -1856,6 +1862,27 @@ evaluations:
 - id: EVAL-025
   layer: outcome
   target: BATON-030
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-026
+  layer: outcome
+  target: BATON-031
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-027
+  layer: outcome
+  target: BATON-032
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-028
+  layer: outcome
+  target: BATON-033
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

@@ -295,7 +295,7 @@ export class TerritorySimulation {
             remainingTroops -= cost;
             player.landCount++;
             this.grid[nIdx] = ownerId;
-            if (this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+            if (!frontier.includes(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
               frontier.push(nIdx);
             }
             expandedAny = true;
@@ -310,7 +310,7 @@ export class TerritorySimulation {
             player.landCount++;
             if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
             this.grid[nIdx] = ownerId;
-            if (this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+            if (!frontier.includes(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
               frontier.push(nIdx);
             }
             expandedAny = true;
@@ -367,12 +367,19 @@ export class TerritorySimulation {
   updateBoats(deltaTimeMs) {
     for (let i = this.boats.length - 1; i >= 0; i--) {
       const boat = this.boats[i];
+      if (!boat) {
+        this.boats.splice(i, 1);
+        continue;
+      }
       const dx = boat.targetX - boat.x;
       const dy = boat.targetY - boat.y;
       const dist = Math.hypot(dx, dy);
 
       if (dist < 8) {
-        this.advanceFrontierTowards(boat.ownerId, boat.targetX, boat.targetY, boat.troops);
+        const owner = this.players[boat.ownerId];
+        if (owner && owner.isAlive) {
+          this.advanceFrontierTowards(boat.ownerId, boat.targetX, boat.targetY, boat.troops);
+        }
         this.boats.splice(i, 1);
       } else {
         const step = (boat.speed * deltaTimeMs) / 16.6;

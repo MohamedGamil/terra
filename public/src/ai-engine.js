@@ -71,9 +71,17 @@ export class AIEngine {
       }
     }
 
+    // Tick cooldown per difficulty (Easy = 8 ticks [400ms], Hard = 5 ticks [250ms], Impossible = 2 ticks [100ms])
+    const tickCooldown = difficulty === 'impossible' ? 2 : (difficulty === 'hard' ? 5 : 8);
+
     for (let id = 2; id <= this.numPlayers; id++) {
       const bot = players[id];
       if (!bot || !bot.isAlive || bot.balance < 20) continue;
+
+      // Action throttling
+      bot.actionCooldown = (bot.actionCooldown || 0) + 1;
+      if (bot.actionCooldown < tickCooldown) continue;
+      bot.actionCooldown = 0;
 
       const profile = this.botProfiles.get(id);
       if (!profile) continue;
@@ -89,7 +97,7 @@ export class AIEngine {
 
       // Determine expansion rate per tick based on profile & difficulty
       const baseRate = Math.floor(bot.balance * profile.attackRatio * diffMult);
-      const expansionRate = Math.min(Math.max(1, baseRate), 25);
+      const expansionRate = Math.min(Math.max(1, baseRate), 15);
       let count = 0;
 
       for (let i = frontier.length - 1; i >= 0 && count < expansionRate; i--) {
@@ -115,39 +123,45 @@ export class AIEngine {
 
           // 1. Neutral Land Expansion
           if (targetOwner === 0) {
-            const cost = 2;
-            if (bot.balance >= cost && Math.random() < profile.expansionChance) {
-              bot.balance -= cost;
+            const baseCost = 2;
+            const attackTax = Math.ceil(bot.balance * 0.0117);
+            const totalCost = baseCost + attackTax;
+
+            if (bot.balance >= totalCost && Math.random() < profile.expansionChance) {
+              bot.balance -= totalCost;
               bot.landCount++;
               grid[nIdx] = id;
-              if (this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
+              if (!frontier.includes(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
                 frontier.push(nIdx);
               }
               count++;
               expanded = true;
             }
           } 
-          // 2. Rival Territory Attack (Rushing or Targeting Leader/Human)
+          // 2. Rival Territory Attack (Neutral Targeting)
           else if (targetOwner !== id) {
             const targetPlayer = players[targetOwner];
             let shouldAttack = false;
 
             if (profile.archetype === 'RUSHER') {
-              shouldAttack = true; // Rushers attack any neighbor
+              shouldAttack = Math.random() < 0.6; // Rushers attack rivals
             } else if (profile.archetype === 'ADAPTIVE' && targetOwner === leaderId) {
-              shouldAttack = true; // Target leader
-            } else if (targetOwner === 1) { // Focus human
-              shouldAttack = Math.random() < 0.4;
+              shouldAttack = Math.random() < 0.7; // Target leader
+            } else {
+              shouldAttack = Math.random() < 0.2; // Fair neutral attack chance
             }
 
             if (shouldAttack && targetPlayer && targetPlayer.landCount > 0) {
-              const attackCost = 6;
-              if (bot.balance >= attackCost) {
-                bot.balance -= attackCost;
+              const baseCost = 6;
+              const attackTax = Math.ceil(bot.balance * 0.0117);
+              const totalCost = baseCost + attackTax;
+
+              if (bot.balance >= totalCost) {
+                bot.balance -= totalCost;
                 targetPlayer.landCount = Math.max(0, targetPlayer.landCount - 1);
                 bot.landCount++;
                 grid[nIdx] = id;
-                if (this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
+                if (!frontier.includes(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
                   frontier.push(nIdx);
                 }
                 count++;
