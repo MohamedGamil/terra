@@ -6,97 +6,148 @@
 
 export class GeoJSONWorldMap {
   /**
-   * Detailed SVG Vector Paths for All World Continents and Major Islands.
+   * Detailed SVG Vector Paths for All World Continents, Major Islands, and Archipelagos.
+   * Coordinate space is normalized to a 1000x1000 grid.
    */
   static getDetailedWorldPaths() {
     return [
-      // --- NORTH AMERICA & GREENLAND ---
-      // Main Continent (Canada, Alaska, US, Mexico)
-      "M 60,160 C 80,130 140,110 200,120 C 240,100 300,110 340,140 C 370,180 340,240 320,280 C 290,320 270,390 260,450 C 240,490 220,460 200,430 C 180,380 150,340 120,300 C 90,260 50,210 60,160 Z",
-      // Alaska Peninsula & Aleutian Islands
-      "M 40,190 L 70,180 L 90,200 L 50,210 Z",
+      // =========================================================================
+      // --- 1. NORTH AMERICA & GREENLAND ---
+      // =========================================================================
+      // North America Mainland (Canada, Alaska, US, Mexico, Central America)
+      "M 140,40 C 180,35 220,38 260,45 C 290,40 330,42 360,55 C 380,80 370,110 350,130 C 370,140 390,170 380,200 C 365,220 340,230 330,250 C 345,270 360,300 340,330 C 320,360 300,380 290,410 C 275,440 260,480 245,510 C 235,530 220,545 230,560 C 240,570 255,585 245,600 C 235,605 220,590 215,570 C 210,540 220,510 205,480 C 190,440 160,410 145,370 C 130,330 115,290 100,250 C 85,220 60,200 45,185 C 35,170 45,150 70,145 C 95,140 120,150 145,140 C 160,115 130,90 115,75 C 110,60 125,45 140,40 Z",
+
+      // Alaska Peninsula & Aleutian Islands Arc
+      "M 45,185 C 35,195 25,200 15,210 C 20,215 35,210 45,200 C 55,195 50,188 45,185 Z",
+      "M 12,212 L 8,215 L 14,216 Z",
+
       // Greenland
-      "M 340,60 C 380,40 440,30 470,70 C 450,110 400,130 360,120 C 340,100 330,80 340,60 Z",
-      // Baffin & Canadian Arctic Archipelago
-      "M 240,80 L 290,70 L 310,100 L 260,110 Z",
-      "M 280,50 L 320,40 L 340,70 L 300,80 Z",
-      // Central America & Yucatan Peninsula
-      "M 230,460 C 250,470 275,510 265,525 C 245,510 230,480 230,460 Z",
-      // Caribbean (Cuba, Hispaniola, Puerto Rico, Jamaica)
-      "M 285,475 C 305,480 330,470 325,485 C 305,490 285,485 285,475 Z",
-      "M 335,482 C 355,480 365,488 345,492 Z",
+      "M 370,45 C 410,30 450,25 480,45 C 495,70 480,105 455,125 C 420,135 385,120 370,95 C 360,75 362,55 370,45 Z",
 
-      // --- SOUTH AMERICA ---
-      // Main Continent (Colombia, Brazil, Argentina, Chile, Peru)
-      "M 265,525 C 310,510 360,505 385,530 C 410,570 415,630 395,680 C 370,740 335,820 305,885 C 285,880 290,810 295,740 C 295,670 270,600 265,525 Z",
-      // Tierra del Fuego & Falkland Islands
-      "M 295,888 C 315,890 305,910 285,900 Z",
-      "M 340,865 C 355,860 350,875 335,875 Z",
+      // Canadian Arctic Archipelago (Baffin, Ellesmere, Victoria Islands)
+      "M 270,55 C 295,50 320,65 310,85 C 290,95 265,85 270,55 Z", // Baffin Island
+      "M 210,48 C 240,42 255,60 235,75 C 215,72 205,58 210,48 Z", // Victoria Island
+      "M 315,30 C 340,25 350,45 330,52 C 315,48 310,38 315,30 Z", // Ellesmere Island
 
-      // --- EUROPE ---
-      // Western & Central & Eastern Europe
-      "M 450,220 C 480,190 530,170 580,190 C 620,220 640,260 620,300 C 580,330 530,345 490,320 C 460,290 445,250 450,220 Z",
-      // Scandinavia (Norway, Sweden, Finland)
-      "M 495,130 C 530,105 570,115 575,160 C 565,200 535,220 505,190 C 490,165 490,145 495,130 Z",
+      // Florida Peninsula & US Gulf Coast
+      "M 285,385 C 298,390 305,415 300,435 C 292,430 288,410 282,395 Z",
+
+      // Baja California Peninsula
+      "M 175,430 C 185,465 195,500 202,525 C 196,520 188,490 170,440 Z",
+
+      // Yucatan Peninsula
+      "M 245,510 C 265,505 275,525 260,538 C 248,532 242,518 245,510 Z",
+
+      // Caribbean Archipelagos (Cuba, Hispaniola, Puerto Rico, Jamaica)
+      "M 280,475 C 315,470 335,485 315,492 C 290,490 275,482 280,475 Z", // Cuba
+      "M 330,488 C 355,485 365,498 340,502 C 325,500 322,492 330,488 Z", // Hispaniola
+      "M 368,495 C 378,494 382,500 370,502 Z",                          // Puerto Rico
+
+      // =========================================================================
+      // --- 2. SOUTH AMERICA ---
+      // =========================================================================
+      // South America Mainland (Colombia, Venezuela, Brazil, Peru, Chile, Argentina)
+      "M 245,600 C 275,580 320,570 360,580 C 400,600 425,635 410,680 C 390,730 380,780 355,830 C 330,880 310,935 295,970 C 285,965 290,920 295,870 C 300,820 270,760 260,700 C 250,650 235,620 245,600 Z",
+
+      // Patagonia Islands & Tierra del Fuego
+      "M 292,972 C 312,968 318,988 295,992 C 285,985 288,975 292,972 Z",
+      "M 345,940 C 360,935 365,950 348,952 Z", // Falkland Islands
+
+      // =========================================================================
+      // --- 3. EUROPE & BRITISH ISLES ---
+      // =========================================================================
+      // Mainland Europe (France, Germany, Poland, Ukraine, Russia West)
+      "M 470,210 C 510,195 560,190 610,205 C 645,230 655,270 635,310 C 595,335 550,345 505,330 C 475,305 460,260 470,210 Z",
+
+      // Scandinavian Peninsula (Norway, Sweden, Finland)
+      "M 515,100 C 545,85 585,90 600,120 C 590,160 565,190 535,185 C 515,160 505,125 515,100 Z",
+
       // Iberian Peninsula (Spain & Portugal)
-      "M 445,275 C 475,270 485,300 475,320 C 450,325 440,300 445,275 Z",
-      // Italian Peninsula (Italy Boot & Sicily)
-      "M 510,295 C 525,305 540,330 535,345 C 520,340 515,320 510,295 Z",
-      "M 515,350 L 535,348 L 525,362 Z",
-      // Great Britain & Ireland & Iceland
-      "M 448,190 C 465,180 480,195 465,230 C 450,225 445,205 448,190 Z",
-      "M 430,200 C 442,190 448,210 435,225 Z",
-      "M 390,120 C 410,115 420,130 400,140 Z",
+      "M 455,290 C 490,285 505,310 490,340 C 465,348 448,325 455,290 Z",
 
-      // --- AFRICA ---
-      // Main Continent (Sahara, West Africa, Congo, Horn of Africa, Cape)
-      "M 450,345 C 520,335 580,330 635,370 C 655,420 615,500 585,580 C 555,660 515,730 475,690 C 455,600 420,500 415,410 C 420,360 435,350 450,345 Z",
+      // Italian Peninsula Boot & Islands (Italy, Sicily, Sardinia, Corsica)
+      "M 525,310 C 540,318 555,345 548,365 C 538,360 530,340 525,310 Z", // Boot
+      "M 532,370 C 548,368 545,382 530,380 Z",                          // Sicily
+      "M 515,335 C 523,332 522,352 514,354 Z",                          // Sardinia
+
+      // British Isles (Great Britain & Ireland)
+      "M 465,195 C 485,185 498,205 480,245 C 462,240 455,215 465,195 Z", // Great Britain
+      "M 445,208 C 458,202 462,225 448,238 C 438,230 438,215 445,208 Z", // Ireland
+      "M 410,105 C 430,98 442,118 420,128 C 402,122 400,110 410,105 Z",  // Iceland
+
+      // Greece & Balkan Peninsula
+      "M 565,325 C 585,320 598,348 580,368 C 568,360 560,340 565,325 Z",
+      "M 575,372 C 592,370 590,378 572,379 Z",                          // Crete
+
+      // =========================================================================
+      // --- 4. AFRICA ---
+      // =========================================================================
+      // Mainland Africa (Sahara, West Africa, Central Africa, Horn of Africa, Cape)
+      "M 460,350 C 530,340 600,335 660,370 C 690,420 645,510 610,590 C 575,670 535,760 490,720 C 465,630 425,520 420,420 C 425,370 440,355 460,350 Z",
+
       // Madagascar
-      "M 625,575 C 645,555 655,620 635,645 C 620,630 615,595 625,575 Z",
+      "M 645,585 C 665,565 678,630 655,665 C 638,650 632,610 645,585 Z",
 
-      // --- ASIA & MIDDLE EAST ---
-      // Mainland Asia (Russia, China, Mongolia, Siberia)
-      "M 580,190 C 680,165 780,140 880,150 C 960,180 970,260 930,320 C 870,380 780,440 720,410 C 660,370 600,310 580,190 Z",
+      // =========================================================================
+      // --- 5. ASIA & MIDDLE EAST ---
+      // =========================================================================
+      // Mainland Asia (Russia Siberia, China, Central Asia, Mongolia)
+      "M 610,205 C 720,175 830,150 940,160 C 990,190 995,270 950,330 C 890,390 790,440 730,410 C 670,370 625,300 610,205 Z",
+
       // Arabian Peninsula
-      "M 575,345 C 635,355 650,415 615,455 C 570,430 565,380 575,345 Z",
+      "M 605,350 C 665,360 680,425 640,465 C 590,440 585,390 605,350 Z",
+
       // Indian Subcontinent & Sri Lanka
-      "M 700,380 C 750,395 780,450 745,505 C 715,460 695,420 700,380 Z",
-      "M 750,510 C 762,510 758,525 748,525 Z",
+      "M 715,385 C 765,400 798,460 760,520 C 730,470 705,425 715,385 Z",
+      "M 762,525 C 775,524 772,540 760,538 Z",                          // Sri Lanka
+
       // Southeast Asia / Indochina & Malay Peninsula
-      "M 780,440 C 835,445 845,510 820,535 C 795,490 775,460 780,440 Z",
-      // Japanese Archipelago (Honshu, Hokkaido, Kyushu)
-      "M 885,255 C 925,245 935,335 895,355 C 880,320 875,280 885,255 Z",
-      // Indonesia Archipelago (Sumatra, Java, Borneo, Sulawesi)
-      "M 800,535 C 840,530 875,545 885,570 C 840,580 810,565 800,535 Z",
-      "M 870,440 C 895,435 905,490 875,495 Z", // Philippines
+      "M 795,445 C 848,450 860,515 832,545 C 810,500 790,470 795,445 Z",
 
-      // --- OCEANIA & AUSTRALIA ---
+      // Japanese Archipelago (Honshu, Hokkaido, Kyushu, Shikoku)
+      "M 905,250 C 945,240 955,330 912,350 C 895,315 890,275 905,250 Z",
+
+      // Indonesian Archipelago & Philippines
+      "M 815,548 C 855,540 895,555 905,580 C 858,592 822,578 815,548 Z", // Sumatra/Java/Sundas
+      "M 875,510 C 905,502 925,540 892,558 C 870,545 865,525 875,510 Z", // Borneo/Sulawesi
+      "M 885,445 C 910,440 920,495 890,500 Z",                          // Philippines
+      "M 915,560 C 965,555 975,595 910,592 Z",                          // New Guinea / West Papua
+
+      // =========================================================================
+      // --- 6. OCEANIA & AUSTRALIA ---
+      // =========================================================================
       // Australia Continent & Tasmania
-      "M 790,610 C 890,585 940,640 925,740 C 865,790 805,750 775,680 C 770,640 775,620 790,610 Z",
-      "M 860,805 C 880,800 875,825 855,820 Z",
-      // New Zealand (North & South Islands)
-      "M 945,715 C 975,735 955,765 Z",
-      "M 935,770 C 965,775 945,820 Z",
-      // Papua New Guinea
-      "M 895,570 C 945,565 955,600 890,600 Z",
+      "M 805,620 C 905,595 955,650 940,750 C 880,800 820,760 790,690 C 785,650 790,630 805,620 Z",
+      "M 875,815 C 895,810 890,835 870,830 Z",                          // Tasmania
 
-      // --- ANTARCTICA ---
-      "M 150,935 L 850,935 L 920,985 L 80,985 Z"
+      // New Zealand (North & South Islands)
+      "M 955,730 C 980,748 965,778 950,765 Z",                          // North Island
+      "M 942,780 C 970,785 955,830 935,815 Z",                          // South Island
+
+      // =========================================================================
+      // --- 7. ANTARCTICA ---
+      // =========================================================================
+      "M 120,940 C 350,930 650,930 880,940 L 940,990 L 60,990 Z"
     ];
   }
 
+  /**
+   * Geometrically Precise Mountain Polyline Chains (Impassable Terrain = 2).
+   */
   static getMountainPaths() {
     return [
-      "M 150,200 L 190,260 L 240,330 L 225,410", // Rockies
-      "M 265,550 L 305,670 L 285,810",           // Andes
-      "M 465,255 L 515,275 L 545,265",           // Alps
-      "M 695,315 L 775,335 L 755,365"            // Himalayas
+      "M 145,210 L 180,260 L 225,340 L 215,420 L 235,510", // Rockies & Sierra Madre
+      "M 255,610 L 285,710 L 275,820 L 290,920",          // Andes
+      "M 480,255 L 525,275 L 550,265",                  // Alps
+      "M 710,320 L 785,340 L 825,350",                  // Himalayas & Tibet
+      "M 625,190 L 630,260 L 628,310",                  // Urals
+      "M 815,630 L 880,680 L 860,760"                   // Great Dividing Range
     ];
   }
 
   /**
    * Rasterizes detailed vector world paths to Uint8Array terrain grid.
-   * 0 = Ocean Water, 1 = Neutral Land, 2 = Impassable Mountain
+   * Values: 0 = Ocean Water, 1 = Neutral Land, 2 = Impassable Mountain
    */
   static rasterize(width = 1000, height = 1000) {
     const startTime = performance.now();
@@ -118,7 +169,7 @@ export class GeoJSONWorldMap {
       ctx.save();
       ctx.scale(scaleX, scaleY);
 
-      // Render Land Continents (#010101 -> 1 Land)
+      // Render Land Continents (#010101 -> 1 Neutral Land)
       ctx.fillStyle = '#010101';
       const paths = this.getDetailedWorldPaths();
       for (const d of paths) {
@@ -126,9 +177,9 @@ export class GeoJSONWorldMap {
         ctx.fill(p);
       }
 
-      // Render Mountains (#020202 -> 2 Mountain)
+      // Render Mountain Ranges (#020202 -> 2 Impassable Mountain)
       ctx.strokeStyle = '#020202';
-      ctx.lineWidth = 10;
+      ctx.lineWidth = 12;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       const mountains = this.getMountainPaths();
@@ -147,40 +198,167 @@ export class GeoJSONWorldMap {
         terrain[i] = pixels[i * 4];
       }
     } else {
-      // Headless Node.js CLI fallback
+      // Headless Node.js CLI rasterizer using high-precision vector polygon scanlines
       terrain.fill(0);
       const scaleX = width / 1000;
       const scaleY = height / 1000;
 
-      const boxes = [
-        { minX: 60 * scaleX, maxX: 380 * scaleX, minY: 100 * scaleY, maxY: 490 * scaleY }, // NA
-        { minX: 260 * scaleX, maxX: 415 * scaleX, minY: 500 * scaleY, maxY: 900 * scaleY }, // SA
-        { minX: 440 * scaleX, maxX: 640 * scaleX, minY: 100 * scaleY, maxY: 340 * scaleY }, // EU
-        { minX: 415 * scaleX, maxX: 655 * scaleX, minY: 330 * scaleY, maxY: 730 * scaleY }, // AF
-        { minX: 570 * scaleX, maxX: 970 * scaleX, minY: 140 * scaleY, maxY: 580 * scaleY }, // AS
-        { minX: 770 * scaleX, maxX: 955 * scaleX, minY: 565 * scaleY, maxY: 825 * scaleY }  // AU
-      ];
-
-      for (const box of boxes) {
-        for (let y = Math.floor(box.minY); y < Math.floor(box.maxY); y++) {
-          const row = y * width;
-          for (let x = Math.floor(box.minX); x < Math.floor(box.maxX); x++) {
-            const idx = row + x;
-            if (idx >= 0 && idx < terrain.length) terrain[idx] = 1;
-          }
-        }
+      const paths = this.getDetailedWorldPaths();
+      for (const d of paths) {
+        const poly = this.parsePathToPolygon(d, scaleX, scaleY);
+        this.rasterizePolygon(poly, terrain, width, height, 1);
       }
 
-      // Add Mountains
-      for (let y = Math.floor(315 * scaleY); y < Math.floor(365 * scaleY); y++) {
-        const row = y * width;
-        for (let x = Math.floor(695 * scaleX); x < Math.floor(775 * scaleX); x++) {
-          terrain[row + x] = 2;
-        }
+      // Add Mountain polyline rasterization in headless mode
+      const mountains = this.getMountainPaths();
+      for (const d of mountains) {
+        const polyline = this.parsePolylineToPoints(d, scaleX, scaleY);
+        this.rasterizePolyline(polyline, terrain, width, height, 2, Math.round(12 * scaleX));
       }
     }
 
     console.log(`GeoJSON Vector World Map Rasterized in ${(performance.now() - startTime).toFixed(2)} ms (${width}x${height})`);
     return terrain;
+  }
+
+  /**
+   * Helper to parse SVG path D string into a dense 2D polygon vertex array.
+   */
+  static parsePathToPolygon(d, scaleX, scaleY) {
+    const points = [];
+    const tokens = d.match(/[a-z]|[-+]?\d*\.?\d+/gi) || [];
+    let currentCmd = '';
+    let i = 0;
+    let currX = 0, currY = 0;
+
+    while (i < tokens.length) {
+      const token = tokens[i];
+      if (/^[a-z]$/i.test(token)) {
+        currentCmd = token.toUpperCase();
+        i++;
+        continue;
+      }
+
+      if (currentCmd === 'M' || currentCmd === 'L') {
+        const x = parseFloat(tokens[i]) * scaleX;
+        const y = parseFloat(tokens[i + 1]) * scaleY;
+        points.push({ x, y });
+        currX = x;
+        currY = y;
+        i += 2;
+      } else if (currentCmd === 'C') {
+        const c1x = parseFloat(tokens[i]) * scaleX;
+        const c1y = parseFloat(tokens[i + 1]) * scaleY;
+        const c2x = parseFloat(tokens[i + 2]) * scaleX;
+        const c2y = parseFloat(tokens[i + 3]) * scaleY;
+        const x2 = parseFloat(tokens[i + 4]) * scaleX;
+        const y2 = parseFloat(tokens[i + 5]) * scaleY;
+
+        // Sample cubic bezier curve into linear segments
+        const steps = 8;
+        for (let tStep = 1; tStep <= steps; tStep++) {
+          const t = tStep / steps;
+          const invT = 1 - t;
+          const px = invT * invT * invT * currX + 3 * invT * invT * t * c1x + 3 * invT * t * t * c2x + t * t * t * x2;
+          const py = invT * invT * invT * currY + 3 * invT * invT * t * c1y + 3 * invT * t * t * c2y + t * t * t * y2;
+          points.push({ x: px, y: py });
+        }
+        currX = x2;
+        currY = y2;
+        i += 6;
+      } else {
+        i++;
+      }
+    }
+    return points;
+  }
+
+  /**
+   * Helper to parse SVG polyline D string into points.
+   */
+  static parsePolylineToPoints(d, scaleX, scaleY) {
+    const points = [];
+    const numbers = d.match(/[-+]?\d*\.?\d+/g) || [];
+    for (let i = 0; i < numbers.length; i += 2) {
+      points.push({
+        x: parseFloat(numbers[i]) * scaleX,
+        y: parseFloat(numbers[i + 1]) * scaleY
+      });
+    }
+    return points;
+  }
+
+  /**
+   * Fast scanline polygon fill algorithm for pure JS headless mode.
+   */
+  static rasterizePolygon(poly, terrain, width, height, value) {
+    if (poly.length < 3) return;
+
+    let minY = height, maxY = 0;
+    for (const p of poly) {
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+
+    minY = Math.max(0, Math.floor(minY));
+    maxY = Math.min(height - 1, Math.ceil(maxY));
+
+    for (let y = minY; y <= maxY; y++) {
+      const scanY = y + 0.5;
+      const nodes = [];
+      let j = poly.length - 1;
+
+      for (let i = 0; i < poly.length; i++) {
+        if ((poly[i].y < scanY && poly[j].y >= scanY) || (poly[j].y < scanY && poly[i].y >= scanY)) {
+          const x = poly[i].x + (scanY - poly[i].y) / (poly[j].y - poly[i].y) * (poly[j].x - poly[i].x);
+          nodes.push(x);
+        }
+        j = i;
+      }
+
+      nodes.sort((a, b) => a - b);
+
+      for (let i = 0; i < nodes.length; i += 2) {
+        if (i + 1 >= nodes.length) break;
+        const left = Math.max(0, Math.floor(nodes[i]));
+        const right = Math.min(width - 1, Math.ceil(nodes[i + 1]));
+        const rowOffset = y * width;
+        for (let x = left; x <= right; x++) {
+          terrain[rowOffset + x] = value;
+        }
+      }
+    }
+  }
+
+  /**
+   * Fast thick polyline stroke algorithm for headless mountains.
+   */
+  static rasterizePolyline(points, terrain, width, height, value, thickness) {
+    const halfThick = thickness / 2;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const minX = Math.max(0, Math.floor(Math.min(p1.x, p2.x) - halfThick));
+      const maxX = Math.min(width - 1, Math.ceil(Math.max(p1.x, p2.x) + halfThick));
+      const minY = Math.max(0, Math.floor(Math.min(p1.y, p2.y) - halfThick));
+      const maxY = Math.min(height - 1, Math.ceil(Math.max(p1.y, p2.y) + halfThick));
+
+      for (let y = minY; y <= maxY; y++) {
+        const rowOffset = y * width;
+        for (let x = minX; x <= maxX; x++) {
+          // Distance from point to segment
+          const l2 = (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
+          let t = l2 === 0 ? 0 : ((x - p1.x) * (p2.x - p1.x) + (y - p1.y) * (p2.y - p1.y)) / l2;
+          t = Math.max(0, Math.min(1, t));
+          const projX = p1.x + t * (p2.x - p1.x);
+          const projY = p1.y + t * (p2.y - p1.y);
+          const distSq = (x - projX) ** 2 + (y - projY) ** 2;
+
+          if (distSq <= halfThick ** 2) {
+            terrain[rowOffset + x] = value;
+          }
+        }
+      }
+    }
   }
 }

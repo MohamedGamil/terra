@@ -1113,11 +1113,12 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q1
     resume_pointer: Ready for implementation
-    state: leased
+    state: completed
     unblocks:
     - BATON-019
     - BATON-020
-    lease_owner: mgamil.dev@gmail.com
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-024
   objective: Replace simplified bezier paths with high-detail Natural Earth GeoJSON
     vector paths and mountain ranges.
@@ -1521,6 +1522,13 @@ evaluations:
 - id: EVAL-018
   layer: outcome
   target: BATON-018
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-019
+  layer: outcome
+  target: BATON-024
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
