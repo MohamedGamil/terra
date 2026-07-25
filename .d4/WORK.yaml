@@ -1414,8 +1414,10 @@ batons:
     - BATON-025
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-025
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-027
   objective: Implement in-game diplomatic wheel for Non-Aggression Pacts, peace treaties,
     joint attacks, and betrayals.
@@ -2011,6 +2013,13 @@ evaluations:
 - id: EVAL-033
   layer: outcome
   target: BATON-025
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-034
+  layer: outcome
+  target: BATON-027
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

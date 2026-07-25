@@ -16,6 +16,7 @@ export class GameServerEngine {
 
     // Delta tracking for network state sync
     this.modifiedPixels = []; // Array of { idx, owner }
+    this.pacts = new Map();
 
     this.tickCount = 0;
     this.tickRateHz = 20; // 20 ticks/sec (50ms interval)
@@ -132,6 +133,7 @@ export class GameServerEngine {
           }
           // Combat Attack on Rival Territory (2:1 defender ratio)
           else if (targetOwner !== id) {
+            if (this.hasPact(id, targetOwner)) continue;
             const defender = this.players[targetOwner];
             const cost = 5;
             if (player.balance >= cost * 2) {
@@ -178,5 +180,33 @@ export class GameServerEngine {
       if (!p || !p.isAlive) continue;
       p.balance += Math.floor(p.landCount * 1.5);
     }
+  }
+
+  getPactKey(id1, id2) {
+    const minId = Math.min(id1, id2);
+    const maxId = Math.max(id1, id2);
+    return `${minId}-${maxId}`;
+  }
+
+  hasPact(id1, id2) {
+    if (!id1 || !id2 || id1 === id2) return false;
+    return this.pacts.get(this.getPactKey(id1, id2)) === 'ACTIVE';
+  }
+
+  proposePact(id1, id2) {
+    if (!this.players[id1] || !this.players[id2]) return false;
+    this.pacts.set(this.getPactKey(id1, id2), 'ACTIVE');
+    return true;
+  }
+
+  breakPact(id1, id2) {
+    const key = this.getPactKey(id1, id2);
+    if (this.pacts.get(key) !== 'ACTIVE') return false;
+    this.pacts.delete(key);
+    const breaker = this.players[id1];
+    if (breaker) {
+      breaker.balance = Math.floor(breaker.balance * 0.85); // 15% penalty
+    }
+    return true;
   }
 }

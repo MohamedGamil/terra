@@ -43,6 +43,11 @@ export class TerritorySimulation {
     this.spawnTimer = 10.0;
     this.humanSpawnIdx = null;
 
+    this.pacts = new Map();
+    this.pactLockTimers = new Map();
+    this.jointTargets = new Map();
+    this.toastNotifications = [];
+
     this.interestTimer = 0;
     this.incomeTimer = 0;
     this.tickCount = 0;
@@ -57,6 +62,10 @@ export class TerritorySimulation {
     this.grid.fill(0);
     this.boats = [];
     this.humanSpawnIdx = null;
+    this.pacts.clear();
+    this.pactLockTimers.clear();
+    this.jointTargets.clear();
+    this.toastNotifications = [];
 
     for (let id = 1; id <= this.numPlayers; id++) {
       this.players[id] = {
@@ -230,6 +239,112 @@ export class TerritorySimulation {
     return true;
   }
 
+  getPactKey(id1, id2) {
+    const minId = Math.min(id1, id2);
+    const maxId = Math.max(id1, id2);
+    return `${minId}-${maxId}`;
+  }
+
+  hasPact(id1, id2) {
+    if (!id1 || !id2 || id1 === id2) return false;
+    return this.pacts.get(this.getPactKey(id1, id2)) === 'ACTIVE';
+  }
+
+  proposePact(fromId, toId) {
+    if (this.state !== 'PLAYING') return false;
+    const pFrom = this.players[fromId];
+    const pTo = this.players[toId];
+    if (!pFrom || !pTo || !pFrom.isAlive || !pTo.isAlive) return false;
+    if (this.hasPact(fromId, toId)) return false;
+
+    // AI evaluate proposal if target is bot
+    if (toId !== 1 && this.aiEngine) {
+      const accepted = this.aiEngine.evaluateDiplomaticProposal(this, toId, fromId, 'NAP');
+      if (accepted) {
+        this.pacts.set(this.getPactKey(fromId, toId), 'ACTIVE');
+        this.addToast(`${pTo.name} accepted your Non-Aggression Pact!`, 'success');
+        return true;
+      } else {
+        this.addToast(`${pTo.name} declined your Non-Aggression Pact proposal.`, 'warning');
+        return false;
+      }
+    }
+
+    // Direct pact formation for multiplayer/bots
+    this.pacts.set(this.getPactKey(fromId, toId), 'ACTIVE');
+    this.addToast(`Non-Aggression Pact established with ${pTo.name}!`, 'success');
+    return true;
+  }
+
+  breakPact(fromId, toId) {
+    const key = this.getPactKey(fromId, toId);
+    if (this.pacts.get(key) !== 'ACTIVE') return false;
+
+    this.pacts.delete(key);
+    const breaker = this.players[fromId];
+    const target = this.players[toId];
+
+    if (breaker) {
+      // 15% troop balance penalty & 10s interest lock
+      breaker.balance = Math.floor(breaker.balance * 0.85);
+      this.pactLockTimers.set(fromId, 10.0);
+    }
+
+    const breakerName = breaker ? breaker.name : `Player ${fromId}`;
+    const targetName = target ? target.name : `Player ${toId}`;
+    this.addToast(`${breakerName} BROKE Non-Aggression Pact with ${targetName}!`, 'error');
+    return true;
+  }
+
+  sendAid(fromId, toId, percent = 10) {
+    if (!this.hasPact(fromId, toId)) return false;
+    const pFrom = this.players[fromId];
+    const pTo = this.players[toId];
+    if (!pFrom || !pTo || !pFrom.isAlive || !pTo.isAlive || pFrom.balance < 50) return false;
+
+    const rawAid = Math.floor((pFrom.balance * percent) / 100);
+    const tax = Math.ceil(rawAid * 0.05); // 5% transfer tax
+    const netAid = rawAid - tax;
+
+    pFrom.balance -= rawAid;
+    pTo.balance += netAid;
+
+    this.addToast(`Sent ${netAid.toLocaleString()} troops aid to ${pTo.name} (5% tax).`, 'info');
+    return true;
+  }
+
+  setJointTarget(fromId, targetId) {
+    if (targetId === fromId) return false;
+    this.jointTargets.set(fromId, targetId);
+    const target = this.players[targetId];
+    if (target) {
+      this.addToast(`Designated ${target.name} as Joint Target for allies!`, 'info');
+    }
+    return true;
+  }
+
+  addToast(message, type = 'info') {
+    this.toastNotifications.push({
+      id: Date.now() + Math.random(),
+      message,
+      type,
+      timestamp: Date.now()
+    });
+    if (this.toastNotifications.length > 5) {
+      this.toastNotifications.shift();
+    }
+  }
+
+  getActivePactsForPlayer(playerId) {
+    const active = [];
+    for (let id = 1; id <= this.numPlayers; id++) {
+      if (id !== playerId && this.hasPact(playerId, id)) {
+        active.push(id);
+      }
+    }
+    return active;
+  }
+
   findClosestCoastalPixel(ownerId) {
     const frontier = this.frontiers[ownerId];
     const width = this.width;
@@ -303,6 +418,7 @@ export class TerritorySimulation {
           }
         }
         else if (defenderOwner !== ownerId) {
+          if (this.hasPact(ownerId, defenderOwner)) continue;
           const defender = this.players[defenderOwner];
           const cost = 4;
           if (remainingTroops >= cost * 2) {
@@ -392,6 +508,7 @@ export class TerritorySimulation {
 
   updateBots() {
     this.aiEngine.updateBots(
+      this,
       this.players,
       this.frontiers,
       this.terrainGrid,

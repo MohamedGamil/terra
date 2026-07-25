@@ -10,6 +10,7 @@
     "test:benchmark": "node scripts/benchmark-cli.js",
     "test:server": "node scripts/server-benchmark.js",
     "test:combat": "node scripts/combat-test.js",
+    "test:diplomacy": "node scripts/diplomacy-test.js",
     "test:map": "node scripts/map-minimap-benchmark.js"
   },
   "devDependencies": {

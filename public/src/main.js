@@ -637,6 +637,45 @@ class TerraApp {
       this.closeContextMenu();
     });
 
+    const proposeBtn = document.getElementById('ctx-nap-propose');
+    if (proposeBtn) {
+      proposeBtn.addEventListener('click', () => {
+        if (this.targetPixelIdx >= 0) {
+          const targetOwner = this.simulation.grid[this.targetPixelIdx];
+          if (targetOwner > 0 && targetOwner !== 1) {
+            this.simulation.proposePact(1, targetOwner);
+          }
+        }
+        this.closeContextMenu();
+      });
+    }
+
+    const breakBtn = document.getElementById('ctx-nap-break');
+    if (breakBtn) {
+      breakBtn.addEventListener('click', () => {
+        if (this.targetPixelIdx >= 0) {
+          const targetOwner = this.simulation.grid[this.targetPixelIdx];
+          if (targetOwner > 0 && targetOwner !== 1) {
+            this.simulation.breakPact(1, targetOwner);
+          }
+        }
+        this.closeContextMenu();
+      });
+    }
+
+    const aidBtn = document.getElementById('ctx-send-aid');
+    if (aidBtn) {
+      aidBtn.addEventListener('click', () => {
+        if (this.targetPixelIdx >= 0) {
+          const targetOwner = this.simulation.grid[this.targetPixelIdx];
+          if (targetOwner > 0 && targetOwner !== 1) {
+            this.simulation.sendAid(1, targetOwner, 10);
+          }
+        }
+        this.closeContextMenu();
+      });
+    }
+
     document.getElementById('ctx-lock').addEventListener('click', () => {
       this.closeContextMenu();
     });
@@ -781,6 +820,7 @@ class TerraApp {
 
       this.simulation.update(delta);
       this.renderer.boats = this.simulation.boats;
+      this.renderer.toasts = this.simulation.toastNotifications;
 
       if (this.simulation.state === 'PLAYING') {
         this.matchElapsedSec += delta / 1000;

@@ -56,7 +56,10 @@ export class AIEngine {
   /**
    * Main bot tick routine executing multi-personality strategy logic.
    */
-  updateBots(players, frontiers, terrainGrid, grid, boats, width, height, difficulty = 'easy') {
+  updateBots(simOrPlayers, frontiers, terrainGrid, grid, boats, width, height, difficulty = 'easy') {
+    const simulation = (simOrPlayers && simOrPlayers.players) ? simOrPlayers : null;
+    const players = simulation ? simulation.players : simOrPlayers;
+
     // Difficulty multipliers
     const diffMult = difficulty === 'impossible' ? 1.5 : (difficulty === 'hard' ? 1.2 : 1.0);
 
@@ -140,6 +143,7 @@ export class AIEngine {
           } 
           // 2. Rival Territory Attack (Neutral Targeting)
           else if (targetOwner !== id) {
+            if (simulation && simulation.hasPact(id, targetOwner)) continue;
             const targetPlayer = players[targetOwner];
             let shouldAttack = false;
 
@@ -244,5 +248,39 @@ export class AIEngine {
       }
     }
     return false;
+  }
+
+  /**
+   * Evaluates diplomatic proposal directed at botId based on archetype profile.
+   */
+  evaluateDiplomaticProposal(simulation, botId, proposerId, proposalType = 'NAP') {
+    const profile = this.botProfiles.get(botId);
+    if (!profile) return false;
+
+    const pBot = simulation.players[botId];
+    const pProp = simulation.players[proposerId];
+    if (!pBot || !pProp) return false;
+
+    const archetype = profile.archetype;
+
+    if (archetype === 'RUSHER') {
+      // Rushers dislike alliances (15% acceptance chance)
+      return Math.random() < 0.15;
+    } else if (archetype === 'DEFENDER') {
+      // Defenders love peaceful NAPs (85% acceptance chance)
+      return Math.random() < 0.85;
+    } else if (archetype === 'EXPANSIONIST') {
+      // Accepts if proposer balance is strong (> 70% of bot balance)
+      return pProp.balance >= pBot.balance * 0.7;
+    } else if (archetype === 'ADAPTIVE') {
+      // Evaluates balance ratio and leader status
+      if (proposerId === 1) {
+        // Human player proposal: 75% acceptance if human is reasonably strong
+        return pProp.balance >= pBot.balance * 0.5;
+      }
+      return Math.random() < 0.6;
+    }
+
+    return true;
   }
 }

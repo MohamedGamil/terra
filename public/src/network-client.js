@@ -173,6 +173,37 @@ export class NetworkClient {
     });
   }
 
+  sendProposePact(targetId) {
+    this.send({
+      type: 'CLIENT_ACTION',
+      action: 'PROPOSE_PACT',
+      roomCode: this.roomCode,
+      playerId: this.playerId,
+      targetId
+    });
+  }
+
+  sendBreakPact(targetId) {
+    this.send({
+      type: 'CLIENT_ACTION',
+      action: 'BREAK_PACT',
+      roomCode: this.roomCode,
+      playerId: this.playerId,
+      targetId
+    });
+  }
+
+  sendAid(targetId, percent = 10) {
+    this.send({
+      type: 'CLIENT_ACTION',
+      action: 'SEND_AID',
+      roomCode: this.roomCode,
+      playerId: this.playerId,
+      targetId,
+      percent
+    });
+  }
+
   disconnect() {
     if (this.ws) {
       this.ws.close();

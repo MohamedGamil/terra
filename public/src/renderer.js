@@ -257,6 +257,44 @@ export class TerritoryRenderer {
       this.ctx.fillText('⛵', bx - 6, by + 6);
     }
 
+    // Render Toast Notifications
+    if (this.toasts && this.toasts.length > 0) {
+      let toastY = 70;
+      for (let i = this.toasts.length - 1; i >= 0; i--) {
+        const toast = this.toasts[i];
+        const ageMs = Date.now() - toast.timestamp;
+        if (ageMs > 4000) continue;
+
+        const opacity = ageMs > 3200 ? 1 - (ageMs - 3200) / 800 : 1;
+        this.ctx.save();
+        this.ctx.globalAlpha = opacity;
+
+        const padding = 12;
+        this.ctx.font = '13px Inter, system-ui, sans-serif';
+        const textWidth = this.ctx.measureText(toast.message).width;
+        const toastW = textWidth + padding * 2;
+        const toastX = (this.canvas.width - toastW) / 2;
+
+        this.ctx.fillStyle = toast.type === 'success' ? 'rgba(16, 185, 129, 0.9)' :
+                             (toast.type === 'error' ? 'rgba(239, 68, 68, 0.9)' :
+                             (toast.type === 'warning' ? 'rgba(245, 158, 11, 0.9)' : 'rgba(15, 23, 42, 0.9)'));
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        this.ctx.lineWidth = 1;
+
+        this.ctx.beginPath();
+        this.ctx.roundRect(toastX, toastY, toastW, 30, 8);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(toast.message, this.canvas.width / 2, toastY + 19);
+        this.ctx.restore();
+
+        toastY += 36;
+      }
+    }
+
     return performance.now() - startTime;
   }
 }
