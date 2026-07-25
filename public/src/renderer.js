@@ -41,6 +41,9 @@ export class TerritoryRenderer {
     this.spawnPickPoint = null;
     this.hoverSpawnPoint = null;
     this.boats = [];
+    this.radarPulses = [];
+    this.visibilityBuffer = null;
+    this.fogOfWarEnabled = true;
 
     this.onCanvasClick = null; // Callback: (coords, mouseButton) => void
 
@@ -255,6 +258,25 @@ export class TerritoryRenderer {
       this.ctx.fillStyle = '#ffffff';
       this.ctx.font = `${Math.max(12, Math.floor(14 * this.zoom))}px sans-serif`;
       this.ctx.fillText('⛵', bx - 6, by + 6);
+    }
+
+    // Scout Radar Pulse Wave Animations
+    for (const pulse of this.radarPulses) {
+      const px = this.panX + pulse.x * this.zoom;
+      const py = this.panY + pulse.y * this.zoom;
+      const rad = pulse.radius * this.zoom;
+
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, rad, 0, Math.PI * 2);
+      this.ctx.strokeStyle = '#00f2fe';
+      this.ctx.lineWidth = 2.5;
+      this.ctx.setLineDash([6, 6]);
+      this.ctx.stroke();
+
+      this.ctx.fillStyle = 'rgba(0, 242, 254, 0.08)';
+      this.ctx.fill();
+      this.ctx.restore();
     }
 
     // Render Toast Notifications

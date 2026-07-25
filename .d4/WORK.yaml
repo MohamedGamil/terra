@@ -1388,8 +1388,10 @@ batons:
     - BATON-025
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-025
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-026
   objective: Implement dynamic visibility radius around territory pixels, semi-transparent
     fog rendering, and radar pulse.
@@ -2020,6 +2022,13 @@ evaluations:
 - id: EVAL-034
   layer: outcome
   target: BATON-027
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-035
+  layer: outcome
+  target: BATON-026
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

@@ -512,6 +512,41 @@ class TerraApp {
       });
     }
 
+    const radarBtn = document.getElementById('btn-radar-execute');
+    if (radarBtn) {
+      radarBtn.addEventListener('click', () => {
+        let tx = null, ty = null;
+        if (this.targetPixelIdx >= 0) {
+          tx = this.targetPixelIdx % this.simulation.width;
+          ty = Math.floor(this.targetPixelIdx / this.simulation.width);
+        }
+        this.simulation.triggerScoutRadar(1, tx, ty);
+      });
+    }
+
+    const fogBtn = document.getElementById('btn-toggle-fog');
+    if (fogBtn) {
+      fogBtn.addEventListener('click', () => {
+        this.simulation.fogOfWarEnabled = !this.simulation.fogOfWarEnabled;
+        this.renderer.fogOfWarEnabled = this.simulation.fogOfWarEnabled;
+        const stateStr = this.simulation.fogOfWarEnabled ? 'Enabled' : 'Disabled';
+        this.simulation.addToast(`Fog of War ${stateStr}`, 'info');
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'r' || e.key === 'R') {
+        if (this.simulation.state === 'PLAYING') {
+          let tx = null, ty = null;
+          if (this.targetPixelIdx >= 0) {
+            tx = this.targetPixelIdx % this.simulation.width;
+            ty = Math.floor(this.targetPixelIdx / this.simulation.width);
+          }
+          this.simulation.triggerScoutRadar(1, tx, ty);
+        }
+      }
+    });
+
     const benchBtn = document.getElementById('btn-run-benchmark');
     if (benchBtn) {
       benchBtn.addEventListener('click', () => this.runBenchmark());
@@ -821,6 +856,8 @@ class TerraApp {
       this.simulation.update(delta);
       this.renderer.boats = this.simulation.boats;
       this.renderer.toasts = this.simulation.toastNotifications;
+      this.renderer.radarPulses = this.simulation.radarPulses;
+      this.renderer.visibilityBuffer = this.simulation.visibilityBuffer;
 
       if (this.simulation.state === 'PLAYING') {
         this.matchElapsedSec += delta / 1000;

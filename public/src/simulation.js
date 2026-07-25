@@ -48,6 +48,10 @@ export class TerritorySimulation {
     this.jointTargets = new Map();
     this.toastNotifications = [];
 
+    this.fogOfWarEnabled = true;
+    this.visibilityBuffer = new Uint8Array(width * height);
+    this.radarPulses = [];
+
     this.interestTimer = 0;
     this.incomeTimer = 0;
     this.tickCount = 0;
@@ -60,7 +64,9 @@ export class TerritorySimulation {
     this.state = 'SPAWN_PICK';
     this.spawnTimer = 10.0;
     this.grid.fill(0);
+    this.visibilityBuffer.fill(0);
     this.boats = [];
+    this.radarPulses = [];
     this.humanSpawnIdx = null;
     this.pacts.clear();
     this.pactLockTimers.clear();
@@ -345,6 +351,139 @@ export class TerritorySimulation {
     return active;
   }
 
+  updateVisibilityMask(playerId = 1) {
+    if (!this.fogOfWarEnabled) return;
+
+    for (let i = 0; i < this.visibilityBuffer.length; i++) {
+      if (this.visibilityBuffer[i] === 2) {
+        this.visibilityBuffer[i] = 1;
+      }
+    }
+
+    const width = this.width;
+    const height = this.height;
+    const visionRadius = 25;
+    const visionSq = visionRadius * visionRadius;
+
+    const frontier = this.frontiers[playerId];
+    if (frontier && frontier.length > 0) {
+      const step = Math.max(1, Math.floor(frontier.length / 100));
+      for (let i = 0; i < frontier.length; i += step) {
+        const idx = frontier[i];
+        const cx = idx % width;
+        const cy = Math.floor(idx / width);
+
+        for (let dy = -visionRadius; dy <= visionRadius; dy += 2) {
+          const ny = cy + dy;
+          if (ny < 0 || ny >= height) continue;
+          for (let dx = -visionRadius; dx <= visionRadius; dx += 2) {
+            const nx = cx + dx;
+            if (nx < 0 || nx >= width) continue;
+            if (dx * dx + dy * dy <= visionSq) {
+              this.visibilityBuffer[ny * width + nx] = 2;
+            }
+          }
+        }
+      }
+    }
+
+    for (const boat of this.boats) {
+      if (boat.ownerId === playerId) {
+        const cx = Math.floor(boat.x);
+        const cy = Math.floor(boat.y);
+        const bRadius = 30;
+        const bSq = bRadius * bRadius;
+        for (let dy = -bRadius; dy <= bRadius; dy += 2) {
+          const ny = cy + dy;
+          if (ny < 0 || ny >= height) continue;
+          for (let dx = -bRadius; dx <= bRadius; dx += 2) {
+            const nx = cx + dx;
+            if (nx < 0 || nx >= width) continue;
+            if (dx * dx + dy * dy <= bSq) {
+              this.visibilityBuffer[ny * width + nx] = 2;
+            }
+          }
+        }
+      }
+    }
+
+    for (const pulse of this.radarPulses) {
+      if (pulse.ownerId === playerId && pulse.elapsed < pulse.duration) {
+        const cx = Math.floor(pulse.x);
+        const cy = Math.floor(pulse.y);
+        const pRad = Math.floor(pulse.radius);
+        const pSq = pRad * pRad;
+
+        for (let dy = -pRad; dy <= pRad; dy += 3) {
+          const ny = cy + dy;
+          if (ny < 0 || ny >= height) continue;
+          for (let dx = -pRad; dx <= pRad; dx += 3) {
+            const nx = cx + dx;
+            if (nx < 0 || nx >= width) continue;
+            if (dx * dx + dy * dy <= pSq) {
+              this.visibilityBuffer[ny * width + nx] = 2;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  triggerScoutRadar(playerId = 1, targetX = null, targetY = null) {
+    if (this.state !== 'PLAYING') return false;
+    const player = this.players[playerId];
+    if (!player || !player.isAlive || player.balance < 50) return false;
+
+    const fee = Math.max(50, Math.floor(player.balance * 0.02));
+    player.balance -= fee;
+
+    let px = targetX;
+    let py = targetY;
+
+    if (px === null || py === null) {
+      const frontier = this.frontiers[playerId];
+      if (frontier && frontier.length > 0) {
+        const centerIdx = frontier[Math.floor(frontier.length / 2)];
+        px = centerIdx % this.width;
+        py = Math.floor(centerIdx / this.width);
+      } else {
+        px = Math.floor(this.width / 2);
+        py = Math.floor(this.height / 2);
+      }
+    }
+
+    this.radarPulses.push({
+      id: Date.now() + Math.random(),
+      ownerId: playerId,
+      x: px,
+      y: py,
+      radius: 10,
+      maxRadius: 200,
+      speed: 120,
+      duration: 5.0,
+      elapsed: 0
+    });
+
+    this.addToast('📡 Scout Reconnaissance Radar launched! Sweeping 200px radius.', 'info');
+    return true;
+  }
+
+  updateRadarPulses(deltaTimeMs) {
+    const dtSec = deltaTimeMs / 1000;
+    for (let i = this.radarPulses.length - 1; i >= 0; i--) {
+      const p = this.radarPulses[i];
+      p.elapsed += dtSec;
+
+      if (p.radius < p.maxRadius) {
+        p.radius = Math.min(p.maxRadius, p.radius + p.speed * dtSec);
+      }
+
+      if (p.elapsed >= p.duration) {
+        this.radarPulses.splice(i, 1);
+      }
+    }
+  }
+
   findClosestCoastalPixel(ownerId) {
     const frontier = this.frontiers[ownerId];
     const width = this.width;
@@ -477,7 +616,13 @@ export class TerritorySimulation {
     }
 
     this.updateBoats(deltaTimeMs);
+    this.updateRadarPulses(deltaTimeMs);
     this.updateBots();
+
+    if (this.tickCount % 5 === 0) {
+      this.updateVisibilityMask(1);
+    }
+
     this.checkGameResolution();
   }
 
