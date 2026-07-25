@@ -1809,9 +1809,15 @@ batons:
     - BATON-040
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-040
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-041
+  authority:
+    gates: []
+    requirements:
+    - REQ-038
   objective: Integrate global interest rate scaling with conquered land area to amplify
     troop throughput (REQ-038).
   title: Territory-Amplified Economy Interest Multiplier
@@ -1819,6 +1825,10 @@ batons:
 - acceptance:
     deterministic_checks:
     - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-038
   execution:
     depends_on:
     - BATON-041
@@ -2227,6 +2237,13 @@ evaluations:
 - id: EVAL-039
   layer: outcome
   target: BATON-040
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-040
+  layer: outcome
+  target: BATON-041
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

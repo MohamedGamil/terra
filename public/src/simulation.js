@@ -693,14 +693,18 @@ export class TerritorySimulation {
       const p = this.players[id];
       if (!p || !p.isAlive) continue;
 
+      const baseRate = p.interestRate || 0.035;
+      const landMultiplier = 1.0 + Math.min(4.0, p.landCount / 2500);
+      let effectiveRate = baseRate * landMultiplier;
+
       if (p.balance > p.landCount * 100) {
         p.redInterest = true;
-        p.interestRate = Math.max(0.01, p.interestRate * 0.95);
+        effectiveRate = Math.max(0.005, effectiveRate * 0.5);
       } else {
         p.redInterest = false;
       }
 
-      p.balance += Math.floor(p.balance * p.interestRate);
+      p.balance += Math.floor(p.balance * effectiveRate);
       p.peakTroops = Math.max(p.peakTroops, p.balance);
     }
   }
