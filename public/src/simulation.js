@@ -504,7 +504,7 @@ export class TerritorySimulation {
     return null;
   }
 
-  advanceFrontierTowards(ownerId, targetX, targetY, troops) {
+  advanceFrontierTowards(ownerId, targetX, targetY, troops, isCounterPush = false) {
     const width = this.width;
     const height = this.height;
     const frontier = this.frontiers[ownerId];
@@ -585,12 +585,12 @@ export class TerritorySimulation {
             }
             expandedAny = true;
 
-            // Defender front-line counter-push retaliation
-            if (defender && defender.isAlive && defender.balance > 300 && Math.random() < 0.2) {
+            // Defender front-line counter-push retaliation (prevent recursive call stack loop)
+            if (!isCounterPush && defender && defender.isAlive && defender.balance > 300 && Math.random() < 0.2) {
               const counterTroops = Math.min(Math.floor(defender.balance * 0.1), 500);
               if (counterTroops > 20) {
                 defender.balance -= counterTroops;
-                this.advanceFrontierTowards(defenderOwner, cx, cy, counterTroops);
+                this.advanceFrontierTowards(defenderOwner, cx, cy, counterTroops, true);
               }
             }
           }
