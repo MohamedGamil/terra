@@ -469,6 +469,14 @@ requirements:
   kind: functional
   statement: The server MUST stream game state updates at 20Hz using delta-encoded
     binary packets to clients.
+- id: REQ-067
+  kind: functional
+  statement: The troop growth simulation MUST calculate a slower, balanced, and more
+    realistic interest rate curve based on owned land proportion.
+- id: REQ-068
+  kind: functional
+  statement: Attacking troop travel durations on land and sea MUST scale dynamically
+    based on the straight-line distance from launch to target coordinates.
 batons:
 - id: BATON-001
   version: 1
@@ -2461,6 +2469,48 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- id: BATON-068
+  title: Slower and Realistic Troop Growth Rate
+  objective: Implement slower, balanced, and more realistic interest rate calculations
+    based on owned land proportion.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-067
+  execution:
+    depends_on:
+    - BATON-067
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-069
+  title: Distance-Scaled Travel Duration for Invasions
+  objective: Implement dynamic travel time scaling based on straight-line distance
+    from launch coordinates to target coordinates for both land and sea.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-068
+  execution:
+    depends_on:
+    - BATON-068
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2578,7 +2628,23 @@ releases:
   - BATON-066
   - BATON-067
   delivery_form: deployable
-  status: draft
+  status: released
+- id: REL-006
+  version: 0.6.0
+  name: 'Terra Real-Time Simulation Refinements: Growth Balance & Path Travel Delay'
+  is_mvp: false
+  exit_criteria:
+  - Interest rate and troop growth dynamically calculate a slower, balanced curve.
+  - Attacking troop travel durations on land and sea scale dynamically based on straight-line
+    distance.
+  requirements:
+  - REQ-067
+  - REQ-068
+  batons:
+  - BATON-068
+  - BATON-069
+  delivery_form: deployable
+  status: released
 evaluations:
 - id: EVAL-001
   layer: outcome

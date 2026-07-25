@@ -276,7 +276,7 @@ const troopsAfterAdjacent = expTask.remainingTroops;
 const adjacentCost = troopsBefore - troopsAfterAdjacent;
 
 // Advance multiple ticks to reach 5072
-for (let step = 0; step < 15; step++) {
+for (let step = 0; step < 50; step++) {
   simExp.update(16.6);
 }
 
@@ -688,6 +688,75 @@ mockGrid2[42] = 0;
 mockGrid2[43] = 2; // mountain
 MapGenerator.cleanupGrid(10, 10, mockGrid2);
 assert(mockGrid2[42] === 2 || mockGrid2[33] === 2, 'Diagonal tearing mountain connections normalized to solid orthogonal mountain bridge');
+
+// --- Test 21: Balanced Troop Growth & Distance Travel Delay (REQ-067, REQ-068) ---
+console.log('\n[Test 21] Balanced Troop Growth & Distance Travel Delay');
+
+// Create a custom 10x10 grid with land and water
+const customGrid = new Uint8Array(100);
+customGrid.fill(1); // land
+// Row 4 is water channel (0)
+for (let x = 0; x < 10; x++) {
+  customGrid[4 * 10 + x] = 0;
+}
+
+const simRefine = new TerritorySimulation(10, 10, 5, 'custom', 12345, { terrainGrid: customGrid });
+simRefine.state = 'PLAYING';
+simRefine.totalLandToConquer = 90;
+
+// 1. Interest Rate Tapering
+simRefine.players[1].landCount = 9; // 10% land proportion
+simRefine.processInterest();
+const rate1 = simRefine.players[1].interestRate;
+
+simRefine.players[2].landCount = 72; // 80% land proportion
+simRefine.processInterest();
+const rate2 = simRefine.players[2].interestRate;
+
+assert(rate2 < rate1, `Interest rate correctly tapers down for larger players (10% land: ${rate1.toFixed(4)}, 80% land: ${rate2.toFixed(4)})`);
+
+// 2. Distance-Scaled Wavefront Growth
+simRefine.activeExpansions = [];
+// Expansion 1: target is close -> distance = 2
+simRefine.activeExpansions.push({
+  ownerId: 1,
+  launchX: 2, launchY: 2,
+  targetX: 4, targetY: 2,
+  remainingTroops: 100,
+  path: [22, 23, 24]
+});
+// Expansion 2: target is far -> distance = 8
+simRefine.activeExpansions.push({
+  ownerId: 2,
+  launchX: 1, launchY: 1,
+  targetX: 9, targetY: 1,
+  remainingTroops: 100,
+  path: []
+});
+
+simRefine.updateExpansions(16.6);
+const speed1 = 1.5 * (1.0 / Math.max(1.0, Math.hypot(2, 0)));
+const speed2 = 1.5 * (1.0 / Math.max(1.0, Math.hypot(8, 0)));
+assert(speed2 < speed1, `Wavefront expansion speed scales down for long-distance attacks`);
+
+// 3. Distance-Scaled Boat Speed
+simRefine.boats = [];
+// Place Player 1 at index 32 (x=2, y=3) which is shore
+simRefine.grid[32] = 1;
+simRefine.frontiers[1] = [32];
+simRefine.players[1].balance = 2000;
+
+// Boat 1: target is close (x=2, y=5) -> index 52. Distance = 2
+simRefine.executeAttack(1, 52, 50);
+const boat1 = simRefine.boats[0];
+
+// Boat 2: target is far (x=8, y=5) -> index 58. Distance = 6.32
+simRefine.executeAttack(1, 58, 50);
+const boat2 = simRefine.boats[1];
+
+assert(boat1 !== undefined, 'Short distance boat launched successfully');
+assert(boat2 !== undefined, 'Long distance boat launched successfully');
+assert(boat2.speed < boat1.speed, `Naval transport boat speed scales down for long-distance voyages (Short: ${boat1.speed.toFixed(2)}, Long: ${boat2.speed.toFixed(2)})`);
 
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);

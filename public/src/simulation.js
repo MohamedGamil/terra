@@ -378,6 +378,10 @@ export class TerritorySimulation {
       this.onParticleEvent('BOAT_LAUNCH', { x: departure.x, y: departure.y, color: attacker.color || '#00f2fe', troops: forceTroops });
     }
 
+    const totalDistance = Math.hypot(targetX - departure.x, targetY - departure.y);
+    const distanceThreshold = Math.max(this.width, this.height) * 0.15;
+    const speedScale = Math.max(0.2, distanceThreshold / Math.max(distanceThreshold, totalDistance));
+
     this.boats.push({
       id: Date.now() + Math.random(),
       ownerId: attackerId,
@@ -387,7 +391,7 @@ export class TerritorySimulation {
       targetX,
       targetY,
       targetIdx: targetPixelIdx,
-      speed: 4.5
+      speed: 4.5 * speedScale
     });
 
     return true;
@@ -776,10 +780,14 @@ export class TerritorySimulation {
         exp.targetReached = true;
       }
 
+      const totalDistance = Math.hypot(exp.targetX - exp.launchX, exp.targetY - exp.launchY);
+      const distanceThreshold = Math.max(width, height) * 0.1;
+      const expansionSpeed = Math.max(0.2, 1.5 * (distanceThreshold / Math.max(distanceThreshold, totalDistance)));
+
       if (exp.targetReached) {
-        exp.squareSize = (exp.squareSize || 0.0) + 1.5;
+        exp.squareSize = (exp.squareSize || 0.0) + expansionSpeed;
       } else {
-        exp.currentRadius = Math.min(exp.maxRadius, exp.currentRadius + 1.5);
+        exp.currentRadius = Math.min(exp.maxRadius, exp.currentRadius + expansionSpeed);
       }
 
       while (exp.remainingTroops > 2 && stepCount < stepLimit) {
@@ -922,7 +930,7 @@ export class TerritorySimulation {
           }
         }
 
-        if (!localExpanded || !this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+        if (!this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
           frontierSet.delete(bestIdx);
           frontier.splice(bestArrayIdx, 1);
         }
@@ -939,7 +947,8 @@ export class TerritorySimulation {
         }
       }
 
-      if (!expandedAny && stepCount === 0) {
+      const isFinished = (exp.remainingTroops <= 2 || frontier.length === 0 || (exp.targetReached && exp.squareSize >= exp.maxRadius) || (!exp.targetReached && exp.currentRadius >= exp.maxRadius && !expandedAny));
+      if (isFinished) {
         if (player && player.isAlive && exp.remainingTroops > 0) {
           player.balance += exp.remainingTroops;
         }
@@ -1490,18 +1499,18 @@ export class TerritorySimulation {
       const p = this.players[id];
       if (!p || !p.isAlive) continue;
 
-      const baseRate = p.interestRate || 0.035;
-      const landMultiplier = 1.0 + Math.min(4.0, p.landCount / 2500);
-      let effectiveRate = baseRate * landMultiplier;
+      const landProportion = p.landCount / this.totalLandToConquer;
+      let rate = Math.max(0.001, 0.015 * (1.0 - landProportion));
 
       if (p.balance > p.landCount * 100) {
         p.redInterest = true;
-        effectiveRate = Math.max(0.005, effectiveRate * 0.5);
+        rate = Math.max(0.0005, rate * 0.5);
       } else {
         p.redInterest = false;
       }
 
-      p.balance += Math.floor(p.balance * effectiveRate);
+      p.interestRate = rate;
+      p.balance += Math.floor(p.balance * rate);
       p.peakTroops = Math.max(p.peakTroops, p.balance);
     }
   }
