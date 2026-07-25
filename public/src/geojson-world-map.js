@@ -70,7 +70,6 @@ export class GeoJSONWorldMap {
     ctx.fillRect(0, 0, width, height);
 
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
 
     const polygons = this.getAuthenticWorldPolygons();
     const scaleX = width / 1000;
@@ -80,13 +79,14 @@ export class GeoJSONWorldMap {
       const ring = polygons[i];
       if (ring.length < 3) continue;
 
+      ctx.beginPath();
       ctx.moveTo(ring[0][0] * scaleX, ring[0][1] * scaleY);
       for (let j = 1; j < ring.length; j++) {
         ctx.lineTo(ring[j][0] * scaleX, ring[j][1] * scaleY);
       }
       ctx.closePath();
+      ctx.fill();
     }
-    ctx.fill();
 
     const imgData = ctx.getImageData(0, 0, width, height);
     const data = imgData.data;

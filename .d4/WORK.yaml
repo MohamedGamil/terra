@@ -2019,8 +2019,10 @@ batons:
     - BATON-048
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-048
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-049
   objective: Implement Map Topography & Coastline Path Cleanup (REQ-046).
   title: Map Topography & Coastline Path Cleanup
@@ -2544,6 +2546,13 @@ evaluations:
 - id: EVAL-048
   layer: outcome
   target: BATON-048
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-049
+  layer: outcome
+  target: BATON-049
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

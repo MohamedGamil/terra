@@ -42,21 +42,25 @@ export class MapGenerator {
       return new Uint8Array(customMapData.terrainGrid);
     }
 
+    let grid;
     if (mapType === 'world') {
-      return GeoJSONWorldMap.rasterize(width, height);
+      grid = GeoJSONWorldMap.rasterize(width, height);
     } else if (mapType === 'europe') {
-      return this.generateRegionalCrop('europe', width, height);
+      grid = this.generateRegionalCrop('europe', width, height);
     } else if (mapType === 'asia') {
-      return this.generateRegionalCrop('asia', width, height);
+      grid = this.generateRegionalCrop('asia', width, height);
     } else if (mapType === 'archipelago') {
-      return this.generateArchipelago(width, height, prng);
+      grid = this.generateArchipelago(width, height, prng);
     } else if (mapType === 'ring_of_fire') {
-      return this.generateRingOfFire(width, height, prng);
+      grid = this.generateRingOfFire(width, height, prng);
     } else if (mapType === 'arena') {
-      return this.generateArena(width, height);
+      grid = this.generateArena(width, height);
+    } else {
+      grid = GeoJSONWorldMap.rasterize(width, height);
     }
 
-    return GeoJSONWorldMap.rasterize(width, height);
+    this.cleanupGrid(width, height, grid);
+    return grid;
   }
 
   /**
@@ -215,5 +219,55 @@ export class MapGenerator {
     }
 
     return grid;
+  }
+
+  static cleanupGrid(width, height, grid) {
+    const visited = new Uint8Array(width * height);
+
+    for (let i = 0; i < grid.length; i++) {
+      if (grid[i] > 0 && !visited[i]) {
+        const component = [];
+        const queue = [i];
+        visited[i] = 1;
+
+        let head = 0;
+        while (head < queue.length) {
+          const idx = queue[head++];
+          component.push(idx);
+
+          const cx = idx % width;
+          const cy = Math.floor(idx / width);
+
+          // Check 4 neighbors
+          const neighbors = [
+            idx - 1,
+            idx + 1,
+            idx - width,
+            idx + width
+          ];
+
+          for (let n = 0; n < neighbors.length; n++) {
+            const nIdx = neighbors[n];
+            if (nIdx >= 0 && nIdx < grid.length) {
+              const nx = nIdx % width;
+              const ny = Math.floor(nIdx / width);
+              if (Math.abs(nx - cx) <= 1 && Math.abs(ny - cy) <= 1) {
+                if (grid[nIdx] > 0 && !visited[nIdx]) {
+                  visited[nIdx] = 1;
+                  queue.push(nIdx);
+                }
+              }
+            }
+          }
+        }
+
+        // Prune contiguous land components containing fewer than 15 pixels
+        if (component.length < 15) {
+          for (let c = 0; c < component.length; c++) {
+            grid[component[c]] = 0;
+          }
+        }
+      }
+    }
   }
 }

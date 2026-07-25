@@ -155,6 +155,25 @@ sim.checkPlayerEliminations();
 assert(bot2.isAlive === false, 'Bot 2 is eliminated when landCount reduced to 0px');
 assert(bot2.balance === 0, 'Bot 2 balance set to 0 upon elimination');
 
+// --- Test 8: Map Topography & Coastline Path Cleanup (REQ-046) ---
+console.log('\n[Test 8] Map Topography & Coastline Path Cleanup (REQ-046)');
+const testGrid = new Uint8Array(100 * 100);
+// Add a tiny isolated 5-pixel land component
+testGrid[10 * 100 + 10] = 1;
+testGrid[10 * 100 + 11] = 1;
+testGrid[10 * 100 + 12] = 1;
+testGrid[10 * 100 + 13] = 1;
+testGrid[10 * 100 + 14] = 1;
+
+// Add a large 20-pixel land component
+for (let x = 30; x < 50; x++) {
+  testGrid[30 * 100 + x] = 1;
+}
+
+MapGenerator.cleanupGrid(100, 100, testGrid);
+assert(testGrid[10 * 100 + 10] === 0, 'Isolated tiny 5-pixel island pruned to ocean');
+assert(testGrid[30 * 100 + 30] === 1, 'Large contiguous land segment preserved');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);
