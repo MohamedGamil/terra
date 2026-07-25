@@ -20,6 +20,14 @@ export class TerritorySimulation {
     this.state = 'LOBBY';
 
     this.terrainGrid = MapGenerator.generate(mapType, width, height, seed, customMapData);
+    
+    let landCount = 0;
+    for (let i = 0; i < this.terrainGrid.length; i++) {
+      if (this.terrainGrid[i] === 1) landCount++;
+    }
+    this.totalLandToConquer = landCount || (width * height);
+    this.maxTroopsLimit = Math.min(2000000000, this.totalLandToConquer * 200000);
+
     this.grid = new Uint16Array(width * height);
     this.aiEngine = new AIEngine(numPlayers);
 
@@ -1070,6 +1078,18 @@ export class TerritorySimulation {
     }
 
     this.checkGameResolution();
+
+    // Clamp player balances to prevent NaN or extreme values
+    for (let id = 1; id <= this.numPlayers; id++) {
+      const p = this.players[id];
+      if (p && p.isAlive) {
+        if (isNaN(p.balance) || p.balance < 0) {
+          p.balance = 500;
+        } else if (p.balance > this.maxTroopsLimit) {
+          p.balance = this.maxTroopsLimit;
+        }
+      }
+    }
   }
 
   updateCapitalCentroids() {

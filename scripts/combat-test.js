@@ -584,6 +584,28 @@ for (let step = 0; step < 50; step++) {
 assert(simRef.activeExpansions.length === 0, 'Expansion successfully completed and pruned');
 assert(simRef.players[1].balance > 1000, 'Leftover troops successfully refunded back to player balance');
 
+// --- Test 19: Maximum Troop Cap & NaN Defense (REQ-057) ---
+console.log('\n[Test 19] Maximum Troop Cap & NaN Defense (REQ-057)');
+
+const simCap = new TerritorySimulation(100, 100, 10, 'arena');
+simCap.state = 'PLAYING';
+
+// Total land to conquer on arena should be non-zero
+assert(simCap.totalLandToConquer > 0, 'totalLandToConquer is non-zero');
+assert(simCap.maxTroopsLimit > 0, 'maxTroopsLimit is non-zero and initialized');
+
+// Set player balance above cap and verify it gets clamped
+simCap.players[1].isAlive = true;
+simCap.players[1].landCount = 10;
+simCap.players[1].balance = simCap.maxTroopsLimit + 50000;
+simCap.update(16.6);
+assert(simCap.players[1].balance === simCap.maxTroopsLimit, 'Player balance successfully capped to maxTroopsLimit');
+
+// Set player balance to NaN and verify defense mechanism resets it to 500
+simCap.players[1].balance = NaN;
+simCap.update(16.6);
+assert(simCap.players[1].balance === 500, 'Player balance successfully recovered from NaN to 500');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);
