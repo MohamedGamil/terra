@@ -44,6 +44,7 @@ export class TerritorySimulation {
     this.tickCount = 0;
 
     this.gameResult = null;
+    this.onParticleEvent = null;
   }
 
   startSpawnPhase() {
@@ -179,6 +180,10 @@ export class TerritorySimulation {
     const targetX = targetPixelIdx % this.width;
     const targetY = Math.floor(targetPixelIdx / this.width);
 
+    if (this.onParticleEvent) {
+      this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
+    }
+
     this.advanceFrontierTowards(attackerId, targetX, targetY, forceTroops);
     return true;
   }
@@ -201,6 +206,10 @@ export class TerritorySimulation {
 
     const departure = this.findClosestCoastalPixel(attackerId);
     if (!departure) return false;
+
+    if (this.onParticleEvent) {
+      this.onParticleEvent('BOAT_LAUNCH', { x: departure.x, y: departure.y, color: attacker.color || '#00f2fe', troops: forceTroops });
+    }
 
     this.boats.push({
       id: Date.now() + Math.random(),

@@ -5,6 +5,7 @@ import { MinimapRenderer } from './minimap.js';
 import { BenchmarkRunner } from './benchmark.js';
 import { MatchRecorder } from './match-recorder.js';
 import { StatsDashboard } from './stats-dashboard.js';
+import { ParticleSystem } from './particles.js';
 
 class TerraApp {
   constructor() {
@@ -22,6 +23,7 @@ class TerraApp {
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
     this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
 
+    this.particles = new ParticleSystem(500);
     this.recorder = new MatchRecorder(1.0);
     this.dashboard = new StatsDashboard('post-match-overlay', 'chart-canvas');
 
@@ -31,6 +33,7 @@ class TerraApp {
     this.targetPixelIdx = -1;
     this.matchElapsedSec = 0;
 
+    this.initParticleEvents();
     this.initMinimapEvents();
     this.initLobbyUI();
     this.initCombatUI();
@@ -38,6 +41,18 @@ class TerraApp {
     this.initContextMenuUI();
     this.setupRendererCallbacks();
     this.startLoop();
+  }
+
+  initParticleEvents() {
+    this.simulation.onParticleEvent = (type, data) => {
+      if (type === 'ATTACK_LAUNCH') {
+        this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 22);
+        this.particles.spawnFloatingText(data.x, data.y, `-${data.troops}`, '#ff0055');
+      } else if (type === 'BOAT_LAUNCH') {
+        this.particles.spawnShockwave(data.x, data.y, '#00f2fe', 16);
+        this.particles.spawnFloatingText(data.x, data.y, `⛵ BOAT (${data.troops})`, '#00f2fe');
+      }
+    };
   }
 
   initMinimapEvents() {
@@ -407,6 +422,8 @@ class TerraApp {
       }
 
       const renderMs = this.renderer.render(this.simulation.grid, this.simulation.terrainGrid, true);
+      this.particles.update(delta / 1000);
+      this.particles.render(this.renderer.ctx, this.renderer);
       this.minimap.render(this.simulation.grid, this.simulation.terrainGrid, this.renderer);
 
       const fps = delta > 0 ? 1000 / delta : 60;
