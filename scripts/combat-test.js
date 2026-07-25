@@ -1240,6 +1240,49 @@ assert(sim32.boats[0].startX === 50, 'Boat launched correctly from the unblocked
 
 testsPassed += 3;
 
+// --- Test 33: Reinforcement Redirection & Enclave Attack ---
+console.log('\n[Test 33] Reinforcement Redirection & Enclave Attack (REQ-095)');
+
+const sim33 = new TerritorySimulation(100, 100, 10, 'arena');
+sim33.state = 'PLAYING';
+sim33.terrainGrid.fill(1); // all land
+
+// Player 1 setup
+sim33.players[1].isAlive = true;
+sim33.players[1].balance = 5000;
+sim33.players[1].landCount = 10;
+sim33.grid[1010] = 1; // launch index
+sim33.frontiers[1] = [1010];
+
+// Target 1: Neutral land at (x=15, y=10) -> 1015
+const target1Idx = 10 * 100 + 15;
+const okFirst = sim33.executeAttack(1, target1Idx, 25);
+assert(okFirst === true, 'First land attack launched successfully');
+assert(sim33.activeExpansions.length === 1, 'One active expansion spawned');
+
+const initialExp = sim33.activeExpansions[0];
+assert(initialExp.targetX === 15, 'Expansion targetX is 15');
+assert(initialExp.targetY === 10, 'Expansion targetY is 10');
+
+// Target 2: Nearby rival enclave at (x=18, y=10) -> 1018 (within 8 pixels distance: hypot(15-18, 10-10) = 3)
+const target2Idx = 10 * 100 + 18;
+sim33.grid[target2Idx] = 2; // owned by Player 2 (rival)
+sim33.players[2] = { isAlive: true, balance: 100, landCount: 1 };
+
+const okSecond = sim33.executeAttack(1, target2Idx, 25);
+assert(okSecond === true, 'Reinforcement attack accepted');
+assert(sim33.activeExpansions.length === 1, 'Still only one active expansion');
+
+// Verify redirection properties
+assert(initialExp.targetX === 18, 'Expansion targetX updated to 18');
+assert(initialExp.targetY === 10, 'Expansion targetY updated to 10');
+assert(initialExp.isRivalAttack === true, 'isRivalAttack updated to true');
+assert(initialExp.targetOwner === 2, 'targetOwner updated to 2');
+assert(initialExp.maxRadius === 1000.0, 'maxRadius updated to 1000.0 for rival attack');
+assert(initialExp.path !== null && initialExp.path[initialExp.path.length - 1] === target2Idx, 'Path successfully recalculated to end at new target index');
+
+testsPassed += 7;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

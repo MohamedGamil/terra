@@ -594,6 +594,21 @@ requirements:
   statement: Shoreline candidate pairs checked during naval reverse-path checks MUST
     be filtered by proximity to the target click to ensure local gulfs/harbors are
     never skipped on large shorelines.
+- id: REQ-094
+  kind: functional
+  statement: The simulation MUST print detailed console logs detailing target coordinates,
+    pathfinding status, snapping pairs, and budget math to precisely diagnose attack
+    issues.
+- id: REQ-095
+  kind: functional
+  statement: When reinforcing an existing active land expansion, the simulation MUST
+    immediately update its target coordinates, recalculate its path using the land
+    pathfinder, and update its maxRadius to redirect the campaign.
+- id: REQ-096
+  kind: functional
+  statement: The defense threshold check MUST scale down if the defender is a small
+    player (based on their land count relative to the attacker) to prevent small enclaved
+    players with high balances from becoming unattackable.
 batons:
 - id: BATON-001
   version: 1
@@ -3074,6 +3089,63 @@ batons:
   objective: Implement proximity-based candidate sorting and filtering for shorelines.
   title: Proximity-Sorted Shoreline Filter
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-094
+  execution:
+    depends_on:
+    - BATON-091
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-092
+  objective: Implement attack diagnosis debug logging in executeAttack and launchBoatAttack.
+  title: Attack Diagnosis Debug Logs
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-095
+  execution:
+    depends_on:
+    - BATON-092
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-093
+  objective: Implement reinforcement redirection targeting, pathing, and radius updates
+    in executeAttack.
+  title: Reinforcement Redirection Implementation
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-096
+  execution:
+    depends_on:
+    - BATON-093
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: draft
+  id: BATON-094
+  objective: Balance the defense threshold logic to prevent small enclaved players
+    with high balances from becoming unattackable.
+  title: Defense Threshold Balancing for Enclaves
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3910,6 +3982,20 @@ evaluations:
 - id: EVAL-091
   layer: outcome
   target: BATON-091
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-092
+  layer: outcome
+  target: BATON-092
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-093
+  layer: outcome
+  target: BATON-093
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

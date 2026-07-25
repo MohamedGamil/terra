@@ -200,18 +200,29 @@ export class TerritorySimulation {
   executeAttack(attackerId, targetPixelIdx, forcePercent = 25, isTargeted = true) {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
-    if (!attacker || !attacker.isAlive || attacker.balance < 20) return false;
-
-    // Land attack target must be land (terrain !== 0)
-    if (this.terrainGrid[targetPixelIdx] === 0) {
+    if (!attacker || !attacker.isAlive || attacker.balance < 20) {
       if (attackerId === 1) {
-        this.addToast('⚠️ Cannot launch land attack across ocean! Launch a Naval Attack instead.', 'warning');
+        console.warn(`[ATTACK DEBUG] executeAttack rejected: attacker.balance = ${attacker ? attacker.balance : 'N/A'}`);
       }
       return false;
     }
 
+    const targetOwner = this.grid[targetPixelIdx];
     const targetX = targetPixelIdx % this.width;
     const targetY = Math.floor(targetPixelIdx / this.width);
+
+    if (attackerId === 1) {
+      console.log(`[ATTACK DEBUG] executeAttack request: TargetOwner=${targetOwner}, targetIdx=${targetPixelIdx} (x=${targetX}, y=${targetY}), forcePercent=${forcePercent}`);
+    }
+
+    // Land attack target must be land (terrain !== 0)
+    if (this.terrainGrid[targetPixelIdx] === 0) {
+      if (attackerId === 1) {
+        console.warn(`[ATTACK DEBUG] Land attack rejected: target is water.`);
+        this.addToast('⚠️ Cannot launch land attack across ocean! Launch a Naval Attack instead.', 'warning');
+      }
+      return false;
+    }
 
     // Check for existing active expansion targeting the same area to reinforce it
     const existing = this.activeExpansions.find(e => 
@@ -225,17 +236,46 @@ export class TerritorySimulation {
         attacker.balance -= tax;
         const forceTroops = Math.floor((attacker.balance * forcePercent) / 100);
         if (forceTroops >= 5) {
+          if (attackerId === 1) {
+            console.log(`[ATTACK DEBUG] Reinforcing and redirecting existing expansion: troopsAdded=${forceTroops}, newRemaining=${existing.remainingTroops + forceTroops}, oldTarget=(${existing.targetX}, ${existing.targetY}) -> newTarget=(${targetX}, ${targetY})`);
+          }
           attacker.balance -= forceTroops;
           existing.remainingTroops += forceTroops;
           existing.targetReached = false; // Reset target reached flag to resume path push
-          const targetOwner = this.grid[targetPixelIdx];
+          existing.targetX = targetX;
+          existing.targetY = targetY;
           existing.targetOwner = targetOwner;
           existing.isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);
+
+          if (existing.isRivalAttack) {
+            existing.maxRadius = 1000.0;
+          } else {
+            existing.maxRadius = Math.hypot(targetX - existing.launchX, targetY - existing.launchY);
+          }
+
+          if (existing.launchX !== undefined && existing.launchY !== undefined) {
+            const launchIdx = Math.floor(existing.launchY) * this.width + Math.floor(existing.launchX);
+            const newPath = this.findLandPath(launchIdx, targetPixelIdx);
+            if (newPath) {
+              existing.path = newPath;
+              if (attackerId === 1) {
+                console.log(`[ATTACK DEBUG] Reinforcement path updated successfully: length=${newPath.length}`);
+              }
+            } else {
+              if (attackerId === 1) {
+                console.warn(`[ATTACK DEBUG] Reinforcement path update failed. Keeping old path.`);
+              }
+            }
+          }
+
           if (this.onParticleEvent) {
             this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
           }
           return true;
         }
+      }
+      if (attackerId === 1) {
+        console.warn(`[ATTACK DEBUG] Reinforcement rejected: insufficient balance.`);
       }
       return false;
     }
@@ -244,7 +284,12 @@ export class TerritorySimulation {
     attacker.balance -= tax;
 
     const forceTroops = Math.floor((attacker.balance * forcePercent) / 100);
-    if (forceTroops < 5) return false;
+    if (forceTroops < 5) {
+      if (attackerId === 1) {
+        console.warn(`[ATTACK DEBUG] Attack rejected: forceTroops=${forceTroops} < 5.`);
+      }
+      return false;
+    }
 
     attacker.balance -= forceTroops;
 
@@ -315,16 +360,26 @@ export class TerritorySimulation {
       }
     }
 
+    if (attackerId === 1) {
+      console.log(`[ATTACK DEBUG] Land BFS result: launchIdx=${launchIdx} (connection found = ${launchIdx !== -1})`);
+    }
+
     const path = this.findLandPath(launchIdx, targetPixelIdx);
     if (!path) {
+      if (attackerId === 1) {
+        console.log(`[ATTACK DEBUG] Land path not found between ${launchIdx} and ${targetPixelIdx}. Falling back to naval boat attack!`);
+      }
       attacker.balance += tax + forceTroops;
       return this.launchBoatAttack(attackerId, targetPixelIdx, forcePercent);
+    }
+
+    if (attackerId === 1) {
+      console.log(`[ATTACK DEBUG] Land path found successfully: length=${path.length}. Launching land expansion!`);
     }
 
     const launchX = launchIdx % width;
     const launchY = Math.floor(launchIdx / width);
 
-    const targetOwner = this.grid[targetPixelIdx];
     const isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);
 
     if (targetOwner === 0 && !isTargeted) {
@@ -391,7 +446,16 @@ export class TerritorySimulation {
   launchBoatAttack(attackerId, targetPixelIdx, forcePercent = 25) {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
-    if (!attacker || !attacker.isAlive || attacker.balance < 50) return false;
+    if (!attacker || !attacker.isAlive || attacker.balance < 50) {
+      if (attackerId === 1) {
+        console.warn(`[NAVAL DEBUG] launchBoatAttack rejected: attacker.balance = ${attacker ? attacker.balance : 'N/A'}`);
+      }
+      return false;
+    }
+
+    if (attackerId === 1) {
+      console.log(`[NAVAL DEBUG] launchBoatAttack request: targetPixelIdx=${targetPixelIdx}, forcePercent=${forcePercent}`);
+    }
 
     let initialLandIdx = targetPixelIdx;
     if (this.terrainGrid[initialLandIdx] === 0) {
@@ -456,8 +520,12 @@ export class TerritorySimulation {
 
     // 2. Identify target island shoreline pixels
     const islandShoreline = islandPixels.filter(idx => this.isShorelinePixel(idx));
+    if (attackerId === 1) {
+      console.log(`[NAVAL DEBUG] Target island BFS: contiguousSize=${islandPixels.length}, shorelineSize=${islandShoreline.length}`);
+    }
     if (islandShoreline.length === 0) {
       if (attackerId === 1) {
+        console.warn(`[NAVAL DEBUG] Target island has no accessible shoreline.`);
         this.addToast('⚠️ Target island has no accessible shoreline!', 'warning');
       }
       return false;
@@ -475,6 +543,9 @@ export class TerritorySimulation {
       }
     }
 
+    if (attackerId === 1) {
+      console.log(`[NAVAL DEBUG] Player shoreline size: ${playerShoreline.length}`);
+    }
     if (playerShoreline.length === 0) {
       if (attackerId === 1) {
         this.addToast('⚠️ You need an occupied shoreline to launch a naval attack!', 'warning');
@@ -537,8 +608,13 @@ export class TerritorySimulation {
       }
     }
 
+    if (attackerId === 1) {
+      console.log(`[NAVAL DEBUG] Snapping candidates sizes: player=${playerCandidates.length}, island=${islandCandidates.length}`);
+    }
+
     if (bestDepartureIdx === -1) {
       if (attackerId === 1) {
+        console.warn(`[NAVAL DEBUG] Snapping failed: No direct water path found between player shorelines and target shorelines.`);
         this.addToast('⚠️ No direct water path found between your coast and the target island!', 'warning');
       }
       return false;
@@ -579,8 +655,15 @@ export class TerritorySimulation {
     let forceTroops = Math.max(10, Math.min(maxAllowedLaunch, initialTroopsNeeded));
     forceTroops = Math.max(10, Math.min(balanceAfterTax - 10, forceTroops));
 
+    if (attackerId === 1) {
+      console.log(`[NAVAL DEBUG] Selected Snapped Pair: Departure=(${departureX}, ${departureY}), Landing=(${targetX}, ${targetY}), Distance=${totalDistance.toFixed(2)}`);
+      console.log(`[NAVAL DEBUG] Island Stats: Size=${islandSize}, uniqueRivals=${uniqueOwners.size}, totalIslandDefenderBalance=${totalIslandDefenderBalance}`);
+      console.log(`[NAVAL DEBUG] Budget Math: baseConquestNeeded=${baseConquestNeeded}, initialTroopsNeeded=${initialTroopsNeeded}, maxAllowedLaunch=${maxAllowedLaunch}, forceTroops=${forceTroops}`);
+    }
+
     if (forceTroops < 10) {
       if (attackerId === 1) {
+        console.warn(`[NAVAL DEBUG] Rejected: forceTroops=${forceTroops} is less than 10.`);
         this.addToast('⚠️ Insufficient troops to launch naval invasion!', 'warning');
       }
       return false;
@@ -1022,6 +1105,10 @@ export class TerritorySimulation {
       const exp = this.activeExpansions[idx];
       const player = this.players[exp.ownerId];
 
+      if (exp.ownerId === 1 && exp.isRivalAttack) {
+        console.log(`[UPDATE DEBUG] activeExpansion loop: target=(${exp.targetX}, ${exp.targetY}), remainingTroops=${exp.remainingTroops}, targetReached=${exp.targetReached}, maxRadius=${exp.maxRadius}, currentRadius=${exp.currentRadius}`);
+      }
+
       if (!player || !player.isAlive || exp.remainingTroops <= 2) {
         if (player && player.isAlive && exp.remainingTroops > 0) {
           player.balance += exp.remainingTroops;
@@ -1164,7 +1251,16 @@ export class TerritorySimulation {
           }
         }
 
-        if (bestIdx < 0) break;
+        if (exp.ownerId === 1 && exp.isRivalAttack) {
+          console.log(`[UPDATE DEBUG] Selected bestIdx=${bestIdx} (cx=${bestIdx % width}, cy=${Math.floor(bestIdx / width)}), minDist=${Math.sqrt(minDist).toFixed(2)}`);
+        }
+
+        if (bestIdx < 0) {
+          if (exp.ownerId === 1 && exp.isRivalAttack) {
+            console.log(`[UPDATE DEBUG] No bestIdx found on frontier! Exiting step loop.`);
+          }
+          break;
+        }
 
         const cx = bestIdx % width;
         const cy = Math.floor(bestIdx / width);
@@ -1186,7 +1282,12 @@ export class TerritorySimulation {
           if (defenderOwner === exp.ownerId) continue;
 
           // Neutral expansions cannot capture rival owned territory
-          if (exp.isRivalAttack === false && defenderOwner !== 0) continue;
+          if (exp.isRivalAttack === false && defenderOwner !== 0) {
+            if (exp.ownerId === 1 && exp.isRivalAttack) {
+              console.log(`[UPDATE DEBUG] Skip neighbor nIdx=${nIdx} (owned by ${defenderOwner}): Neutral expansion trying to capture rival.`);
+            }
+            continue;
+          }
 
           const nx = nIdx % width;
           const ny = Math.floor(nIdx / width);
@@ -1194,10 +1295,20 @@ export class TerritorySimulation {
           if (exp.targetReached) {
             const dx = Math.abs(nx - exp.targetX);
             const dy = Math.abs(ny - exp.targetY);
-            if (Math.max(dx, dy) > exp.squareSize) continue;
+            if (Math.max(dx, dy) > exp.squareSize) {
+              if (exp.ownerId === 1 && exp.isRivalAttack) {
+                console.log(`[UPDATE DEBUG] Skip neighbor nIdx=${nIdx} (owned by ${defenderOwner}): Target reached but outside square size ${exp.squareSize.toFixed(2)}.`);
+              }
+              continue;
+            }
           } else {
             const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
-            if (exp.path !== null && distFromLaunch > exp.currentRadius) continue;
+            if (exp.path !== null && distFromLaunch > exp.currentRadius) {
+              if (exp.ownerId === 1 && exp.isRivalAttack) {
+                console.log(`[UPDATE DEBUG] Skip neighbor nIdx=${nIdx} (owned by ${defenderOwner}): distFromLaunch=${distFromLaunch.toFixed(2)} > currentRadius=${exp.currentRadius.toFixed(2)}.`);
+              }
+              continue;
+            }
 
             if (!exp.isRivalAttack) {
               let distToPath = Infinity;
@@ -1212,7 +1323,12 @@ export class TerritorySimulation {
                   if (distToPath <= 3.0) break;
                 }
               }
-              if (exp.path && distToPath > 3.0) continue;
+              if (exp.path && distToPath > 3.0) {
+                if (exp.ownerId === 1 && exp.isRivalAttack) {
+                  console.log(`[UPDATE DEBUG] Skip neighbor nIdx=${nIdx} (owned by ${defenderOwner}): distToPath=${distToPath.toFixed(2)} > 3.0.`);
+                }
+                continue;
+              }
             }
           }
 
@@ -1262,12 +1378,20 @@ export class TerritorySimulation {
               expandedAny = true;
             }
           } else {
-            if (this.hasPact(exp.ownerId, defenderOwner)) continue;
+            if (this.hasPact(exp.ownerId, defenderOwner)) {
+              if (exp.ownerId === 1 && exp.isRivalAttack) {
+                console.log(`[UPDATE DEBUG] Skip rival nIdx=${nIdx} (owned by ${defenderOwner}): Active Pact exists.`);
+              }
+              continue;
+            }
             const defender = this.players[defenderOwner];
 
             if (defender) {
               const defenseThreshold = Math.max(10, Math.floor(defender.balance * 0.20));
               if (exp.remainingTroops < defenseThreshold) {
+                if (exp.ownerId === 1 && exp.isRivalAttack) {
+                  console.log(`[UPDATE DEBUG] Skip rival nIdx=${nIdx} (owned by ${defenderOwner}): exp.remainingTroops=${exp.remainingTroops} < defenseThreshold=${defenseThreshold}. Attrition 5 troops applied.`);
+                }
                 exp.remainingTroops = Math.max(0, exp.remainingTroops - 5);
                 continue;
               }
@@ -1350,10 +1474,22 @@ export class TerritorySimulation {
         }
       }
 
-      const isFinished = (exp.remainingTroops <= 2 || frontier.length === 0 || (exp.targetReached && exp.squareSize >= exp.maxRadius) || (!exp.targetReached && exp.path !== null && exp.currentRadius >= exp.maxRadius && !expandedAny));
+      const cond1 = exp.remainingTroops <= 2;
+      const cond2 = frontier.length === 0;
+      const cond3 = !!(exp.targetReached && exp.squareSize >= exp.maxRadius);
+      const cond4 = !!(!exp.targetReached && exp.path !== null && exp.currentRadius >= exp.maxRadius && !expandedAny);
+      const isFinished = cond1 || cond2 || cond3 || cond4;
+
+      if (exp.ownerId === 1 && exp.isRivalAttack) {
+        console.log(`[UPDATE DEBUG] isFinished check: result=${isFinished}, cond1(remainingTroops<=2)=${cond1}, cond2(frontierEmpty)=${cond2}, cond3(squareSize>=maxRadius)=${cond3}, cond4(currentRadius>=maxRadius && !expandedAny)=${cond4}, expandedAny=${expandedAny}`);
+      }
+
       if (isFinished) {
         if (player && player.isAlive && exp.remainingTroops > 0) {
           player.balance += exp.remainingTroops;
+        }
+        if (exp.ownerId === 1 && exp.isRivalAttack) {
+          console.warn(`[UPDATE DEBUG] activeExpansion pruned/finished.`);
         }
         this.activeExpansions.splice(idx, 1);
       }
