@@ -1720,13 +1720,19 @@ batons:
 - acceptance:
     deterministic_checks:
     - npm run test:fog
+  authority:
+    gates: []
+    requirements:
+    - REQ-034
   execution:
     depends_on:
     - BATON-026
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-026
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-037
   objective: Reduce hover/target crosshair cursor size to a sleek, compact precision
     radius with scaleX/Y alignment (REQ-034).
@@ -2175,6 +2181,13 @@ evaluations:
 - id: EVAL-035
   layer: outcome
   target: BATON-026
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-036
+  layer: outcome
+  target: BATON-037
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

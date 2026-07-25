@@ -206,10 +206,10 @@ export class TerritoryRenderer {
       const hx = this.panX + (this.hoverSpawnPoint.x + 0.5) * this.zoom;
       const hy = this.panY + (this.hoverSpawnPoint.y + 0.5) * this.zoom;
       this.ctx.beginPath();
-      this.ctx.arc(hx, hy, Math.max(12, 16 * this.zoom), 0, Math.PI * 2);
-      this.ctx.strokeStyle = 'rgba(0, 242, 254, 0.6)';
-      this.ctx.lineWidth = 2;
-      this.ctx.setLineDash([4, 4]);
+      this.ctx.arc(hx, hy, Math.max(6, 10 * this.zoom), 0, Math.PI * 2);
+      this.ctx.strokeStyle = 'rgba(0, 242, 254, 0.8)';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.setLineDash([3, 3]);
       this.ctx.stroke();
       this.ctx.setLineDash([]);
     }
@@ -219,39 +219,56 @@ export class TerritoryRenderer {
       const sx = this.panX + (this.spawnPickPoint.x + 0.5) * this.zoom;
       const sy = this.panY + (this.spawnPickPoint.y + 0.5) * this.zoom;
       this.ctx.beginPath();
-      this.ctx.arc(sx, sy, Math.max(14, 18 * this.zoom), 0, Math.PI * 2);
+      this.ctx.arc(sx, sy, Math.max(8, 12 * this.zoom), 0, Math.PI * 2);
       this.ctx.strokeStyle = '#00f2fe';
-      this.ctx.lineWidth = 3.5;
+      this.ctx.lineWidth = 2;
       this.ctx.stroke();
 
-      this.ctx.fillStyle = 'rgba(0, 242, 254, 0.4)';
+      this.ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
       this.ctx.fill();
 
       this.ctx.fillStyle = '#ffffff';
-      this.ctx.font = 'bold 13px sans-serif';
+      this.ctx.font = 'bold 11px sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('YOUR SPAWN', sx, sy - 24);
+      this.ctx.fillText('YOUR SPAWN', sx, sy - 16);
     }
 
-    // Target Selection Crosshair
+    // Compact High-Precision Target Selection Crosshair
     if (this.targetPixelIdx >= 0) {
       const tx = (this.targetPixelIdx % this.width);
       const ty = Math.floor(this.targetPixelIdx / this.width);
       const sx = this.panX + (tx + 0.5) * this.zoom;
       const sy = this.panY + (ty + 0.5) * this.zoom;
+      const rad = Math.max(6, 10 * this.zoom);
 
+      // Outer dark shadow ring
       this.ctx.beginPath();
-      this.ctx.arc(sx, sy, Math.max(14, 20 * this.zoom), 0, Math.PI * 2);
-      this.ctx.strokeStyle = '#f43f5e';
-      this.ctx.lineWidth = 2.5;
+      this.ctx.arc(sx, sy, rad, 0, Math.PI * 2);
+      this.ctx.strokeStyle = 'rgba(4, 6, 9, 0.8)';
+      this.ctx.lineWidth = 3;
       this.ctx.stroke();
 
+      // Inner high-contrast rose ring
       this.ctx.beginPath();
-      this.ctx.moveTo(sx - 10, sy); this.ctx.lineTo(sx + 10, sy);
-      this.ctx.moveTo(sx, sy - 10); this.ctx.lineTo(sx, sy + 10);
+      this.ctx.arc(sx, sy, rad, 0, Math.PI * 2);
       this.ctx.strokeStyle = '#f43f5e';
-      this.ctx.lineWidth = 2;
+      this.ctx.lineWidth = 1.5;
       this.ctx.stroke();
+
+      // Precision crosshair lines
+      const arm = Math.max(4, 6 * this.zoom);
+      this.ctx.beginPath();
+      this.ctx.moveTo(sx - arm, sy); this.ctx.lineTo(sx + arm, sy);
+      this.ctx.moveTo(sx, sy - arm); this.ctx.lineTo(sx, sy + arm);
+      this.ctx.strokeStyle = '#ffffff';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.stroke();
+
+      // Center dot
+      this.ctx.fillStyle = '#f43f5e';
+      this.ctx.beginPath();
+      this.ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+      this.ctx.fill();
     }
 
     // Naval Boat Transport Icons

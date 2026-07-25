@@ -272,8 +272,8 @@ export class AIEngine {
       // Rushers dislike alliances (15% acceptance chance)
       return Math.random() < 0.15;
     } else if (archetype === 'DEFENDER') {
-      // Defenders love peaceful NAPs (85% acceptance chance)
-      return Math.random() < 0.85;
+      // Defenders love peaceful NAPs (95% acceptance chance)
+      return Math.random() < 0.95;
     } else if (archetype === 'EXPANSIONIST') {
       // Accepts if proposer balance is strong (> 70% of bot balance)
       return pProp.balance >= pBot.balance * 0.7;
