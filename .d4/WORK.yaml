@@ -1959,8 +1959,10 @@ batons:
     - BATON-045
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-045
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-046
   objective: Implement Shoreline-to-Shoreline Naval Attacks (REQ-043).
   title: Shoreline-to-Shoreline Naval Attacks
@@ -2517,6 +2519,13 @@ evaluations:
 - id: EVAL-045
   layer: outcome
   target: BATON-045
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-046
+  layer: outcome
+  target: BATON-046
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

@@ -215,10 +215,40 @@ export class TerritorySimulation {
     return true;
   }
 
+  isShorelinePixel(idx) {
+    if (this.terrainGrid[idx] === 0) return false;
+    const cx = idx % this.width;
+    const cy = Math.floor(idx / this.width);
+    const width = this.width;
+    if (cy > 0 && this.terrainGrid[idx - width] === 0) return true;
+    if (cy < this.height - 1 && this.terrainGrid[idx + width] === 0) return true;
+    if (cx > 0 && this.terrainGrid[idx - 1] === 0) return true;
+    if (cx < this.width - 1 && this.terrainGrid[idx + 1] === 0) return true;
+    return false;
+  }
+
   launchBoatAttack(attackerId, targetPixelIdx, forcePercent = 25) {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 50) return false;
+
+    if (!this.isShorelinePixel(targetPixelIdx)) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ Target must be a shoreline to land!', 'warning');
+      }
+      return false;
+    }
+
+    const targetX = targetPixelIdx % this.width;
+    const targetY = Math.floor(targetPixelIdx / this.width);
+
+    const departure = this.findClosestCoastalPixelTo(attackerId, targetX, targetY);
+    if (!departure) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ You need an accessible shoreline to launch a naval attack!', 'warning');
+      }
+      return false;
+    }
 
     const tax = Math.ceil(attacker.balance * 0.03125);
     attacker.balance -= tax;
@@ -227,12 +257,6 @@ export class TerritorySimulation {
     if (forceTroops < 10) return false;
 
     attacker.balance -= forceTroops;
-
-    const targetX = targetPixelIdx % this.width;
-    const targetY = Math.floor(targetPixelIdx / this.width);
-
-    const departure = this.findClosestCoastalPixel(attackerId);
-    if (!departure) return false;
 
     if (this.onParticleEvent) {
       this.onParticleEvent('BOAT_LAUNCH', { x: departure.x, y: departure.y, color: attacker.color || '#00f2fe', troops: forceTroops });
@@ -488,9 +512,13 @@ export class TerritorySimulation {
     }
   }
 
-  findClosestCoastalPixel(ownerId) {
+  findClosestCoastalPixelTo(ownerId, tx, ty) {
     const frontier = this.frontiers[ownerId];
+    if (!frontier) return null;
     const width = this.width;
+    let bestPixel = null;
+    let minDistance = Infinity;
+
     for (const idx of frontier) {
       const cx = idx % width;
       const cy = Math.floor(idx / width);
@@ -498,10 +526,15 @@ export class TerritorySimulation {
           (cy < this.height - 1 && this.terrainGrid[idx + width] === 0) ||
           (cx > 0 && this.terrainGrid[idx - 1] === 0) ||
           (cx < width - 1 && this.terrainGrid[idx + 1] === 0)) {
-        return { x: cx, y: cy };
+        
+        const dist = Math.hypot(cx - tx, cy - ty);
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestPixel = { x: cx, y: cy };
+        }
       }
     }
-    return null;
+    return bestPixel;
   }
 
   advanceFrontierTowards(ownerId, targetX, targetY, troops, isCounterPush = false) {
