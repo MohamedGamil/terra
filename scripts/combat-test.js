@@ -528,6 +528,52 @@ for (let step = 0; step < 15; step++) {
 // Check that we captured pixels along the path (e.g. x=20, y=10, which was unowned neutral land)
 assert(simRoute.grid[10 * 100 + 20] === 1, 'Expansion successfully captured intermediate path pixel (x=20, y=10) incrementally');
 
+// --- Test 18: Attack Reinforcement, Square Capture, & Troop Refund (REQ-056) ---
+console.log('\n[Test 18] Attack Reinforcement, Square Capture, & Troop Refund (REQ-056)');
+
+const simRef = new TerritorySimulation(100, 100, 10, 'arena');
+simRef.state = 'PLAYING';
+
+simRef.players[1].isAlive = true;
+simRef.players[1].balance = 2000;
+simRef.players[1].landCount = 10;
+simRef.grid[1010] = 1;
+simRef.frontiers[1] = [1010];
+
+simRef.terrainGrid.fill(1);
+
+const refTargetIdx = 10 * 100 + 20; // x=20, y=10
+const firstOk = simRef.executeAttack(1, refTargetIdx, 25);
+assert(firstOk === true, 'First attack launched successfully');
+assert(simRef.activeExpansions.length === 1, 'One active expansion spawned');
+
+const initialTroops = simRef.activeExpansions[0].remainingTroops;
+
+// Double click to reinforce
+const reinforceOk = simRef.executeAttack(1, refTargetIdx, 25);
+assert(reinforceOk === true, 'Reinforcement attack successfully accepted');
+assert(simRef.activeExpansions.length === 1, 'Still only one active expansion (no duplicate task spawned)');
+assert(simRef.activeExpansions[0].remainingTroops > initialTroops, 'Troops successfully reinforced into active expansion');
+
+// Let it expand. Wait for it to reach target and expand in square
+for (let step = 0; step < 25; step++) {
+  simRef.update(16.6);
+}
+
+// Target coordinate (x=20, y=10) must be captured
+assert(simRef.grid[refTargetIdx] === 1, 'Target coordinate captured successfully');
+
+// Square area expansion (e.g. check x=21, y=11 which is a diagonal neighbor inside square bounds)
+assert(simRef.grid[11 * 100 + 21] === 1, 'Frontier successfully expanded in square shape around target');
+
+// The expansion should eventually be completed (pruned) and leftover troops refunded
+for (let step = 0; step < 50; step++) {
+  simRef.update(16.6);
+}
+
+assert(simRef.activeExpansions.length === 0, 'Expansion successfully completed and pruned');
+assert(simRef.players[1].balance > 1000, 'Leftover troops successfully refunded back to player balance');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

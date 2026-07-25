@@ -199,6 +199,33 @@ export class TerritorySimulation {
       return false;
     }
 
+    const targetX = targetPixelIdx % this.width;
+    const targetY = Math.floor(targetPixelIdx / this.width);
+
+    // Check for existing active expansion targeting the same area to reinforce it
+    const existing = this.activeExpansions.find(e => 
+      e.ownerId === attackerId && 
+      Math.hypot(e.targetX - targetX, e.targetY - targetY) <= 8
+    );
+
+    if (existing) {
+      const tax = Math.ceil(attacker.balance * 0.0117);
+      if (attacker.balance >= tax + 5) {
+        attacker.balance -= tax;
+        const forceTroops = Math.floor((attacker.balance * forcePercent) / 100);
+        if (forceTroops >= 5) {
+          attacker.balance -= forceTroops;
+          existing.remainingTroops += forceTroops;
+          existing.targetReached = false; // Reset target reached flag to resume path push
+          if (this.onParticleEvent) {
+            this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
+          }
+          return true;
+        }
+      }
+      return false;
+    }
+
     const tax = Math.ceil(attacker.balance * 0.0117);
     attacker.balance -= tax;
 
@@ -206,9 +233,6 @@ export class TerritorySimulation {
     if (forceTroops < 5) return false;
 
     attacker.balance -= forceTroops;
-
-    const targetX = targetPixelIdx % this.width;
-    const targetY = Math.floor(targetPixelIdx / this.width);
 
     if (this.onParticleEvent) {
       this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
@@ -691,12 +715,18 @@ export class TerritorySimulation {
       const player = this.players[exp.ownerId];
 
       if (!player || !player.isAlive || exp.remainingTroops <= 2) {
+        if (player && player.isAlive && exp.remainingTroops > 0) {
+          player.balance += exp.remainingTroops;
+        }
         this.activeExpansions.splice(idx, 1);
         continue;
       }
 
       const frontier = this.frontiers[exp.ownerId];
       if (!frontier || frontier.length === 0) {
+        if (player && player.isAlive && exp.remainingTroops > 0) {
+          player.balance += exp.remainingTroops;
+        }
         this.activeExpansions.splice(idx, 1);
         continue;
       }
@@ -727,7 +757,17 @@ export class TerritorySimulation {
         exp.maxRadius = Math.hypot(exp.targetX - exp.launchX, exp.targetY - exp.launchY);
       }
 
-      exp.currentRadius = Math.min(exp.maxRadius, exp.currentRadius + 1.5);
+      // Check if target coordinate has been captured to switch to square area expansion mode
+      const targetIdx = Math.floor(exp.targetY) * width + Math.floor(exp.targetX);
+      if (this.grid[targetIdx] === exp.ownerId) {
+        exp.targetReached = true;
+      }
+
+      if (exp.targetReached) {
+        exp.squareSize = (exp.squareSize || 0.0) + 1.5;
+      } else {
+        exp.currentRadius = Math.min(exp.maxRadius, exp.currentRadius + 1.5);
+      }
 
       while (exp.remainingTroops > 2 && stepCount < stepLimit) {
         let bestIdx = -1;
@@ -770,22 +810,28 @@ export class TerritorySimulation {
           const nx = nIdx % width;
           const ny = Math.floor(nIdx / width);
 
-          const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
-          if (distFromLaunch > exp.currentRadius) continue;
+          if (exp.targetReached) {
+            const dx = Math.abs(nx - exp.targetX);
+            const dy = Math.abs(ny - exp.targetY);
+            if (Math.max(dx, dy) > exp.squareSize) continue;
+          } else {
+            const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
+            if (distFromLaunch > exp.currentRadius) continue;
 
-          let distToPath = Infinity;
-          if (exp.path) {
-            for (let i = 0; i < exp.path.length; i++) {
-              const px = exp.path[i] % width;
-              const py = Math.floor(exp.path[i] / width);
-              const d = Math.hypot(nx - px, ny - py);
-              if (d < distToPath) {
-                distToPath = d;
+            let distToPath = Infinity;
+            if (exp.path) {
+              for (let i = 0; i < exp.path.length; i++) {
+                const px = exp.path[i] % width;
+                const py = Math.floor(exp.path[i] / width);
+                const d = Math.hypot(nx - px, ny - py);
+                if (d < distToPath) {
+                  distToPath = d;
+                }
+                if (distToPath <= 3.0) break;
               }
-              if (distToPath <= 3.0) break;
             }
+            if (exp.path && distToPath > 3.0) continue;
           }
-          if (exp.path && distToPath > 3.0) continue;
 
           if (defenderOwner === 0) {
             const distToLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
@@ -871,6 +917,9 @@ export class TerritorySimulation {
       }
 
       if (!expandedAny && stepCount === 0) {
+        if (player && player.isAlive && exp.remainingTroops > 0) {
+          player.balance += exp.remainingTroops;
+        }
         this.activeExpansions.splice(idx, 1);
       }
     }
