@@ -439,6 +439,54 @@ simBoats.boats.push({
 simBoats.updateBoats(16.6); // Moves 5 pixels forward: 48 + 5 = 53 (crosses the land wall at x=50)
 assert(simBoats.boats.length === 0, 'Transport boat sank/deleted upon colliding with land wall');
 
+// --- Test 16: Robust Shoreline Naval Access Checks (REQ-054) ---
+console.log('\n[Test 16] Robust Shoreline Naval Access Checks (REQ-054)');
+
+const simSnap = new TerritorySimulation(100, 100, 10, 'arena');
+simSnap.state = 'PLAYING';
+
+// 1. Verify diagonal shoreline detection (8-adjacency)
+// Set cell 5050 (x=50, y=50) to land (1)
+// Set all cardinal neighbors to mountain (2) so no cardinal water exists
+simSnap.terrainGrid[5050] = 1;
+simSnap.terrainGrid[4950] = 2; // North
+simSnap.terrainGrid[5150] = 2; // South
+simSnap.terrainGrid[5049] = 2; // West
+simSnap.terrainGrid[5051] = 2; // East
+
+// Set only a diagonal neighbor (North-West: 4949) to water (0)
+simSnap.terrainGrid[4949] = 0;
+
+const isDiagShoreline = simSnap.isShorelinePixel(5050);
+assert(isDiagShoreline === true, 'Diagonal-only water adjacency is successfully identified as shoreline');
+
+// 2. Verify radial target coordinate snapping
+// Initialize entire map to land (1)
+simSnap.terrainGrid.fill(1);
+
+// Set up a player coastal departure point
+simSnap.players[1].balance = 1000;
+simSnap.spawnCircularSeed(1, 1010, 2); // Player 1 owns x=10, y=10 area
+// Make x=10, y=11 water so the player has a shoreline
+simSnap.terrainGrid[1110] = 0;
+simSnap.frontiers[1] = [1010];
+
+// Define a landing target shoreline far away at x=80, y=80
+const targetShorelineIdx = 80 * 100 + 80;
+simSnap.terrainGrid[targetShorelineIdx] = 1; // land
+simSnap.terrainGrid[80 * 100 + 79] = 0; // water neighbor
+
+// Let the player click 3 pixels off (e.g. x=83, y=80, which is inland/not shoreline)
+const clickedIdx = 80 * 100 + 83;
+
+assert(simSnap.isShorelinePixel(clickedIdx) === false, 'Clicked index itself is not a shoreline pixel');
+
+// Launch boat attack to the clicked index; it should snap to targetShorelineIdx and succeed!
+const snapLaunchOk = simSnap.launchBoatAttack(1, clickedIdx, 25);
+assert(snapLaunchOk === true, 'Radial snapping successfully mapped target to closest shoreline and launched boat');
+assert(simSnap.boats.length === 1, 'Naval boat successfully spawned');
+assert(simSnap.boats[0].targetX === 80 && simSnap.boats[0].targetY === 80, `Boat target snapped correctly to x=80, y=80 (Actual Target: x=${simSnap.boats[0].targetX}, y=${simSnap.boats[0].targetY})`);
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

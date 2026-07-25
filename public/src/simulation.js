@@ -249,10 +249,21 @@ export class TerritorySimulation {
     const cx = idx % this.width;
     const cy = Math.floor(idx / this.width);
     const width = this.width;
-    if (cy > 0 && this.terrainGrid[idx - width] === 0) return true;
-    if (cy < this.height - 1 && this.terrainGrid[idx + width] === 0) return true;
-    if (cx > 0 && this.terrainGrid[idx - 1] === 0) return true;
-    if (cx < this.width - 1 && this.terrainGrid[idx + 1] === 0) return true;
+    const height = this.height;
+
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+          const nIdx = ny * width + nx;
+          if (this.terrainGrid[nIdx] === 0) {
+            return true;
+          }
+        }
+      }
+    }
     return false;
   }
 
@@ -261,15 +272,43 @@ export class TerritorySimulation {
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 50) return false;
 
-    if (!this.isShorelinePixel(targetPixelIdx)) {
-      if (attackerId === 1) {
-        this.addToast('⚠️ Target must be a shoreline to land!', 'warning');
+    let landingIdx = targetPixelIdx;
+
+    if (!this.isShorelinePixel(landingIdx)) {
+      const startX = targetPixelIdx % this.width;
+      const startY = Math.floor(targetPixelIdx / this.width);
+      let bestShorelineIdx = -1;
+      let minSearchDist = Infinity;
+
+      for (let dy = -5; dy <= 5; dy++) {
+        for (let dx = -5; dx <= 5; dx++) {
+          const nx = startX + dx;
+          const ny = startY + dy;
+          if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
+            const checkIdx = ny * this.width + nx;
+            if (this.isShorelinePixel(checkIdx)) {
+              const d = Math.hypot(dx, dy);
+              if (d < minSearchDist) {
+                minSearchDist = d;
+                bestShorelineIdx = checkIdx;
+              }
+            }
+          }
+        }
       }
-      return false;
+
+      if (bestShorelineIdx !== -1) {
+        landingIdx = bestShorelineIdx;
+      } else {
+        if (attackerId === 1) {
+          this.addToast('⚠️ Target must be a shoreline to land!', 'warning');
+        }
+        return false;
+      }
     }
 
-    const targetX = targetPixelIdx % this.width;
-    const targetY = Math.floor(targetPixelIdx / this.width);
+    const targetX = landingIdx % this.width;
+    const targetY = Math.floor(landingIdx / this.width);
 
     const departure = this.findClosestCoastalPixelTo(attackerId, targetX, targetY);
     if (!departure) {
@@ -545,17 +584,31 @@ export class TerritorySimulation {
     const frontier = this.frontiers[ownerId];
     if (!frontier) return null;
     const width = this.width;
+    const height = this.height;
     let bestPixel = null;
     let minDistance = Infinity;
 
     for (const idx of frontier) {
       const cx = idx % width;
       const cy = Math.floor(idx / width);
-      if ((cy > 0 && this.terrainGrid[idx - width] === 0) ||
-          (cy < this.height - 1 && this.terrainGrid[idx + width] === 0) ||
-          (cx > 0 && this.terrainGrid[idx - 1] === 0) ||
-          (cx < width - 1 && this.terrainGrid[idx + 1] === 0)) {
-        
+      
+      let isCoast = false;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = cx + dx;
+          const ny = cy + dy;
+          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            if (this.terrainGrid[ny * width + nx] === 0) {
+              isCoast = true;
+              break;
+            }
+          }
+        }
+        if (isCoast) break;
+      }
+
+      if (isCoast) {
         const dist = Math.hypot(cx - tx, cy - ty);
         if (dist < minDistance) {
           minDistance = dist;

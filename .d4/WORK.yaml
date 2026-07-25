@@ -2196,8 +2196,10 @@ batons:
     - BATON-056
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-056
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-057
   title: Robust Shoreline Naval Access Checks
   objective: Resolve false negatives in shoreline accessibility checks for player
@@ -2707,6 +2709,13 @@ evaluations:
 - id: EVAL-056
   layer: outcome
   target: BATON-056
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-057
+  layer: outcome
+  target: BATON-057
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
