@@ -120,7 +120,9 @@ export class AIEngine {
               bot.balance -= cost;
               bot.landCount++;
               grid[nIdx] = id;
-              frontier.push(nIdx);
+              if (this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
+                frontier.push(nIdx);
+              }
               count++;
               expanded = true;
             }
@@ -145,7 +147,9 @@ export class AIEngine {
                 targetPlayer.landCount = Math.max(0, targetPlayer.landCount - 1);
                 bot.landCount++;
                 grid[nIdx] = id;
-                frontier.push(nIdx);
+                if (this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
+                  frontier.push(nIdx);
+                }
                 count++;
                 expanded = true;
 
@@ -157,8 +161,8 @@ export class AIEngine {
           }
         }
 
-        // Prune inland frontier pixels with no valid targets
-        if (!expanded && Math.random() < 0.15) {
+        // Prune inland frontier pixels immediately
+        if (!this.isBorderPixel(fIdx, grid, terrainGrid, width, height, id)) {
           frontier.splice(i, 1);
         }
       }
@@ -206,5 +210,25 @@ export class AIEngine {
       }
     }
     return null;
+  }
+
+  isBorderPixel(idx, grid, terrainGrid, width, height, ownerId) {
+    const cx = idx % width;
+    const cy = Math.floor(idx / width);
+
+    const neighbors = [
+      cy > 0 ? idx - width : -1,
+      cy < height - 1 ? idx + width : -1,
+      cx > 0 ? idx - 1 : -1,
+      cx < width - 1 ? idx + 1 : -1
+    ];
+
+    for (const nIdx of neighbors) {
+      if (nIdx < 0) continue;
+      if (terrainGrid[nIdx] === 1 && grid[nIdx] !== ownerId) {
+        return true;
+      }
+    }
+    return false;
   }
 }

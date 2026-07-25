@@ -13,6 +13,7 @@ export class ParticleSystem {
     // Pre-allocate fixed pool to prevent GC frame stutter
     for (let i = 0; i < maxParticles; i++) {
       this.pool.push({
+        inPool: true,
         active: false,
         type: 'SHOCKWAVE', // 'SHOCKWAVE' | 'SPARK' | 'TEXT'
         x: 0,
@@ -33,20 +34,26 @@ export class ParticleSystem {
   getParticle() {
     if (this.pool.length > 0) {
       const p = this.pool.pop();
+      p.inPool = false;
       p.active = true;
       return p;
     }
     // Recycle oldest active particle if pool exhausted
     if (this.activeParticles.length > 0) {
       const p = this.activeParticles.shift();
+      p.inPool = false;
+      p.active = true;
       return p;
     }
     return null;
   }
 
   recycleParticle(p) {
-    p.active = false;
-    this.pool.push(p);
+    if (p && !p.inPool) {
+      p.inPool = true;
+      p.active = false;
+      this.pool.push(p);
+    }
   }
 
   spawnShockwave(x, y, color = '#00f2fe', maxRadius = 20) {

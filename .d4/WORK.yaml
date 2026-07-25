@@ -311,6 +311,28 @@ requirements:
   statement: Match Replay & Statistics Dashboard for post-game analysis.
   traces_to:
   - HY-001
+- id: REQ-022
+  statement: Real-Time Multiplayer Lobby & Room Code Sync Engine for multi-human matches.
+- id: REQ-023
+  statement: Interactive Fog of War & Scout Reconnaissance Radar for tactical territory
+    visibility.
+- id: REQ-024
+  statement: Diplomacy & Non-Aggression Pact Alliance System for tactical player alliances.
+- id: REQ-025
+  statement: In-Browser Interactive Map Editor & Custom Territory Designer with JSON
+    export.
+- id: REQ-026
+  statement: Player ELO Rating & Persistent Local Progression System.
+- id: REQ-027
+  statement: Engine Memory Leak Elimination & Unbounded Array Pruning to prevent mid-game
+    freezes.
+- id: REQ-028
+  statement: AI Fair Balance & Difficulty Scaling Calibration to ensure human playability.
+- id: REQ-029
+  statement: High-Precision GeoJSON World Map & Geography Engine Overhaul to match
+    real world map details.
+- id: REQ-030
+  statement: Game Engine Stability, Array Mutation & Logic Bug Hardening.
 batons:
 - id: BATON-001
   version: 1
@@ -1313,6 +1335,259 @@ batons:
   title: Post-Match Replay & Statistics Dashboard
   type: implementation
   version: 1
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - WebSocket room code sync functioning
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-002
+    requirements:
+    - REQ-022
+  execution:
+    depends_on:
+    - BATON-019
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-019
+    state: leased
+    lease_owner: mgamil.dev@gmail.com
+  id: BATON-025
+  objective: Implement WebSocket room code creation, match joining, and multi-human
+    client state synchronization.
+  scope:
+    exclude: []
+    include: []
+  title: Real-Time Multiplayer Lobby & Room Code Sync Engine
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - Fog of war rendering and scout radar pulse functioning
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-001
+    requirements:
+    - REQ-023
+  execution:
+    depends_on:
+    - BATON-025
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-025
+    state: draft
+  id: BATON-026
+  objective: Implement dynamic visibility radius around territory pixels, semi-transparent
+    fog rendering, and radar pulse.
+  scope:
+    exclude: []
+    include: []
+  title: Interactive Fog of War & Scout Reconnaissance Radar
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - Diplomatic wheel and alliance pacts functioning
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-003
+    requirements:
+    - REQ-024
+  execution:
+    depends_on:
+    - BATON-025
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-025
+    state: draft
+  id: BATON-027
+  objective: Implement in-game diplomatic wheel for Non-Aggression Pacts, peace treaties,
+    joint attacks, and betrayals.
+  scope:
+    exclude: []
+    include: []
+  title: Diplomacy & Non-Aggression Pact Alliance System
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - Map paint brushes and JSON export functioning
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-025
+  execution:
+    depends_on:
+    - BATON-020
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-020
+    state: draft
+  id: BATON-028
+  objective: Implement terrain paint brushes, spawn point placement, and JSON map
+    import/export.
+  scope:
+    exclude: []
+    include: []
+  title: In-Browser Interactive Map Editor & Custom Territory Designer
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - ELO calculation and rank badges functioning
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-003
+    requirements:
+    - REQ-026
+  execution:
+    depends_on:
+    - BATON-023
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-023
+    state: draft
+  id: BATON-029
+  objective: Implement ELO calculation based on standings, rank badges (Bronze ->
+    Grandmaster), and local storage persistence.
+  scope:
+    exclude: []
+    include: []
+  title: Player ELO Rating & Persistent Local Progression System
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - node scripts/benchmark-cli.js
+    reviewer_checks:
+    - 10-minute match runs cleanly with 0 memory growth or freezing
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-001
+    - GATE-003
+    requirements:
+    - REQ-027
+  execution:
+    depends_on: []
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Immediate priority bug fix
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-030
+  objective: Refactor frontiers to auto-prune inland pixels, fix particle recycling
+    in ParticleSystem, and window telemetry samples.
+  scope:
+    exclude: []
+    include:
+    - public/src/simulation.js
+    - public/src/ai-engine.js
+    - public/src/particles.js
+  title: Engine Memory Leak Elimination & Unbounded Array Pruning
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - npm run test:combat
+    reviewer_checks:
+    - AI bots pay 1.17% attack tax and execute with fair human-perceivable reaction
+      delays
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-003
+    requirements:
+    - REQ-028
+  execution:
+    depends_on:
+    - BATON-030
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready after BATON-030
+    state: draft
+  id: BATON-031
+  objective: Apply 1.17% attack tax and 3.125% boat tax to AI bots, add bot action
+    tick throttling (250ms-500ms), and remove human ganking.
+  scope:
+    exclude: []
+    include:
+    - public/src/ai-engine.js
+    - public/src/simulation.js
+  title: AI Fair Balance & Difficulty Scaling Calibration
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - npm run test:map
+    reviewer_checks:
+    - GeoJSON World Map details Scandinavian peninsula, Red Sea, Persian Gulf, Mediterranean
+      islands, SE Asian archipelagos, and Great Lakes
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-029
+  execution:
+    depends_on:
+    - BATON-030
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready after BATON-030
+    state: draft
+  id: BATON-032
+  objective: "Replace coarse B\xE9zier curves with high-resolution vector paths detailing\
+    \ accurate coastlines and sub-pixel multi-polygon rasterization."
+  scope:
+    exclude: []
+    include:
+    - public/src/geojson-world-map.js
+  title: High-Precision GeoJSON World Map & Geography Engine Overhaul
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - npm run test:server
+    reviewer_checks:
+    - Zero array mutation splices during iterations and robust null checks during
+      bot elimination
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-001
+    - GATE-003
+    requirements:
+    - REQ-030
+  execution:
+    depends_on:
+    - BATON-030
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready after BATON-030
+    state: draft
+  id: BATON-033
+  objective: Fix backward loop array splices, clear expired naval boat references,
+    and add non-null safeguards to render loop.
+  scope:
+    exclude: []
+    include:
+    - public/src/simulation.js
+    - public/src/main.js
+  title: Game Engine Stability, Array Mutation & Logic Bug Hardening
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -1574,6 +1849,13 @@ evaluations:
 - id: EVAL-024
   layer: outcome
   target: BATON-019
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-025
+  layer: outcome
+  target: BATON-030
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

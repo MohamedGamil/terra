@@ -95,6 +95,10 @@ export class MatchRecorder {
         timestamp: parseFloat(elapsedSec.toFixed(1)),
         players: snapshotPlayers
       });
+
+      if (this.timelineSamples.length > 600) {
+        this.timelineSamples.shift();
+      }
     }
   }
 

@@ -295,7 +295,9 @@ export class TerritorySimulation {
             remainingTroops -= cost;
             player.landCount++;
             this.grid[nIdx] = ownerId;
-            frontier.push(nIdx);
+            if (this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+              frontier.push(nIdx);
+            }
             expandedAny = true;
           }
         }
@@ -308,15 +310,27 @@ export class TerritorySimulation {
             player.landCount++;
             if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
             this.grid[nIdx] = ownerId;
-            frontier.push(nIdx);
+            if (this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+              frontier.push(nIdx);
+            }
             expandedAny = true;
           }
         }
       }
 
-      if (!expandedAny) {
+      if (!expandedAny || !this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
         frontier.splice(bestArrayIdx, 1);
       }
+    }
+  }
+
+  pruneAllFrontiers() {
+    for (let id = 1; id <= this.numPlayers; id++) {
+      const frontier = this.frontiers[id];
+      if (!frontier || frontier.length === 0) continue;
+      this.frontiers[id] = frontier.filter(idx => 
+        this.aiEngine.isBorderPixel(idx, this.grid, this.terrainGrid, this.width, this.height, id)
+      );
     }
   }
 
@@ -339,6 +353,10 @@ export class TerritorySimulation {
 
     if (this.tickCount % 100 === 0) {
       this.processIncome();
+    }
+
+    if (this.tickCount % 200 === 0) {
+      this.pruneAllFrontiers();
     }
 
     this.updateBoats(deltaTimeMs);
