@@ -498,7 +498,9 @@ class TerraApp {
     if (attackBtn) {
       attackBtn.addEventListener('click', () => {
         if (this.targetPixelIdx >= 0) {
-          if (this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent)) {
+          const targetOwner = this.simulation.grid[this.targetPixelIdx];
+          const isTargeted = (targetOwner !== 0);
+          if (this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent, isTargeted)) {
             this.sound.playAttack();
           }
         }
@@ -685,11 +687,13 @@ class TerraApp {
         this.targetPixelIdx = idx;
         this.renderer.targetPixelIdx = idx;
 
+        const targetOwner = this.simulation.grid[idx];
+        const isTargeted = (targetOwner !== 0);
         const terrainType = this.simulation.terrainGrid[idx];
         if (terrainType === 0) {
           this.simulation.launchBoatAttack(1, idx, this.selectedForcePercent);
         } else if (terrainType === 1) {
-          this.simulation.executeAttack(1, idx, this.selectedForcePercent);
+          this.simulation.executeAttack(1, idx, this.selectedForcePercent, isTargeted);
         }
       }
     };
@@ -708,7 +712,9 @@ class TerraApp {
 
     document.getElementById('ctx-attack').addEventListener('click', () => {
       if (this.targetPixelIdx >= 0) {
-        this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent);
+        const targetOwner = this.simulation.grid[this.targetPixelIdx];
+        const isTargeted = (targetOwner !== 0);
+        this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent, isTargeted);
       }
       this.closeContextMenu();
     });

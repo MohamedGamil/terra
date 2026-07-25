@@ -826,6 +826,41 @@ assert(expansionSpeed >= 1.0, `Wavefront speed scales at least to 1.0 (Actual: $
 
 testsPassed += 3;
 
+// --- Test 24: Centroid-Outward Neutral Expansion Frontier Filtering (REQ-074) ---
+console.log('\n[Test 24] Centroid-Outward Neutral Expansion Frontier Filtering (REQ-074)');
+const simFilter = new TerritorySimulation(10, 10, 3, 'arena');
+simFilter.state = 'PLAYING';
+simFilter.terrainGrid.fill(1); // fill with land
+
+// Player 1 owns (1,1) (idx 11) and (1,2) (idx 21)
+simFilter.grid[11] = 1;
+simFilter.grid[21] = 1;
+simFilter.frontiers[1] = [11, 21];
+
+// Rival Player 2 owns (1,0) (idx 10)
+simFilter.grid[10] = 2;
+simFilter.frontiers[2] = [10];
+
+simFilter.players[1].isAlive = true;
+simFilter.players[1].balance = 500;
+simFilter.players[1].landCount = 2;
+simFilter.players[1].capitalX = 1;
+simFilter.players[1].capitalY = 1;
+
+// Execute non-targeted neutral attack (isTargeted = false) targeting neutral index 12
+const okLaunch = simFilter.executeAttack(1, 12, 50, false);
+assert(okLaunch === true, 'Neutral expansion successfully launched');
+assert(simFilter.activeExpansions.length === 1, 'One expansion queued');
+
+// Run tick updates to trigger expansion
+simFilter.update(16.6);
+
+// Verify that the expansion captured neutral pixels but NOT rival pixel 10
+assert(simFilter.grid[10] === 2, 'Rival pixel 10 remains untouched by Player 1 neutral expansion');
+assert(simFilter.grid[12] === 1 || simFilter.grid[22] === 1 || simFilter.grid[2] === 1, 'Neutral neighbor pixels are successfully captured');
+
+testsPassed += 4;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

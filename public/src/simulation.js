@@ -876,6 +876,26 @@ export class TerritorySimulation {
         exp.currentRadius = Math.min(exp.maxRadius, exp.currentRadius + expansionSpeed);
       }
 
+      // Initialize validFrontier for centroid-outward expansions to ensure we only select border pixels adjacent to neutral land.
+      let validFrontier = [];
+      if (exp.path === null) {
+        for (let i = 0; i < frontier.length; i++) {
+          const fIdx = frontier[i];
+          const cx = fIdx % width;
+          const cy = Math.floor(fIdx / width);
+          
+          const hasNeutralNeighbor = 
+            (cy > 0 && this.grid[fIdx - width] === 0 && this.terrainGrid[fIdx - width] !== 0 && this.terrainGrid[fIdx - width] !== 2) ||
+            (cy < height - 1 && this.grid[fIdx + width] === 0 && this.terrainGrid[fIdx + width] !== 0 && this.terrainGrid[fIdx + width] !== 2) ||
+            (cx > 0 && this.grid[fIdx - 1] === 0 && this.terrainGrid[fIdx - 1] !== 0 && this.terrainGrid[fIdx - 1] !== 2) ||
+            (cx < width - 1 && this.grid[fIdx + 1] === 0 && this.terrainGrid[fIdx + 1] !== 0 && this.terrainGrid[fIdx + 1] !== 2);
+
+          if (hasNeutralNeighbor) {
+            validFrontier.push(fIdx);
+          }
+        }
+      }
+
       while (exp.remainingTroops > 2 && stepCount < stepLimit) {
         let bestIdx = -1;
         let minDist = Infinity;
@@ -894,9 +914,9 @@ export class TerritorySimulation {
             }
           }
         } else {
-          if (frontier.length > 0) {
-            bestArrayIdx = Math.floor(Math.random() * frontier.length);
-            bestIdx = frontier[bestArrayIdx];
+          if (validFrontier.length > 0) {
+            bestArrayIdx = Math.floor(Math.random() * validFrontier.length);
+            bestIdx = validFrontier[bestArrayIdx];
           }
         }
 
@@ -920,6 +940,9 @@ export class TerritorySimulation {
 
           const defenderOwner = this.grid[nIdx];
           if (defenderOwner === exp.ownerId) continue;
+
+          // Neutral expansions cannot capture rival owned territory
+          if (exp.isRivalAttack === false && defenderOwner !== 0) continue;
 
           const nx = nIdx % width;
           const ny = Math.floor(nIdx / width);
@@ -963,6 +986,33 @@ export class TerritorySimulation {
                 frontier.push(nIdx);
                 frontierSet.add(nIdx);
               }
+
+              if (exp.path === null) {
+                // nIdx is a new border pixel, check if it has neutral neighbors to add to validFrontier
+                const ncx = nIdx % width;
+                const ncy = Math.floor(nIdx / width);
+                const nHasNeutral =
+                  (ncy > 0 && this.grid[nIdx - width] === 0 && this.terrainGrid[nIdx - width] !== 0 && this.terrainGrid[nIdx - width] !== 2) ||
+                  (ncy < height - 1 && this.grid[nIdx + width] === 0 && this.terrainGrid[nIdx + width] !== 0 && this.terrainGrid[nIdx + width] !== 2) ||
+                  (ncx > 0 && this.grid[nIdx - 1] === 0 && this.terrainGrid[nIdx - 1] !== 0 && this.terrainGrid[nIdx - 1] !== 2) ||
+                  (ncx < width - 1 && this.grid[nIdx + 1] === 0 && this.terrainGrid[nIdx + 1] !== 0 && this.terrainGrid[nIdx + 1] !== 2);
+                if (nHasNeutral) {
+                  validFrontier.push(nIdx);
+                }
+
+                // Check if bestIdx still has neutral neighbors; if not, remove it from validFrontier
+                const bcx = bestIdx % width;
+                const bcy = Math.floor(bestIdx / width);
+                const bHasNeutral =
+                  (bcy > 0 && this.grid[bestIdx - width] === 0 && this.terrainGrid[bestIdx - width] !== 0 && this.terrainGrid[bestIdx - width] !== 2) ||
+                  (bcy < height - 1 && this.grid[bestIdx + width] === 0 && this.terrainGrid[bestIdx + width] !== 0 && this.terrainGrid[bestIdx + width] !== 2) ||
+                  (bcx > 0 && this.grid[bestIdx - 1] === 0 && this.terrainGrid[bestIdx - 1] !== 0 && this.terrainGrid[bestIdx - 1] !== 2) ||
+                  (bcx < width - 1 && this.grid[bestIdx + 1] === 0 && this.terrainGrid[bestIdx + 1] !== 0 && this.terrainGrid[bestIdx + 1] !== 2);
+                if (!bHasNeutral) {
+                  validFrontier.splice(bestArrayIdx, 1);
+                }
+              }
+
               localExpanded = true;
               stepCount++;
               expandedAny = true;
@@ -1025,7 +1075,14 @@ export class TerritorySimulation {
 
         if (!this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
           frontierSet.delete(bestIdx);
-          frontier.splice(bestArrayIdx, 1);
+          if (exp.path !== null) {
+            frontier.splice(bestArrayIdx, 1);
+          } else {
+            const fIndex = frontier.indexOf(bestIdx);
+            if (fIndex !== -1) {
+              frontier.splice(fIndex, 1);
+            }
+          }
         }
 
         if (!localExpanded) {

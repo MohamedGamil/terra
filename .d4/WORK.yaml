@@ -498,6 +498,11 @@ requirements:
   kind: functional
   statement: The wavefront propagation speed MUST scale to at least 1.0 pixel per
     tick for long-distance attacks, ensuring invasions travel at a responsive rate.
+- id: REQ-074
+  kind: functional
+  statement: All interactive player land attacks targeting neutral land MUST expand
+    radially/uniformly outwards from the player's borders (centroid-outward non-targeted
+    mode) with optimized frontier checking to avoid sluggish captures.
 batons:
 - id: BATON-001
   version: 1
@@ -2617,6 +2622,27 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- id: BATON-074
+  title: Centroid-Outward Neutral Expansion Frontier Filtering & UI Integration
+  objective: Implement active frontier filtering for centroid-outward expansions to
+    target neutral pixels exclusively and integrate with UI call sites.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-074
+  execution:
+    depends_on:
+    - BATON-073
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2783,6 +2809,20 @@ releases:
   batons:
   - BATON-072
   - BATON-073
+  delivery_form: deployable
+  status: released
+- id: REL-009
+  version: 0.9.0
+  name: 'Terra Neutral Expansion Refinements: Outward Radial Growth & UI Snapping'
+  is_mvp: false
+  exit_criteria:
+  - Neutral land expansions grow radially outwards from entire frontier adjacent to
+    neutral.
+  - UI triggers non-targeted centroid-outward expansion when clicking on neutral land.
+  requirements:
+  - REQ-074
+  batons:
+  - BATON-074
   delivery_form: deployable
   status: released
 evaluations:
@@ -3293,6 +3333,13 @@ evaluations:
 - id: EVAL-073
   layer: outcome
   target: BATON-073
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-074
+  layer: outcome
+  target: BATON-074
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
