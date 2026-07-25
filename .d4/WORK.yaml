@@ -342,6 +342,32 @@ requirements:
 - id: REQ-033
   statement: The GeoJSONWorldMap module shall synchronously import land polygon assets
     to prevent async timing windows and blank game canvas rendering.
+- id: REQ-034
+  kind: functional
+  statement: Compact High-Precision Target Cursor & Canvas Pointer UI (smaller circular
+    element).
+- id: REQ-035
+  kind: functional
+  statement: Double-Click Direct Tactical Attack Gesture on map viewport.
+- id: REQ-036
+  kind: functional
+  statement: Strictly Contiguous Frontier Pathing & Land Adjacency Combat Constraint.
+- id: REQ-037
+  kind: functional
+  statement: Border Pressure & Tug-of-War Push/Push-Back Frontier Combat Engine.
+- id: REQ-038
+  kind: functional
+  statement: Territory-Amplified Global Interest Rate & Dynamic Economy Throughput
+    Multiplier.
+- id: REQ-039
+  kind: functional
+  statement: Direct Island Transport Landing & Autonomous Island Seed Frontier Expansion.
+- id: REQ-040
+  kind: functional
+  statement: Web Audio API Procedural RTS Sound Effects Synthesizer Engine.
+- id: REQ-041
+  kind: functional
+  statement: High-Performance 2D Visual Particle & FX Canvas Engine.
 batons:
 - id: BATON-001
   version: 1
@@ -1690,6 +1716,126 @@ batons:
     exclude: []
     include: []
   title: Synchronous GeoJSON Asset Import & Instant Render
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:fog
+  execution:
+    depends_on:
+    - BATON-026
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-026
+    state: draft
+  id: BATON-037
+  objective: Reduce hover/target crosshair cursor size to a sleek, compact precision
+    radius with scaleX/Y alignment (REQ-034).
+  title: Compact High-Precision Target Cursor & Canvas Pointer UI
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-037
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-037
+    state: draft
+  id: BATON-038
+  objective: Implement double-click event listener executing instant land/naval attacks
+    at clicked map coordinates (REQ-035).
+  title: Double-Click Direct Tactical Attack Viewport Gesture
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-038
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-038
+    state: draft
+  id: BATON-039
+  objective: Enforce strict border adjacency validation for land attacks, preventing
+    distant tele-conquest (REQ-036).
+  title: Contiguous Frontier Pathing & Adjacency Combat Constraint
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-039
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-039
+    state: draft
+  id: BATON-040
+  objective: Implement dynamic border pressure and push-back mechanics for PVP/PVE
+    front-line battles (REQ-037).
+  title: Frontier Pressure & Tug-of-War Push/Push-Back Combat Engine
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-040
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-040
+    state: draft
+  id: BATON-041
+  objective: Integrate global interest rate scaling with conquered land area to amplify
+    troop throughput (REQ-038).
+  title: Territory-Amplified Economy Interest Multiplier
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-041
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-041
+    state: draft
+  id: BATON-042
+  objective: Fix naval transport landing bug on islands by establishing direct island
+    seed frontiers upon arrival (REQ-039).
+  title: Island Naval Landing & Island Seed Frontier Fix
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-042
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-042
+    state: draft
+  id: BATON-043
+  objective: Implement audio synthesizer engine emitting attack launch, capture pop,
+    naval splash, and victory chimes (REQ-040).
+  title: Web Audio API Procedural RTS Sound Effects Engine
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  execution:
+    depends_on:
+    - BATON-043
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-043
+    state: draft
+  id: BATON-044
+  objective: Implement visual particle engine rendering combat sparks, radar shockwaves,
+    and conquest bursts (REQ-041).
+  title: 2D Canvas Particle Engine & Visual Tactical Shockwave FX
   type: implementation
 releases:
 - id: REL-001
