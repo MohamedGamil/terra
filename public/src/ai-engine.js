@@ -200,23 +200,46 @@ export class AIEngine {
           const targetIdx = targetY * width + targetX;
 
           if (terrainGrid[targetIdx] === 1 && grid[targetIdx] !== id) {
-            const force = Math.floor(bot.balance * 0.25);
-            bot.balance -= force;
-            boats.push({
-              id: Date.now() + Math.random(),
-              ownerId: id,
-              troops: force,
-              x: departurePoint.x,
-              y: departurePoint.y,
-              targetX,
-              targetY,
-              targetIdx,
-              speed: 4.5
-            });
+            if (this.isWaterPath(departurePoint.x, departurePoint.y, targetX, targetY, terrainGrid, width, height)) {
+              const force = Math.floor(bot.balance * 0.25);
+              bot.balance -= force;
+              boats.push({
+                id: Date.now() + Math.random(),
+                ownerId: id,
+                troops: force,
+                x: departurePoint.x,
+                y: departurePoint.y,
+                targetX,
+                targetY,
+                targetIdx,
+                speed: 4.5
+              });
+            }
           }
         }
       }
     }
+  }
+
+  isWaterPath(x1, y1, x2, y2, terrainGrid, width, height) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const distance = Math.hypot(dx, dy);
+    if (distance === 0) return true;
+
+    const steps = Math.ceil(distance);
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const px = Math.round(x1 + dx * t);
+      const py = Math.round(y1 + dy * t);
+      if (px < 0 || px >= width || py < 0 || py >= height) return false;
+      const idx = py * width + px;
+
+      if (terrainGrid[idx] !== 0) {
+        return false;
+      }
+    }
+    return true;
   }
 
   findBotCoastalPixel(ownerId, frontier, terrainGrid, width, height) {

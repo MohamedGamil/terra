@@ -2175,8 +2175,10 @@ batons:
     - BATON-055
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-055
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-056
   title: AI Bot Water-Only Naval Pathfinding
   objective: Restrict AI bot naval transports to water/ocean paths without crossing
@@ -2698,6 +2700,13 @@ evaluations:
 - id: EVAL-055
   layer: outcome
   target: BATON-055
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-056
+  layer: outcome
+  target: BATON-056
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

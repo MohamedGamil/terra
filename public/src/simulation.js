@@ -1002,8 +1002,45 @@ export class TerritorySimulation {
       } else {
         const step = (boat.speed * deltaTimeMs) / 16.6;
         const actualStep = Math.min(dist, step);
-        boat.x += (dx / dist) * actualStep;
-        boat.y += (dy / dist) * actualStep;
+        const nextX = boat.x + (dx / dist) * actualStep;
+        const nextY = boat.y + (dy / dist) * actualStep;
+
+        if (boat.startX === undefined) {
+          boat.startX = boat.x;
+          boat.startY = boat.y;
+        }
+
+        const nextXInt = Math.floor(nextX);
+        const nextYInt = Math.floor(nextY);
+        if (nextXInt >= 0 && nextXInt < this.width && nextYInt >= 0 && nextYInt < this.height) {
+          const stepDist = Math.hypot(nextX - boat.x, nextY - boat.y);
+          const stepsToCheck = Math.ceil(stepDist);
+          let collided = false;
+          for (let s = 1; s <= stepsToCheck; s++) {
+            const t = s / stepsToCheck;
+            const px = Math.round(boat.x + (nextX - boat.x) * t);
+            const py = Math.round(boat.y + (nextY - boat.y) * t);
+            if (px >= 0 && px < this.width && py >= 0 && py < this.height) {
+              const checkIdx = py * this.width + px;
+              const distToTarget = Math.hypot(boat.targetX - px, boat.targetY - py);
+              const distFromStart = Math.hypot(px - boat.startX, py - boat.startY);
+              if (boat.ownerId !== 1 && distToTarget >= 8 && distFromStart >= 2 && this.terrainGrid[checkIdx] !== 0) {
+                collided = true;
+                break;
+              }
+            }
+          }
+          if (collided) {
+            if (boat.ownerId === 1) {
+              this.addToast('⛵ A naval transport boat ran aground and sank!', 'danger');
+            }
+            this.boats.splice(i, 1);
+            continue;
+          }
+        }
+
+        boat.x = nextX;
+        boat.y = nextY;
 
         // Apply sea travel attrition decay (0.0015 per pixel)
         boat.troops = Math.max(0, boat.troops - boat.troops * 0.0015 * actualStep);

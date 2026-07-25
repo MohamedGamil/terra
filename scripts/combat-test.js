@@ -20,6 +20,7 @@ globalThis.window = {
 import { TerritorySimulation } from '../public/src/simulation.js';
 import { MapGenerator } from '../public/src/map-generator.js';
 import { TerritoryRenderer } from '../public/src/renderer.js';
+import { AIEngine } from '../public/src/ai-engine.js';
 
 console.log('=== Terra GATE-003 Automated Combat & Game Loop Test Suite ===\n');
 
@@ -395,6 +396,48 @@ assert(mappedBorders.mapX === 200, `Calculated mapX matches layout subtraction (
 
 // Clean up global mock
 delete global.window;
+
+// --- Test 15: AI Bot Water-Only Naval Pathfinding (REQ-053) ---
+console.log('\n[Test 15] AI Bot Water-Only Naval Pathfinding (REQ-053)');
+
+const aiEngine = new AIEngine(10);
+const terrainGridTest = new Uint8Array(100 * 100); // 100x100 grid
+
+// Set a land mass in the middle (x=50, y=0 to 100)
+for (let y = 0; y < 100; y++) {
+  terrainGridTest[y * 100 + 50] = 1;
+}
+
+// 1. Path crossing land (from x=10, y=50 to x=90, y=50) should be blocked (false)
+const pathCrossingLand = aiEngine.isWaterPath(10, 50, 90, 50, terrainGridTest, 100, 100);
+assert(pathCrossingLand === false, 'Water path crossing intermediate land mass is detected as blocked');
+
+// 2. Path entirely over water (from x=10, y=10 to x=40, y=10) should be clear (true)
+const pathOverWater = aiEngine.isWaterPath(10, 10, 40, 10, terrainGridTest, 100, 100);
+assert(pathOverWater === true, 'Water path entirely over ocean is detected as clear');
+
+// 3. Test real-time collision sinking in updateBoats
+const simBoats = new TerritorySimulation(100, 100, 10, 'arena');
+simBoats.state = 'PLAYING';
+// Inject the same terrain grid with a land wall
+simBoats.terrainGrid = terrainGridTest;
+
+// Add a boat travelling across the land wall
+simBoats.boats.push({
+  id: 9999,
+  ownerId: 2,
+  troops: 100,
+  x: 48,
+  y: 50,
+  targetX: 90,
+  targetY: 50,
+  targetIdx: 5090,
+  speed: 5.0
+});
+
+// Update simulation boats (ticks)
+simBoats.updateBoats(16.6); // Moves 5 pixels forward: 48 + 5 = 53 (crosses the land wall at x=50)
+assert(simBoats.boats.length === 0, 'Transport boat sank/deleted upon colliding with land wall');
 
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
