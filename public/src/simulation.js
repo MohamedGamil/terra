@@ -927,7 +927,7 @@ export class TerritorySimulation {
 
       // Initialize validFrontier for centroid-outward expansions to ensure we only select border pixels adjacent to neutral land.
       let validFrontier = [];
-      if (exp.path === null) {
+      if (!exp.path) {
         for (let i = 0; i < frontier.length; i++) {
           const fIdx = frontier[i];
           const cx = fIdx % width;
@@ -953,17 +953,51 @@ export class TerritorySimulation {
         let minDist = Infinity;
         let bestArrayIdx = -1;
 
-        if (exp.path !== null) {
+        if (exp.path) {
+          // Find the frontier pixel that is close to the path and closest to the target
           for (let i = frontier.length - 1; i >= 0; i--) {
             const fIdx = frontier[i];
             if (excludedFrontierIndices.has(fIdx)) continue;
             const fx = fIdx % width;
             const fy = Math.floor(fIdx / width);
+
+            // Compute distance from fIdx to the path (with sampling for performance)
+            let distToPath = Infinity;
+            const pathLen = exp.path.length;
+            const pathStep = Math.max(1, Math.floor(pathLen / 20));
+            for (let p = 0; p < pathLen; p += pathStep) {
+              const px = exp.path[p] % width;
+              const py = Math.floor(exp.path[p] / width);
+              const d = Math.hypot(fx - px, fy - py);
+              if (d < distToPath) {
+                distToPath = d;
+              }
+              if (distToPath <= 3.0) break;
+            }
+
+            if (distToPath > 5.0) continue;
+
             const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
             if (distSq < minDist) {
               minDist = distSq;
               bestIdx = fIdx;
               bestArrayIdx = i;
+            }
+          }
+
+          if (bestIdx === -1) {
+            // Fallback to standard closest search if no pixel is close to path
+            for (let i = frontier.length - 1; i >= 0; i--) {
+              const fIdx = frontier[i];
+              if (excludedFrontierIndices.has(fIdx)) continue;
+              const fx = fIdx % width;
+              const fy = Math.floor(fIdx / width);
+              const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
+              if (distSq < minDist) {
+                minDist = distSq;
+                bestIdx = fIdx;
+                bestArrayIdx = i;
+              }
             }
           }
         } else {

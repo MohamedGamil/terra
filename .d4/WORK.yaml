@@ -580,6 +580,10 @@ requirements:
   statement: Rival attacks targeting enclaves MUST set maxRadius to 1000 to allow
     complete conquest and elimination of encapsulated rival enclaves without artificial
     spatial restrictions.
+- id: REQ-091
+  kind: functional
+  statement: Land attack campaigns with a path MUST constrain frontier pixel selection
+    to pixels within 5.0 units of the path to prevent water-bypassed selection conflicts.
 batons:
 - id: BATON-001
   version: 1
@@ -3001,6 +3005,26 @@ batons:
   objective: Set maxRadius to 1000 for rival enclave attacks to permit full elimination.
   title: Enclave Complete Conquest Fixing
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-091
+  execution:
+    depends_on:
+    - BATON-088
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-089
+  objective: Constrain bestIdx selection to path proximity in updateExpansions to
+    fix enclaved rival attacks.
+  title: Path Proximity Frontier Selection
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3816,6 +3840,13 @@ evaluations:
 - id: EVAL-088
   layer: outcome
   target: BATON-088
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-089
+  layer: outcome
+  target: BATON-089
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
