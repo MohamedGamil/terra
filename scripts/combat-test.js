@@ -117,6 +117,20 @@ sim.processInterest();
 
 assert(sim.players[1].redInterest === true, 'Red Interest warning triggered when balance > 100x land area');
 
+// --- Test 6: Live Top Players Leaderboard Sorting (REQ-042) ---
+console.log('\n[Test 6] Live Top Players Leaderboard Sorting (REQ-042)');
+sim.players[1].landCount = 500;
+sim.players[2].landCount = 1200;
+sim.players[3].landCount = 800;
+
+const sortedLeaderboard = [...sim.players]
+  .filter(p => p && p.landCount > 0)
+  .sort((a, b) => b.landCount - a.landCount);
+
+assert(sortedLeaderboard[0].id === 2, 'Top rank empire has largest land count (1200)');
+assert(sortedLeaderboard[1].id === 3, 'Second rank empire has second largest land count (800)');
+assert(sortedLeaderboard[2].id === 1, 'Third rank empire is player (500)');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

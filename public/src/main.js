@@ -944,6 +944,33 @@ class TerraApp {
         rankEl.textContent = `#${playerRank || 1} / ${this.simulation.players.length - 1}`;
       }
 
+      // Live Top Players Leaderboard HUD Widget
+      const lbRowsEl = document.getElementById('lb-rows');
+      if (lbRowsEl && this.simulation.players) {
+        const sortedEmpires = [...this.simulation.players]
+          .filter(p => p && p.landCount > 0)
+          .sort((a, b) => b.landCount - a.landCount);
+
+        const top7 = sortedEmpires.slice(0, 7);
+        let html = '';
+        top7.forEach((p, idx) => {
+          const isHuman = p.id === 1;
+          const hexColor = this.palette ? this.palette.getColorHex(p.id) : '#00f2fe';
+          const pct = ((p.landCount / (1000 * 1000)) * 100).toFixed(1);
+          html += `
+            <div class="lb-row ${isHuman ? 'human' : ''}">
+              <div class="lb-left">
+                <span class="lb-rank">#${idx + 1}</span>
+                <span class="lb-swatch" style="background: ${hexColor}"></span>
+                <span class="lb-name">${p.name || 'Bot ' + p.id}</span>
+              </div>
+              <div class="lb-right">${p.landCount.toLocaleString()} px² (${pct}%)</div>
+            </div>
+          `;
+        });
+        lbRowsEl.innerHTML = html;
+      }
+
       const interestEl = document.getElementById('hud-interest');
       if (interestEl) {
         if (stats.redInterest) {

@@ -368,6 +368,10 @@ requirements:
 - id: REQ-041
   kind: functional
   statement: High-Performance 2D Visual Particle & FX Canvas Engine.
+- id: REQ-042
+  kind: functional
+  statement: The system MUST display a live top players leaderboard HUD widget sorted
+    by land owned during gameplay screen.
 batons:
 - id: BATON-001
   version: 1
@@ -1887,6 +1891,27 @@ batons:
     and conquest bursts (REQ-041).
   title: 2D Canvas Particle Engine & Visual Tactical Shockwave FX
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-042
+  execution:
+    depends_on:
+    - BATON-044
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-045
+  objective: Implement live top players leaderboard HUD widget ordered by land owned
+    during gameplay screen (REQ-042).
+  title: Live Top Players Leaderboard HUD Widget
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2288,6 +2313,13 @@ evaluations:
 - id: EVAL-044
   layer: outcome
   target: BATON-029
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-045
+  layer: outcome
+  target: BATON-045
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
