@@ -117,7 +117,7 @@ export class TerritorySimulation {
 
     const humanX = this.humanSpawnIdx % width;
     const humanY = Math.floor(this.humanSpawnIdx / width);
-    const minBufferSq = 50 * 50;
+    const minBufferSq = 56 * 56;
 
     // Seed AI Bots (radius 6px) avoiding 50-pixel buffer from human spawn
     for (let id = 2; id <= this.numPlayers; id++) {
@@ -187,6 +187,14 @@ export class TerritorySimulation {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 20) return false;
+
+    // Land attack target must be land (terrain !== 0)
+    if (this.terrainGrid[targetPixelIdx] === 0) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ Cannot launch land attack across ocean! Launch a Naval Attack instead.', 'warning');
+      }
+      return false;
+    }
 
     const tax = Math.ceil(attacker.balance * 0.0117);
     attacker.balance -= tax;
