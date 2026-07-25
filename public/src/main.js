@@ -498,7 +498,9 @@ class TerraApp {
     if (attackBtn) {
       attackBtn.addEventListener('click', () => {
         if (this.targetPixelIdx >= 0) {
-          this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent);
+          if (this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent)) {
+            this.sound.playAttack();
+          }
         }
       });
     }
@@ -507,7 +509,9 @@ class TerraApp {
     if (boatBtn) {
       boatBtn.addEventListener('click', () => {
         if (this.targetPixelIdx >= 0) {
-          this.simulation.launchBoatAttack(1, this.targetPixelIdx, this.selectedForcePercent);
+          if (this.simulation.launchBoatAttack(1, this.targetPixelIdx, this.selectedForcePercent)) {
+            this.sound.playBoat();
+          }
         }
       });
     }
@@ -531,6 +535,15 @@ class TerraApp {
         this.renderer.fogOfWarEnabled = this.simulation.fogOfWarEnabled;
         const stateStr = this.simulation.fogOfWarEnabled ? 'Enabled' : 'Disabled';
         this.simulation.addToast(`Fog of War ${stateStr}`, 'info');
+      });
+    }
+
+    const audioBtn = document.getElementById('btn-toggle-audio');
+    if (audioBtn) {
+      audioBtn.addEventListener('click', () => {
+        const muted = this.sound.toggleMute();
+        audioBtn.textContent = muted ? '🔇 Muted' : '🔊 Sound';
+        this.simulation.addToast(muted ? 'Audio Muted' : 'Audio Enabled', 'info');
       });
     }
 

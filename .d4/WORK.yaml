@@ -1851,9 +1851,15 @@ batons:
     - BATON-042
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-042
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-043
+  authority:
+    gates: []
+    requirements:
+    - REQ-040
   objective: Implement audio synthesizer engine emitting attack launch, capture pop,
     naval splash, and victory chimes (REQ-040).
   title: Web Audio API Procedural RTS Sound Effects Engine
@@ -2253,6 +2259,13 @@ evaluations:
 - id: EVAL-041
   layer: outcome
   target: BATON-042
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-042
+  layer: outcome
+  target: BATON-043
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
