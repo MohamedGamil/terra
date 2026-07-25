@@ -785,6 +785,21 @@ class TerraApp {
       this.simulation.players[1].name = playerName;
     }
 
+    this.simulation.onParticleEvent = (eventType, data) => {
+      if (!this.particles) return;
+      if (eventType === 'ATTACK_LAUNCH') {
+        this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 24);
+        for (let i = 0; i < 5; i++) {
+          this.particles.spawnSpark(data.x, data.y, data.color || '#00f2fe');
+        }
+      } else if (eventType === 'BOAT_LAUNCH') {
+        this.particles.spawnShockwave(data.x, data.y, '#00f2fe', 30);
+        this.particles.spawnFloatingText(data.x, data.y, '🚤 NAVAL', '#00f2fe');
+      } else if (eventType === 'CONQUEST') {
+        this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 16);
+      }
+    };
+
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
     this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
     this.initMinimapEvents();
