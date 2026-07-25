@@ -569,10 +569,13 @@ export class TerritorySimulation {
         else if (defenderOwner !== ownerId) {
           if (this.hasPact(ownerId, defenderOwner)) continue;
           const defender = this.players[defenderOwner];
-          const cost = 4;
-          if (remainingTroops >= cost * 2) {
-            remainingTroops -= cost * 2;
-            if (defender) defender.balance = Math.max(0, defender.balance - cost);
+          const baseCost = 4;
+          const fortBonus = (defender && defender.balance > player.balance * 0.5) ? 2 : 0;
+          const totalCost = baseCost * 2 + fortBonus;
+
+          if (remainingTroops >= totalCost) {
+            remainingTroops -= totalCost;
+            if (defender) defender.balance = Math.max(0, defender.balance - baseCost);
             player.landCount++;
             if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
             this.grid[nIdx] = ownerId;
@@ -581,6 +584,15 @@ export class TerritorySimulation {
               frontierSet.add(nIdx);
             }
             expandedAny = true;
+
+            // Defender front-line counter-push retaliation
+            if (defender && defender.isAlive && defender.balance > 300 && Math.random() < 0.2) {
+              const counterTroops = Math.min(Math.floor(defender.balance * 0.1), 500);
+              if (counterTroops > 20) {
+                defender.balance -= counterTroops;
+                this.advanceFrontierTowards(defenderOwner, cx, cy, counterTroops);
+              }
+            }
           }
         }
       }

@@ -1783,13 +1783,19 @@ batons:
 - acceptance:
     deterministic_checks:
     - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-037
   execution:
     depends_on:
     - BATON-039
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-039
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-040
   objective: Implement dynamic border pressure and push-back mechanics for PVP/PVE
     front-line battles (REQ-037).
@@ -2214,6 +2220,13 @@ evaluations:
 - id: EVAL-038
   layer: outcome
   target: BATON-039
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-039
+  layer: outcome
+  target: BATON-040
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
