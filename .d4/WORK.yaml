@@ -589,6 +589,11 @@ requirements:
   statement: Naval invasions of islands MUST perform reverse-path snapping to match
     closest clear-water coastlines between target and player land, and scale troop
     allocation by distance decay and target island size.
+- id: REQ-093
+  kind: functional
+  statement: Shoreline candidate pairs checked during naval reverse-path checks MUST
+    be filtered by proximity to the target click to ensure local gulfs/harbors are
+    never skipped on large shorelines.
 batons:
 - id: BATON-001
   version: 1
@@ -3050,6 +3055,25 @@ batons:
     for island invasions.
   title: Island Snap & Troop Budget
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-093
+  execution:
+    depends_on:
+    - BATON-090
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-091
+  objective: Implement proximity-based candidate sorting and filtering for shorelines.
+  title: Proximity-Sorted Shoreline Filter
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3879,6 +3903,13 @@ evaluations:
 - id: EVAL-090
   layer: outcome
   target: BATON-090
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-091
+  layer: outcome
+  target: BATON-091
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

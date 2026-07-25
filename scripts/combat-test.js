@@ -1189,6 +1189,57 @@ assert(boat.troops >= 14 && boat.troops <= 20, `Troops amount scaled correctly b
 
 testsPassed += 5;
 
+// --- Test 32: Proximity-Sorted Shoreline Filtering ---
+console.log('\n[Test 32] Proximity-Sorted Shoreline Filtering (REQ-093)');
+
+const sim32 = new TerritorySimulation(100, 100, 10, 'arena');
+sim32.state = 'PLAYING';
+sim32.terrainGrid.fill(0); // water
+
+// Player 1 has a huge shoreline from x=10 to x=90 at y=10
+sim32.players[1].isAlive = true;
+sim32.players[1].balance = 5000;
+sim32.players[1].landCount = 0;
+for (let x = 10; x <= 90; x++) {
+  const idx = 10 * 100 + x;
+  sim32.grid[idx] = 1;
+  sim32.terrainGrid[idx] = 1;
+  sim32.players[1].landCount++;
+}
+
+// A mountain wall at y=15 blocking all water paths, except a tiny gap at x=50
+for (let x = 0; x < 100; x++) {
+  if (x !== 50) {
+    const idx = 15 * 100 + x;
+    sim32.terrainGrid[idx] = 2; // Mountain wall blocking water path
+  }
+}
+
+// Target island at x=49 to 51, y=20
+for (let y = 20; y <= 22; y++) {
+  for (let x = 49; x <= 51; x++) {
+    const idx = y * 100 + x;
+    sim32.terrainGrid[idx] = 1; // land
+  }
+}
+
+// Rebuild frontiers for Player 1
+const p1Frontier32 = [];
+for (let idx = 0; idx < sim32.grid.length; idx++) {
+  if (sim32.grid[idx] === 1) {
+    p1Frontier32.push(idx);
+  }
+}
+sim32.frontiers[1] = p1Frontier32;
+
+// Click on target island center at x=50, y=21
+const ok32 = sim32.launchBoatAttack(1, 21 * 100 + 50, 25);
+assert(ok32, 'Naval invasion successfully launched using the proximity sorted gulf access point');
+assert(sim32.boats.length === 1, 'Invasion boat spawned');
+assert(sim32.boats[0].startX === 50, 'Boat launched correctly from the unblocked gap at x=50');
+
+testsPassed += 3;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

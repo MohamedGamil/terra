@@ -483,20 +483,45 @@ export class TerritorySimulation {
     }
 
     // 4. Reverse Path check: Find optimal (departure, landing) pair with clear water path
+    const startX = initialLandIdx % this.width;
+    const startY = Math.floor(initialLandIdx / this.width);
+
+    // Sort player shoreline by Euclidean distance to initialLandIdx
+    playerShoreline.sort((a, b) => {
+      const ax = a % this.width;
+      const ay = Math.floor(a / this.width);
+      const bx = b % this.width;
+      const by = Math.floor(b / this.width);
+      const distA = Math.hypot(ax - startX, ay - startY);
+      const distB = Math.hypot(bx - startX, by - startY);
+      return distA - distB;
+    });
+
+    // Sort island shoreline by Euclidean distance to initialLandIdx
+    islandShoreline.sort((a, b) => {
+      const ax = a % this.width;
+      const ay = Math.floor(a / this.width);
+      const bx = b % this.width;
+      const by = Math.floor(b / this.width);
+      const distA = Math.hypot(ax - startX, ay - startY);
+      const distB = Math.hypot(bx - startX, by - startY);
+      return distA - distB;
+    });
+
+    const playerCandidates = playerShoreline.slice(0, 100);
+    const islandCandidates = islandShoreline.slice(0, 50);
+
     let bestDepartureIdx = -1;
     let bestLandingIdx = -1;
     let minClearDistance = Infinity;
 
-    const tStep = Math.max(1, Math.floor(islandShoreline.length / 50));
-    const pStep = Math.max(1, Math.floor(playerShoreline.length / 50));
-
-    for (let t = 0; t < islandShoreline.length; t += tStep) {
-      const tIdx = islandShoreline[t];
+    for (let t = 0; t < islandCandidates.length; t++) {
+      const tIdx = islandCandidates[t];
       const tx = tIdx % this.width;
       const ty = Math.floor(tIdx / this.width);
 
-      for (let p = 0; p < playerShoreline.length; p += pStep) {
-        const pIdx = playerShoreline[p];
+      for (let p = 0; p < playerCandidates.length; p++) {
+        const pIdx = playerCandidates[p];
         const px = pIdx % this.width;
         const py = Math.floor(pIdx / this.width);
 
