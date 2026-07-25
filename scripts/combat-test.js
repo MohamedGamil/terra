@@ -494,8 +494,10 @@ const simRoute = new TerritorySimulation(100, 100, 10, 'arena');
 simRoute.state = 'PLAYING';
 
 // Set up Player 1 at x=10, y=10 (idx 1010)
+simRoute.players[1].isAlive = true;
 simRoute.players[1].balance = 1000;
-simRoute.spawnCircularSeed(1, 1010, 2);
+simRoute.players[1].landCount = 10;
+simRoute.grid[1010] = 1;
 simRoute.frontiers[1] = [1010];
 
 // Make the entire terrain grid land (1)
@@ -520,7 +522,9 @@ assert(simRoute.activeExpansions.length === 1, 'Active expansion successfully qu
 assert(simRoute.activeExpansions[0].path !== undefined, 'Expansion path successfully populated');
 
 // 3. Update expansions incrementally along the path corridor
-simRoute.updateExpansions(100);
+for (let step = 0; step < 15; step++) {
+  simRoute.update(16.6);
+}
 // Check that we captured pixels along the path (e.g. x=20, y=10, which was unowned neutral land)
 assert(simRoute.grid[10 * 100 + 20] === 1, 'Expansion successfully captured intermediate path pixel (x=20, y=10) incrementally');
 

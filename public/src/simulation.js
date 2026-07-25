@@ -720,34 +720,42 @@ export class TerritorySimulation {
             startIdx = fIdx;
           }
         }
-        exp.path = this.findLandPath(startIdx, targetIdx) || [startIdx];
       }
 
+      if (exp.currentRadius === undefined) {
+        exp.currentRadius = 1.0;
+        exp.maxRadius = Math.hypot(exp.targetX - exp.launchX, exp.targetY - exp.launchY);
+      }
+
+      exp.currentRadius = Math.min(exp.maxRadius, exp.currentRadius + 1.5);
+
       while (exp.remainingTroops > 2 && stepCount < stepLimit) {
-        let progress = -1;
-        for (let i = 0; i < exp.path.length; i++) {
-          if (this.grid[exp.path[i]] === exp.ownerId) {
-            progress = i;
-          } else {
-            break;
+        let bestIdx = -1;
+        let minDist = Infinity;
+        let bestArrayIdx = -1;
+
+        for (let i = frontier.length - 1; i >= 0; i--) {
+          const fIdx = frontier[i];
+          const fx = fIdx % width;
+          const fy = Math.floor(fIdx / width);
+          const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
+          if (distSq < minDist) {
+            minDist = distSq;
+            bestIdx = fIdx;
+            bestArrayIdx = i;
           }
         }
 
-        if (progress === exp.path.length - 1) {
-          break;
-        }
+        if (bestIdx < 0) break;
 
-        const tipIdx = progress >= 0 ? exp.path[progress] : exp.path[0];
-        const nextIdx = exp.path[progress + 1];
+        const cx = bestIdx % width;
+        const cy = Math.floor(bestIdx / width);
 
-        const cx = tipIdx % width;
-        const cy = Math.floor(tipIdx / width);
         const neighbors = [
-          nextIdx,
-          cy > 0 ? tipIdx - width : -1,
-          cy < height - 1 ? tipIdx + width : -1,
-          cx > 0 ? tipIdx - 1 : -1,
-          cx < width - 1 ? tipIdx + 1 : -1
+          cy > 0 ? bestIdx - width : -1,
+          cy < height - 1 ? bestIdx + width : -1,
+          cx > 0 ? bestIdx - 1 : -1,
+          cx < width - 1 ? bestIdx + 1 : -1
         ];
 
         let localExpanded = false;
@@ -759,9 +767,27 @@ export class TerritorySimulation {
           const defenderOwner = this.grid[nIdx];
           if (defenderOwner === exp.ownerId) continue;
 
+          const nx = nIdx % width;
+          const ny = Math.floor(nIdx / width);
+
+          const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
+          if (distFromLaunch > exp.currentRadius) continue;
+
+          let distToPath = Infinity;
+          if (exp.path) {
+            for (let i = 0; i < exp.path.length; i++) {
+              const px = exp.path[i] % width;
+              const py = Math.floor(exp.path[i] / width);
+              const d = Math.hypot(nx - px, ny - py);
+              if (d < distToPath) {
+                distToPath = d;
+              }
+              if (distToPath <= 3.0) break;
+            }
+          }
+          if (exp.path && distToPath > 3.0) continue;
+
           if (defenderOwner === 0) {
-            const nx = nIdx % width;
-            const ny = Math.floor(nIdx / width);
             const distToLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
             const scaleMultiplier = 1.0 + (distToLaunch * 0.002);
             const cost = Math.ceil(2 * scaleMultiplier);
@@ -778,15 +804,11 @@ export class TerritorySimulation {
               localExpanded = true;
               stepCount++;
               expandedAny = true;
-              break;
             }
-          }
-          else {
+          } else {
             if (this.hasPact(exp.ownerId, defenderOwner)) continue;
             const defender = this.players[defenderOwner];
 
-            const nx = nIdx % width;
-            const ny = Math.floor(nIdx / width);
             const distToLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
             const scaleMultiplier = 1.0 + (distToLaunch * 0.002);
 
@@ -816,7 +838,6 @@ export class TerritorySimulation {
                 const counterTroops = Math.min(Math.floor(defender.balance * 0.1), 500);
                 if (counterTroops > 20) {
                   defender.balance -= counterTroops;
-                  const counterPath = [nIdx, tipIdx];
                   this.activeExpansions.push({
                     ownerId: defenderOwner,
                     targetX: cx,
@@ -824,14 +845,17 @@ export class TerritorySimulation {
                     launchX: nx,
                     launchY: ny,
                     remainingTroops: counterTroops,
-                    isCounterPush: true,
-                    path: counterPath
+                    isCounterPush: true
                   });
                 }
               }
-              break;
             }
           }
+        }
+
+        if (!localExpanded || !this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+          frontierSet.delete(bestIdx);
+          frontier.splice(bestArrayIdx, 1);
         }
 
         if (!localExpanded) {
@@ -839,7 +863,6 @@ export class TerritorySimulation {
         }
       }
 
-      // Prune inland frontier pixels from owner frontier
       for (let i = frontier.length - 1; i >= 0; i--) {
         const fIdx = frontier[i];
         if (!this.aiEngine.isBorderPixel(fIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
