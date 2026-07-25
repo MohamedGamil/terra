@@ -1,778 +1,1527 @@
-# WORK.yaml — requirements, BATONs, dependencies, acceptance, releases (SPEC §15).
 requirements:
-  - id: REQ-001
-    statement: The Terra core engine models Interest (0.5s) and Income (5s) mechanics, including red interest decay when balance > 100x territory land.
-    kind: functional
-    authorized_by: [DEC-001]
-    traces_to: [HY-001]
-    acceptance:
-      - Troop balance grows per 0.5s interest tick.
-      - Flat land income added per 5s cycle.
-      - Interest rate decays when balance exceeds 100x territory area.
-    scope_state: committed
-    release: REL-001
-    priority_quadrant: Q1
-
-  - id: REQ-002
-    statement: Expansion & combat engine resolves player/bot territory conquest with 2:1 defender advantage and action tax.
-    kind: functional
-    authorized_by: [DEC-001, DEC-002]
-    traces_to: [HY-001]
-    acceptance:
-      - Attacking defender territory consumes attacker balance at 2:1 ratio.
-      - Neutral land annexation consumes balance according to distance and tax formula.
-    scope_state: committed
-    release: REL-001
-    priority_quadrant: Q1
-
-  - id: REQ-003
-    statement: Interactive HTML5 Canvas renderer draws 1000x1000 pixel map, color-coded player territories, zoom/pan controls, and attack percentage UI.
-    kind: functional
-    authorized_by: [DEC-001]
-    traces_to: [HY-001]
-    acceptance:
-      - Renderer renders territory ownership at 60 FPS.
-      - Player can select target territory, adjust attack percent slider, and trigger attack.
-    scope_state: committed
-    release: REL-001
-    priority_quadrant: Q1
-
-  - id: REQ-004
-    statement: Singleplayer AI Bot engine controls AI expansion with configurable difficulty tiers (Easy, Hard, Impossible).
-    kind: functional
-    authorized_by: [DEC-001]
-    traces_to: [HY-001]
-    acceptance:
-      - AI bots expand into neutral territory and attack neighboring targets.
-      - Bot troop allocation efficiency scales with difficulty tier.
-    scope_state: committed
-    release: REL-001
-    priority_quadrant: Q2
-
-  - id: REQ-005
-    statement: Main Lobby Menu with Player Name, Color Picker, Map Selector (World, Archipelago, Black Arena), Bot Count, and Bot Difficulty settings.
-    kind: functional
-    authorized_by: [DEC-003]
-    traces_to: [HY-001]
-    acceptance:
-      - Player can customize name and color before match start.
-      - Player can select map layout (World, Archipelago, Black Arena).
-      - Player can set bot count (10 to 500) and difficulty tier.
-    scope_state: committed
-    release: REL-002
-    priority_quadrant: Q1
-
-  - id: REQ-006
-    statement: Interactive Spawn Selection Phase displaying map grid with 10-second timer where player picks starting spawn location before bot spawn.
-    kind: functional
-    authorized_by: [DEC-003]
-    traces_to: [HY-001]
-    acceptance:
-      - 10-second spawn countdown timer runs before game tick start.
-      - Player clicks land pixel to place spawn marker.
-      - AI bots spawn avoiding 50-pixel player spawn radius buffer.
-    scope_state: committed
-    release: REL-002
-    priority_quadrant: Q1
-
-  - id: REQ-007
-    statement: Interactive Player Combat Controls featuring target crosshair locking, 1%-100% Force Allocation Slider, Full Send button, and 1.17% attack tax.
-    kind: functional
-    authorized_by: [DEC-004]
-    traces_to: [HY-001]
-    acceptance:
-      - Clicking enemy/neutral land locks attack target crosshair.
-      - Force slider and quick buttons (25%, 50%, 75%, Full Send) assign attack troop allocation.
-      - Attack execution deducts 1.17% balance tax and applies 2:1 defender loss ratio.
-    scope_state: committed
-    release: REL-002
-    priority_quadrant: Q1
-
-  - id: REQ-008
-    statement: Naval Boat Attacks across water cells with 3.125% deployment tax, plus Win/Defeat resolution and match statistics modal.
-    kind: functional
-    authorized_by: [DEC-004]
-    traces_to: [HY-001]
-    acceptance:
-      - Targeting across ocean cells launches naval boat transport with 3.125% deployment tax.
-      - Game Over Victory screen displays when player conquers 100% of territory.
-      - Defeat screen displays when player territory drops to 0.
-    scope_state: committed
-    release: REL-002
-    priority_quadrant: Q1
-
-  - id: REQ-009
-    statement: Untimed Spawn Selection Phase where players take unhurried time to pick starting position, followed by explicit LOCK SPAWN trigger and post-pick 3..2..1 GO countdown overlay with camera auto-centering.
-    kind: functional
-    authorized_by: [DEC-003, DEC-006]
-    traces_to: [HY-001]
-    acceptance:
-      - Player position pick is un-timed; countdown timer does NOT auto-force random spawn.
-      - Lock Spawn button triggers explicit 3..2..1 GO countdown overlay.
-      - Camera smoothly pans/zooms to auto-center on player starting position during countdown.
-    scope_state: committed
-    release: REL-003
-    priority_quadrant: Q1
-
-  - id: REQ-010
-    statement: High-Accuracy Geographic World Map Generator utilizing SVG continent path vector rasterization for authentic real-world geography and scaled canvas rendering.
-    kind: functional
-    authorized_by: [DEC-005]
-    traces_to: [HY-001]
-    acceptance:
-      - World map accurately reflects Earth continents, major islands, and sea boundaries.
-      - Map generator rasterizes SVG vector data into Uint8Array terrain grid in < 150ms.
-    scope_state: committed
-    release: REL-003
-    priority_quadrant: Q1
-
-  - id: REQ-011
-    statement: Full-Screen Strategy/Tactical RTS Layout featuring 100vw x 100vh canvas viewport, glassmorphic top header bar, and floating bottom combat action bar.
-    kind: functional
-    authorized_by: [DEC-006]
-    traces_to: [HY-001]
-    acceptance:
-      - Gameplay canvas occupies 100% full screen width and height.
-      - Glassmorphic header bar displays telemetry (FPS, Active Players, Land %, Troop Balance, Red Interest).
-      - Tactical action controls float at bottom center without blocking main view.
-    scope_state: committed
-    release: REL-003
-    priority_quadrant: Q1
-
-  - id: REQ-012
-    statement: Interactive RTS Minimap Navigation Widget displaying full-map territory overview, camera viewport bounding box, and click/drag instant camera repositioning.
-    kind: functional
-    authorized_by: [DEC-006]
-    traces_to: [HY-001]
-    acceptance:
-      - Minimap renders full map territory colors in bottom-right corner.
-      - Minimap overlay draws current camera viewport rectangle.
-      - Clicking or dragging on minimap immediately shifts main canvas camera to targeted location.
-    scope_state: committed
-    release: REL-003
-    priority_quadrant: Q1
-
-  - id: REQ-013
-    statement: High-Detail GeoJSON Natural Earth World Map Vector Generator producing 100% realistic geographic coastlines, gulfs, peninsulas, and island archipelagoes.
-    kind: functional
-    authorized_by: [DEC-007]
-    traces_to: [HY-001]
-    acceptance:
-      - Rasterized terrain grid renders detailed geographic shapes (Italy boot, Scandinavia, Horn of Africa, Japan, Indonesia, Caribbean).
-      - Land pixel density exceeds 350,000 pixels with precise shoreline boundaries.
-    scope_state: committed
-    release: REL-004
-    priority_quadrant: Q1
-
-  - id: REQ-014
-    statement: Distance-Threshold Click vs Drag Mouse Gesture Engine guaranteeing 100% reliable click detection for spawn picking without camera panning misfires.
-    kind: functional
-    authorized_by: [DEC-008]
-    traces_to: [HY-001]
-    acceptance:
-      - Clicks with drag distance <= 4px register reliably as spawn selection or target pick.
-      - Camera drag panning activates only when mouse delta exceeds 4px.
-    scope_state: committed
-    release: REL-004
-    priority_quadrant: Q1
-
-  - id: REQ-015
-    statement: Tactical Canvas Right-Click Context Menu providing instant action commands (Attack Land, Send Boat across ocean, Clear Target, Lock Target).
-    kind: functional
-    authorized_by: [DEC-008]
-    traces_to: [HY-001]
-    acceptance:
-      - Right-clicking canvas opens glassmorphic context menu at mouse location.
-      - Context menu intelligently highlights Send Boat for ocean cells and Attack Land for land cells.
-    scope_state: committed
-    release: REL-004
-    priority_quadrant: Q1
-
+- id: REQ-001
+  statement: The Terra core engine models Interest (0.5s) and Income (5s) mechanics,
+    including red interest decay when balance > 100x territory land.
+  kind: functional
+  authorized_by:
+  - DEC-001
+  traces_to:
+  - HY-001
+  acceptance:
+  - Troop balance grows per 0.5s interest tick.
+  - Flat land income added per 5s cycle.
+  - Interest rate decays when balance exceeds 100x territory area.
+  scope_state: committed
+  release: REL-001
+  priority_quadrant: Q1
+- id: REQ-002
+  statement: Expansion & combat engine resolves player/bot territory conquest with
+    2:1 defender advantage and action tax.
+  kind: functional
+  authorized_by:
+  - DEC-001
+  - DEC-002
+  traces_to:
+  - HY-001
+  acceptance:
+  - Attacking defender territory consumes attacker balance at 2:1 ratio.
+  - Neutral land annexation consumes balance according to distance and tax formula.
+  scope_state: committed
+  release: REL-001
+  priority_quadrant: Q1
+- id: REQ-003
+  statement: Interactive HTML5 Canvas renderer draws 1000x1000 pixel map, color-coded
+    player territories, zoom/pan controls, and attack percentage UI.
+  kind: functional
+  authorized_by:
+  - DEC-001
+  traces_to:
+  - HY-001
+  acceptance:
+  - Renderer renders territory ownership at 60 FPS.
+  - Player can select target territory, adjust attack percent slider, and trigger
+    attack.
+  scope_state: committed
+  release: REL-001
+  priority_quadrant: Q1
+- id: REQ-004
+  statement: Singleplayer AI Bot engine controls AI expansion with configurable difficulty
+    tiers (Easy, Hard, Impossible).
+  kind: functional
+  authorized_by:
+  - DEC-001
+  traces_to:
+  - HY-001
+  acceptance:
+  - AI bots expand into neutral territory and attack neighboring targets.
+  - Bot troop allocation efficiency scales with difficulty tier.
+  scope_state: committed
+  release: REL-001
+  priority_quadrant: Q2
+- id: REQ-005
+  statement: Main Lobby Menu with Player Name, Color Picker, Map Selector (World,
+    Archipelago, Black Arena), Bot Count, and Bot Difficulty settings.
+  kind: functional
+  authorized_by:
+  - DEC-003
+  traces_to:
+  - HY-001
+  acceptance:
+  - Player can customize name and color before match start.
+  - Player can select map layout (World, Archipelago, Black Arena).
+  - Player can set bot count (10 to 500) and difficulty tier.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-006
+  statement: Interactive Spawn Selection Phase displaying map grid with 10-second
+    timer where player picks starting spawn location before bot spawn.
+  kind: functional
+  authorized_by:
+  - DEC-003
+  traces_to:
+  - HY-001
+  acceptance:
+  - 10-second spawn countdown timer runs before game tick start.
+  - Player clicks land pixel to place spawn marker.
+  - AI bots spawn avoiding 50-pixel player spawn radius buffer.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-007
+  statement: Interactive Player Combat Controls featuring target crosshair locking,
+    1%-100% Force Allocation Slider, Full Send button, and 1.17% attack tax.
+  kind: functional
+  authorized_by:
+  - DEC-004
+  traces_to:
+  - HY-001
+  acceptance:
+  - Clicking enemy/neutral land locks attack target crosshair.
+  - Force slider and quick buttons (25%, 50%, 75%, Full Send) assign attack troop
+    allocation.
+  - Attack execution deducts 1.17% balance tax and applies 2:1 defender loss ratio.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-008
+  statement: Naval Boat Attacks across water cells with 3.125% deployment tax, plus
+    Win/Defeat resolution and match statistics modal.
+  kind: functional
+  authorized_by:
+  - DEC-004
+  traces_to:
+  - HY-001
+  acceptance:
+  - Targeting across ocean cells launches naval boat transport with 3.125% deployment
+    tax.
+  - Game Over Victory screen displays when player conquers 100% of territory.
+  - Defeat screen displays when player territory drops to 0.
+  scope_state: committed
+  release: REL-002
+  priority_quadrant: Q1
+- id: REQ-009
+  statement: Untimed Spawn Selection Phase where players take unhurried time to pick
+    starting position, followed by explicit LOCK SPAWN trigger and post-pick 3..2..1
+    GO countdown overlay with camera auto-centering.
+  kind: functional
+  authorized_by:
+  - DEC-003
+  - DEC-006
+  traces_to:
+  - HY-001
+  acceptance:
+  - Player position pick is un-timed; countdown timer does NOT auto-force random spawn.
+  - Lock Spawn button triggers explicit 3..2..1 GO countdown overlay.
+  - Camera smoothly pans/zooms to auto-center on player starting position during countdown.
+  scope_state: committed
+  release: REL-003
+  priority_quadrant: Q1
+- id: REQ-010
+  statement: High-Accuracy Geographic World Map Generator utilizing SVG continent
+    path vector rasterization for authentic real-world geography and scaled canvas
+    rendering.
+  kind: functional
+  authorized_by:
+  - DEC-005
+  traces_to:
+  - HY-001
+  acceptance:
+  - World map accurately reflects Earth continents, major islands, and sea boundaries.
+  - Map generator rasterizes SVG vector data into Uint8Array terrain grid in < 150ms.
+  scope_state: committed
+  release: REL-003
+  priority_quadrant: Q1
+- id: REQ-011
+  statement: Full-Screen Strategy/Tactical RTS Layout featuring 100vw x 100vh canvas
+    viewport, glassmorphic top header bar, and floating bottom combat action bar.
+  kind: functional
+  authorized_by:
+  - DEC-006
+  traces_to:
+  - HY-001
+  acceptance:
+  - Gameplay canvas occupies 100% full screen width and height.
+  - Glassmorphic header bar displays telemetry (FPS, Active Players, Land %, Troop
+    Balance, Red Interest).
+  - Tactical action controls float at bottom center without blocking main view.
+  scope_state: committed
+  release: REL-003
+  priority_quadrant: Q1
+- id: REQ-012
+  statement: Interactive RTS Minimap Navigation Widget displaying full-map territory
+    overview, camera viewport bounding box, and click/drag instant camera repositioning.
+  kind: functional
+  authorized_by:
+  - DEC-006
+  traces_to:
+  - HY-001
+  acceptance:
+  - Minimap renders full map territory colors in bottom-right corner.
+  - Minimap overlay draws current camera viewport rectangle.
+  - Clicking or dragging on minimap immediately shifts main canvas camera to targeted
+    location.
+  scope_state: committed
+  release: REL-003
+  priority_quadrant: Q1
+- id: REQ-013
+  statement: High-Detail GeoJSON Natural Earth World Map Vector Generator producing
+    100% realistic geographic coastlines, gulfs, peninsulas, and island archipelagoes.
+  kind: functional
+  authorized_by:
+  - DEC-007
+  traces_to:
+  - HY-001
+  acceptance:
+  - Rasterized terrain grid renders detailed geographic shapes (Italy boot, Scandinavia,
+    Horn of Africa, Japan, Indonesia, Caribbean).
+  - Land pixel density exceeds 350,000 pixels with precise shoreline boundaries.
+  scope_state: committed
+  release: REL-004
+  priority_quadrant: Q1
+- id: REQ-014
+  statement: Distance-Threshold Click vs Drag Mouse Gesture Engine guaranteeing 100%
+    reliable click detection for spawn picking without camera panning misfires.
+  kind: functional
+  authorized_by:
+  - DEC-008
+  traces_to:
+  - HY-001
+  acceptance:
+  - Clicks with drag distance <= 4px register reliably as spawn selection or target
+    pick.
+  - Camera drag panning activates only when mouse delta exceeds 4px.
+  scope_state: committed
+  release: REL-004
+  priority_quadrant: Q1
+- id: REQ-015
+  statement: Tactical Canvas Right-Click Context Menu providing instant action commands
+    (Attack Land, Send Boat across ocean, Clear Target, Lock Target).
+  kind: functional
+  authorized_by:
+  - DEC-008
+  traces_to:
+  - HY-001
+  acceptance:
+  - Right-clicking canvas opens glassmorphic context menu at mouse location.
+  - Context menu intelligently highlights Send Boat for ocean cells and Attack Land
+    for land cells.
+  scope_state: committed
+  release: REL-004
+  priority_quadrant: Q1
+- acceptance:
+  - Rasterizes detailed Natural Earth continental vector paths into Canvas 2D terrain
+    grid.
+  - Accurately models shorelines, islands, lakes, and impassable mountain chains.
+  - Sub-50ms canvas rasterization performance for 1000x1000 grid.
+  authorized_by:
+  - DEC-001
+  id: REQ-021
+  kind: functional
+  priority_quadrant: Q1
+  release: REL-004
+  scope_state: committed
+  statement: Authentic High-Precision GeoJSON World Map Engine replaces simplified
+    bezier paths with accurate global polygons and mountains.
+  traces_to:
+  - HY-001
+- acceptance:
+  - Synthesizes expansion clicks, attack launches, capture fanfares, and interest
+    tick chimes via WebAudio API.
+  - Zero external audio file dependencies.
+  authorized_by:
+  - DEC-001
+  id: REQ-016
+  kind: functional
+  priority_quadrant: Q2
+  release: REL-004
+  scope_state: committed
+  statement: WebAudio Real-Time Sound Effects Engine for responsive audio feedback.
+  traces_to:
+  - HY-001
+- acceptance:
+  - Supports custom seed input and map type presets (World, Archipelago, Arena, Europe,
+    Asia).
+  - Sliders for island density and mountain frequency.
+  authorized_by:
+  - DEC-001
+  id: REQ-017
+  kind: functional
+  priority_quadrant: Q2
+  release: REL-004
+  scope_state: committed
+  statement: Procedural & Preset Map Generator Controls for varied map configurations.
+  traces_to:
+  - HY-001
+- acceptance:
+  - 'Bots exhibit distinct behaviors: Aggressive Rusher, Defensive Balancer, Expansionist,
+    Adaptive.'
+  authorized_by:
+  - DEC-001
+  id: REQ-018
+  kind: functional
+  priority_quadrant: Q2
+  release: REL-004
+  scope_state: committed
+  statement: Multi-Personality AI Strategy Engine for dynamic bot playstyles.
+  traces_to:
+  - HY-001
+- acceptance:
+  - Canvas territory expansion ripple waves and battle impact spark particles.
+  authorized_by:
+  - DEC-001
+  id: REQ-019
+  kind: functional
+  priority_quadrant: Q2
+  release: REL-004
+  scope_state: committed
+  statement: Dynamic Visual Juiciness & Particle Systems for engaging feedback.
+  traces_to:
+  - HY-001
+- acceptance:
+  - Post-match timeline graphs for territory coverage, APM tracking, and leaderboard
+    breakdown.
+  authorized_by:
+  - DEC-001
+  id: REQ-020
+  kind: functional
+  priority_quadrant: Q2
+  release: REL-004
+  scope_state: committed
+  statement: Match Replay & Statistics Dashboard for post-game analysis.
+  traces_to:
+  - HY-001
 batons:
-  - id: BATON-001
-    version: 1
-    type: research
-    title: Formalize Territorial.io Evidence Base & Discovery Governance
-    objective: Document Territorial.io core mechanics, economy rules, and architecture evidence in D4.
-    scope:
-      include: [Analyze territorial.io mechanics, write EVIDENCE.yaml, define UNC-001/002, establish GATE-001/002]
-      exclude: [Production code execution]
-    authority:
-      gates: [GATE-001, GATE-002]
-      requirements: [REQ-001]
-    execution:
-      state: completed
-      owner: mgamil.dev@gmail.com
-      depends_on: []
-      unblocks: [BATON-002]
-      resume_pointer: Validate .d4 YAML records via d4 validate and d4 lint.
-      quadrant: Q1
-      milestone: REL-001
-    capabilities:
-      network_policy: allowlist
-      side_effect_class: A0
-      approval_policy: none
-    acceptance:
-      deterministic_checks: [d4 validate pass, d4 lint pass]
-      reviewer_checks: [Discovery evidence verified]
-      required_artifacts: []
-      rollback_verified: false
-
-  - id: BATON-002
-    version: 1
-    type: implementation
-    title: Build Prototypal Canvas Territory Renderer & Execute GATE-001 Benchmark
-    objective: Implement 1000x1000 canvas renderer prototype to clear GATE-001 (60 FPS benchmark).
-    scope:
-      include: [HTML5 Canvas 2D pixel buffer renderer, synthetic territory expansion generator, FPS benchmark counter]
-      exclude: [Full multiplayer networking]
-    authority:
-      gates: [GATE-001]
-      requirements: [REQ-003]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-001]
-      unblocks: [BATON-003]
-      resume_pointer: Wait for GATE-001 execution; scaffold canvas renderer prototype in src/client.
-      quadrant: Q1
-      milestone: REL-001
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [src/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint, GATE-001 benchmark pass]
-      reviewer_checks: [Walkthrough written]
-      rollback_verified: false
-
-  - id: BATON-003
-    version: 1
-    type: implementation
-    title: Build Server Game Tick & Delta State Synchronization Engine
-    objective: Implement Node.js game loop (0.5s interest, 5s income, 2:1 combat) to clear GATE-002.
-    scope:
-      include: [Game tick engine, 500-bot simulation, delta binary packet encoding]
-      exclude: [UI design polish]
-    authority:
-      gates: [GATE-002]
-      requirements: [REQ-001, REQ-002]
-    execution:
-      state: completed
-      owner: agent-role/backend-implementer
-      depends_on: [BATON-002]
-      unblocks: [BATON-004]
-      resume_pointer: Wait for GATE-002 execution; scaffold server tick engine in src/server.
-      quadrant: Q1
-      milestone: REL-001
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [src/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, unit tests pass, GATE-002 performance test pass]
-      reviewer_checks: [Walkthrough written]
-      rollback_verified: false
-
-  - id: BATON-004
-    version: 1
-    type: implementation
-    title: Build Terra MVP Walking Skeleton with AI Bots & UI
-    objective: Assemble end-to-end singleplayer game loop with AI bots and Canvas UI.
-    scope:
-      include: [Singleplayer game loop, AI bot opponents, full UI player controls]
-      exclude: [Multi-region server distribution]
-    authority:
-      requirements: [REQ-001, REQ-002, REQ-003, REQ-004]
-      decisions: [DEC-001, DEC-002]
-    execution:
-      state: completed
-      owner: agent-role/fullstack-implementer
-      depends_on: [BATON-003]
-      unblocks: [BATON-005]
-      resume_pointer: Integrate client canvas renderer with server game engine for REL-001.
-      quadrant: Q2
-      milestone: REL-001
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [src/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint, end-to-end tests pass]
-      reviewer_checks: [Full walkthrough written]
-      rollback_verified: false
-
-  - id: BATON-005
-    version: 1
-    type: research
-    title: Design & Formalize Main Lobby Menu & Procedural Map Generation Specification
-    objective: Specify Main Lobby UX, Name/Color customization, and 3 procedural map generators (World, Archipelago, Black Arena).
-    scope:
-      include: [Design Main Lobby screen layout, specify procedural map layout algorithms, detail REQ-005]
-      exclude: [Code execution]
-    authority:
-      requirements: [REQ-005]
-      decisions: [DEC-003]
-    execution:
-      state: completed
-      owner: mgamil.dev@gmail.com
-      depends_on: [BATON-004]
-      unblocks: [BATON-006]
-      resume_pointer: Finalize lobby and map generation specifications.
-      quadrant: Q1
-      milestone: REL-002
-    capabilities:
-      network_policy: allowlist
-      side_effect_class: A0
-      approval_policy: none
-    acceptance:
-      deterministic_checks: [d4 validate pass, d4 lint pass]
-      reviewer_checks: [Lobby and map specs verified]
-      required_artifacts: []
-      rollback_verified: false
-
-  - id: BATON-006
-    version: 1
-    type: implementation
-    title: Implement Main Lobby Menu & Procedural Map Generator
-    objective: Build Main Lobby UI screen and procedural map generator (World, Archipelago, Black Arena).
-    scope:
-      include: [Lobby HTML/CSS UI overlay, map generator module, map preview canvas]
-      exclude: [Spawn phase timer]
-    authority:
-      requirements: [REQ-005]
-      decisions: [DEC-003]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-005]
-      unblocks: [BATON-007]
-      resume_pointer: Wait for BATON-005 completion; implement public/src/map-generator.js.
-      quadrant: Q1
-      milestone: REL-002
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Lobby UI and map generation functional]
-      rollback_verified: false
-
-  - id: BATON-007
-    version: 1
-    type: implementation
-    title: Implement Interactive Spawn Selection Phase & Placement Logic
-    objective: Build 10-second spawn selection countdown phase and 50-pixel bot buffer placement logic.
-    scope:
-      include: [Spawn selection phase timer, canvas click-to-spawn marker, bot spawn radius buffer]
-      exclude: [Naval attacks]
-    authority:
-      requirements: [REQ-006]
-      decisions: [DEC-003]
-    execution:
-      state: completed
-      owner: agent-role/fullstack-implementer
-      depends_on: [BATON-006]
-      unblocks: [BATON-008]
-      resume_pointer: Implement SPAWN_PICK state in simulation and client UI.
-      quadrant: Q1
-      milestone: REL-002
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/, src/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Spawn selection phase verified]
-      rollback_verified: false
-
-  - id: BATON-008
-    version: 1
-    type: implementation
-    title: Implement Player Combat Controls, Force Allocation Slider & Target Locking
-    objective: Build click-to-target crosshair locking, force percentage slider (1%-100%), and 1.17% attack tax math.
-    scope:
-      include: [Target selection crosshair ring, force slider UI, 1.17% attack tax deduction]
-      exclude: [Naval attacks]
-    authority:
-      requirements: [REQ-007]
-      decisions: [DEC-004]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-007]
-      unblocks: [BATON-009]
-      resume_pointer: Implement targeted attack vectors and force slider controls.
-      quadrant: Q1
-      milestone: REL-002
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Targeting and force slider verified]
-      rollback_verified: false
-
-  - id: BATON-009
-    version: 1
-    type: implementation
-    title: Implement Naval Boat Attacks, Win/Defeat Resolution & GATE-003 Combat Test Suite
-    objective: Implement boat attacks (3.125% tax across water), victory/defeat screen, and execute GATE-003 combat test suite.
-    scope:
-      include: [Naval boat transport, 3.125% boat tax, Victory/Defeat modal, scripts/combat-test.js]
-      exclude: [Multiplayer WebSocket sync]
-    authority:
-      gates: [GATE-003]
-      requirements: [REQ-008]
-      decisions: [DEC-004]
-    execution:
-      state: completed
-      owner: agent-role/fullstack-implementer
-      depends_on: [BATON-008]
-      unblocks: [BATON-010]
-      resume_pointer: Build boat attack transport and scripts/combat-test.js for GATE-003.
-      quadrant: Q1
-      milestone: REL-002
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/, src/, scripts/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint, GATE-003 combat test pass]
-      reviewer_checks: [Full authentic game loop verified]
-      rollback_verified: false
-
-  - id: BATON-010
-    version: 1
-    type: research
-    title: Research & Planning for World SVG Map Generation, RTS Interface Layout & Minimap Engine
-    objective: Plan SVG vector path rasterization, full-screen RTS UI architecture, and interactive minimap navigation.
-    scope:
-      include: [SVG world map path rasterization architecture, full-screen RTS UI design, minimap camera sync plan]
-      exclude: [Production code edits]
-    authority:
-      gates: [GATE-004]
-      requirements: [REQ-009, REQ-010, REQ-011, REQ-012]
-      decisions: [DEC-005, DEC-006]
-    execution:
-      state: completed
-      owner: mgamil.dev@gmail.com
-      depends_on: [BATON-009]
-      unblocks: [BATON-011]
-      resume_pointer: Write implementation_plan.md for REL-003 and request user review.
-      quadrant: Q1
-      milestone: REL-003
-    capabilities:
-      network_policy: allowlist
-      side_effect_class: A0
-      approval_policy: none
-    acceptance:
-      deterministic_checks: [d4 validate pass, d4 lint pass]
-      reviewer_checks: [Implementation plan approved by user]
-      required_artifacts: []
-      rollback_verified: false
-
-  - id: BATON-011
-    version: 1
-    type: implementation
-    title: Implement High-Accuracy World SVG Vector Map Generator & Terrain Rasterizer
-    objective: Implement SVG Natural Earth continent vector renderer to rasterize accurate world geography into Uint8Array terrain grid.
-    scope:
-      include: [SVG path parser, offscreen terrain rasterizer, accurate land/water/mountain mapping]
-      exclude: [Minimap navigation UI]
-    authority:
-      gates: [GATE-004]
-      requirements: [REQ-010]
-      decisions: [DEC-005]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-010]
-      unblocks: [BATON-012]
-      resume_pointer: Implement public/src/svg-world-map.js and update MapGenerator.
-      quadrant: Q1
-      milestone: REL-003
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint, GATE-004 benchmark pass]
-      reviewer_checks: [World geography verified accurate]
-      rollback_verified: false
-
-  - id: BATON-012
-    version: 1
-    type: implementation
-    title: Implement Full-Screen Tactical RTS Glassmorphic Interface & Floating Action Bar
-    objective: Build 100vw x 100vh full-screen canvas layout with top glassmorphic telemetry header and floating combat controls.
-    scope:
-      include: [Full-screen CSS grid layout, glassmorphic top header, floating bottom action bar]
-      exclude: [Minimap widget]
-    authority:
-      requirements: [REQ-011]
-      decisions: [DEC-006]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-011]
-      unblocks: [BATON-013]
-      resume_pointer: Update public/index.html and public/styles.css for full-screen RTS UI.
-      quadrant: Q1
-      milestone: REL-003
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Full-screen RTS layout verified]
-      rollback_verified: false
-
-  - id: BATON-013
-    version: 1
-    type: implementation
-    title: Implement Interactive RTS Minimap Navigation Widget & Viewport Bounds Sync
-    objective: Build bottom-right minimap canvas widget displaying full map overview, territory colors, camera viewport bounds, and click/drag navigation.
-    scope:
-      include: [Minimap canvas renderer, camera viewport rectangle, click/drag map panning]
-      exclude: [Multiplayer WebSockets]
-    authority:
-      gates: [GATE-004]
-      requirements: [REQ-012]
-      decisions: [DEC-006]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-012]
-      unblocks: [BATON-014]
-      resume_pointer: Scaffold public/src/minimap.js and integrate with TerritoryRenderer.
-      quadrant: Q1
-      milestone: REL-003
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Minimap navigation verified]
-      rollback_verified: false
-
-  - id: BATON-014
-    version: 1
-    type: implementation
-    title: Implement Untimed Spawn Selection Phase & Post-Pick 3..2..1 Countdown Overlay
-    objective: Build untimed spawn selection flow, explicit Lock Spawn trigger, post-pick 3..2..1 GO countdown overlay, and camera auto-centering.
-    scope:
-      include: [Untimed spawn pick state, Lock Spawn button action, 3..2..1 GO countdown overlay, camera auto-centering]
-      exclude: []
-    authority:
-      requirements: [REQ-009]
-      decisions: [DEC-003, DEC-006]
-    execution:
-      state: completed
-      owner: agent-role/fullstack-implementer
-      depends_on: [BATON-013]
-      unblocks: [BATON-015]
-      resume_pointer: Update simulation state machine and main loop for un-timed spawn pick.
-      quadrant: Q1
-      milestone: REL-003
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/, src/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Untimed spawn pick and countdown overlay verified]
-      rollback_verified: false
-
-  - id: BATON-015
-    version: 1
-    type: research
-    title: Research & Specification for Detailed GeoJSON World Map, Click Disambiguation & Context Menu
-    objective: Plan high-detail GeoJSON world vector path rasterization, distance-threshold click gesture engine, and right-click RTS context menu.
-    scope:
-      include: [Design GeoJSON continent vector model, specify click vs drag distance threshold, design right-click context menu]
-      exclude: [Production code edits]
-    authority:
-      gates: [GATE-005]
-      requirements: [REQ-013, REQ-014, REQ-015]
-      decisions: [DEC-007, DEC-008]
-    execution:
-      state: completed
-      owner: mgamil.dev@gmail.com
-      depends_on: [BATON-014]
-      unblocks: [BATON-016]
-      resume_pointer: Update implementation_plan.md for REL-004 and request user feedback.
-      quadrant: Q1
-      milestone: REL-004
-    capabilities:
-      network_policy: allowlist
-      side_effect_class: A0
-      approval_policy: none
-    acceptance:
-      deterministic_checks: [d4 validate pass, d4 lint pass]
-      reviewer_checks: [Implementation plan approved by user]
-      required_artifacts: []
-      rollback_verified: false
-
-  - id: BATON-016
-    version: 1
-    type: implementation
-    title: Implement High-Accuracy GeoJSON Natural Earth World Vector Map Rasterizer
-    objective: Implement detailed GeoJSON continent polygon renderer producing true geographical coastlines, peninsulas, gulfs, and island archipelagoes.
-    scope:
-      include: [GeoJSON multi-polygon parser, high-detail continent shapes, equirectangular map projection]
-      exclude: [Gesture engine]
-    authority:
-      gates: [GATE-005]
-      requirements: [REQ-013]
-      decisions: [DEC-007]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-015]
-      unblocks: [BATON-017]
-      resume_pointer: Scaffold public/src/geojson-world-map.js and integrate with MapGenerator.
-      quadrant: Q1
-      milestone: REL-004
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint, GATE-005 benchmark pass]
-      reviewer_checks: [GeoJSON world geography verified accurate]
-      rollback_verified: false
-
-  - id: BATON-017
-    version: 1
-    type: implementation
-    title: Implement Mouse Gesture Engine & Spawn Pick Selection Click Repair
-    objective: Implement distance-threshold (dragDistance <= 4px) click vs drag disambiguation engine in TerritoryRenderer to guarantee 100% reliable spawn picking.
-    scope:
-      include: [Mouse down/up distance calculation, drag threshold filtering, spawn pick click repair]
-      exclude: [Context menu]
-    authority:
-      gates: [GATE-005]
-      requirements: [REQ-014]
-      decisions: [DEC-008]
-    execution:
-      state: completed
-      owner: agent-role/frontend-implementer
-      depends_on: [BATON-016]
-      unblocks: [BATON-018]
-      resume_pointer: Refactor canvas mouse listeners in public/src/renderer.js and public/src/main.js.
-      quadrant: Q1
-      milestone: REL-004
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Spawn pick clicking 100% reliable without drag misfires]
-      rollback_verified: false
-
-  - id: BATON-018
-    version: 1
-    type: implementation
-    title: Implement Tactical Canvas Right-Click RTS Context Menu Overlay
-    objective: Build glassmorphic right-click canvas context menu providing instant combat commands (Attack Land, Send Boat across water, Stop Attack, Lock Target).
-    scope:
-      include: [Right-click contextmenu event handler, glassmorphic context menu UI, smart target recommendation]
-      exclude: []
-    authority:
-      requirements: [REQ-015]
-      decisions: [DEC-008]
-    execution:
-      state: completed
-      owner: agent-role/fullstack-implementer
-      depends_on: [BATON-017]
-      unblocks: []
-      resume_pointer: Build #rts-context-menu overlay in public/index.html and handle right-click events in public/src/main.js.
-      quadrant: Q1
-      milestone: REL-004
-    capabilities:
-      network_policy: deny
-      filesystem_scope: [public/]
-      side_effect_class: A1
-      approval_policy: review-before-merge
-    acceptance:
-      deterministic_checks: [compile, lint]
-      reviewer_checks: [Right-click context menu functional]
-      rollback_verified: false
-
+- id: BATON-001
+  version: 1
+  type: research
+  title: Formalize Territorial.io Evidence Base & Discovery Governance
+  objective: Document Territorial.io core mechanics, economy rules, and architecture
+    evidence in D4.
+  scope:
+    include:
+    - Analyze territorial.io mechanics
+    - write EVIDENCE.yaml
+    - define UNC-001/002
+    - establish GATE-001/002
+    exclude:
+    - Production code execution
+  authority:
+    gates:
+    - GATE-001
+    - GATE-002
+    requirements:
+    - REQ-001
+  execution:
+    state: completed
+    owner: mgamil.dev@gmail.com
+    depends_on: []
+    unblocks:
+    - BATON-002
+    resume_pointer: Validate .d4 YAML records via d4 validate and d4 lint.
+    quadrant: Q1
+    milestone: REL-001
+  capabilities:
+    network_policy: allowlist
+    side_effect_class: A0
+    approval_policy: none
+  acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - d4 lint pass
+    reviewer_checks:
+    - Discovery evidence verified
+    required_artifacts: []
+    rollback_verified: false
+- id: BATON-002
+  version: 1
+  type: implementation
+  title: Build Prototypal Canvas Territory Renderer & Execute GATE-001 Benchmark
+  objective: Implement 1000x1000 canvas renderer prototype to clear GATE-001 (60 FPS
+    benchmark).
+  scope:
+    include:
+    - HTML5 Canvas 2D pixel buffer renderer
+    - synthetic territory expansion generator
+    - FPS benchmark counter
+    exclude:
+    - Full multiplayer networking
+  authority:
+    gates:
+    - GATE-001
+    requirements:
+    - REQ-003
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-001
+    unblocks:
+    - BATON-003
+    resume_pointer: Wait for GATE-001 execution; scaffold canvas renderer prototype
+      in src/client.
+    quadrant: Q1
+    milestone: REL-001
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - src/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    - GATE-001 benchmark pass
+    reviewer_checks:
+    - Walkthrough written
+    rollback_verified: false
+- id: BATON-003
+  version: 1
+  type: implementation
+  title: Build Server Game Tick & Delta State Synchronization Engine
+  objective: Implement Node.js game loop (0.5s interest, 5s income, 2:1 combat) to
+    clear GATE-002.
+  scope:
+    include:
+    - Game tick engine
+    - 500-bot simulation
+    - delta binary packet encoding
+    exclude:
+    - UI design polish
+  authority:
+    gates:
+    - GATE-002
+    requirements:
+    - REQ-001
+    - REQ-002
+  execution:
+    state: completed
+    owner: agent-role/backend-implementer
+    depends_on:
+    - BATON-002
+    unblocks:
+    - BATON-004
+    resume_pointer: Wait for GATE-002 execution; scaffold server tick engine in src/server.
+    quadrant: Q1
+    milestone: REL-001
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - src/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - unit tests pass
+    - GATE-002 performance test pass
+    reviewer_checks:
+    - Walkthrough written
+    rollback_verified: false
+- id: BATON-004
+  version: 1
+  type: implementation
+  title: Build Terra MVP Walking Skeleton with AI Bots & UI
+  objective: Assemble end-to-end singleplayer game loop with AI bots and Canvas UI.
+  scope:
+    include:
+    - Singleplayer game loop
+    - AI bot opponents
+    - full UI player controls
+    exclude:
+    - Multi-region server distribution
+  authority:
+    requirements:
+    - REQ-001
+    - REQ-002
+    - REQ-003
+    - REQ-004
+    decisions:
+    - DEC-001
+    - DEC-002
+  execution:
+    state: completed
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-003
+    unblocks:
+    - BATON-005
+    resume_pointer: Integrate client canvas renderer with server game engine for REL-001.
+    quadrant: Q2
+    milestone: REL-001
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - src/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    - end-to-end tests pass
+    reviewer_checks:
+    - Full walkthrough written
+    rollback_verified: false
+- id: BATON-005
+  version: 1
+  type: research
+  title: Design & Formalize Main Lobby Menu & Procedural Map Generation Specification
+  objective: Specify Main Lobby UX, Name/Color customization, and 3 procedural map
+    generators (World, Archipelago, Black Arena).
+  scope:
+    include:
+    - Design Main Lobby screen layout
+    - specify procedural map layout algorithms
+    - detail REQ-005
+    exclude:
+    - Code execution
+  authority:
+    requirements:
+    - REQ-005
+    decisions:
+    - DEC-003
+  execution:
+    state: completed
+    owner: mgamil.dev@gmail.com
+    depends_on:
+    - BATON-004
+    unblocks:
+    - BATON-006
+    resume_pointer: Finalize lobby and map generation specifications.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: allowlist
+    side_effect_class: A0
+    approval_policy: none
+  acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - d4 lint pass
+    reviewer_checks:
+    - Lobby and map specs verified
+    required_artifacts: []
+    rollback_verified: false
+- id: BATON-006
+  version: 1
+  type: implementation
+  title: Implement Main Lobby Menu & Procedural Map Generator
+  objective: Build Main Lobby UI screen and procedural map generator (World, Archipelago,
+    Black Arena).
+  scope:
+    include:
+    - Lobby HTML/CSS UI overlay
+    - map generator module
+    - map preview canvas
+    exclude:
+    - Spawn phase timer
+  authority:
+    requirements:
+    - REQ-005
+    decisions:
+    - DEC-003
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-005
+    unblocks:
+    - BATON-007
+    resume_pointer: Wait for BATON-005 completion; implement public/src/map-generator.js.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Lobby UI and map generation functional
+    rollback_verified: false
+- id: BATON-007
+  version: 1
+  type: implementation
+  title: Implement Interactive Spawn Selection Phase & Placement Logic
+  objective: Build 10-second spawn selection countdown phase and 50-pixel bot buffer
+    placement logic.
+  scope:
+    include:
+    - Spawn selection phase timer
+    - canvas click-to-spawn marker
+    - bot spawn radius buffer
+    exclude:
+    - Naval attacks
+  authority:
+    requirements:
+    - REQ-006
+    decisions:
+    - DEC-003
+  execution:
+    state: completed
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-006
+    unblocks:
+    - BATON-008
+    resume_pointer: Implement SPAWN_PICK state in simulation and client UI.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    - src/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Spawn selection phase verified
+    rollback_verified: false
+- id: BATON-008
+  version: 1
+  type: implementation
+  title: Implement Player Combat Controls, Force Allocation Slider & Target Locking
+  objective: Build click-to-target crosshair locking, force percentage slider (1%-100%),
+    and 1.17% attack tax math.
+  scope:
+    include:
+    - Target selection crosshair ring
+    - force slider UI
+    - 1.17% attack tax deduction
+    exclude:
+    - Naval attacks
+  authority:
+    requirements:
+    - REQ-007
+    decisions:
+    - DEC-004
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-007
+    unblocks:
+    - BATON-009
+    resume_pointer: Implement targeted attack vectors and force slider controls.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Targeting and force slider verified
+    rollback_verified: false
+- id: BATON-009
+  version: 1
+  type: implementation
+  title: Implement Naval Boat Attacks, Win/Defeat Resolution & GATE-003 Combat Test
+    Suite
+  objective: Implement boat attacks (3.125% tax across water), victory/defeat screen,
+    and execute GATE-003 combat test suite.
+  scope:
+    include:
+    - Naval boat transport
+    - 3.125% boat tax
+    - Victory/Defeat modal
+    - scripts/combat-test.js
+    exclude:
+    - Multiplayer WebSocket sync
+  authority:
+    gates:
+    - GATE-003
+    requirements:
+    - REQ-008
+    decisions:
+    - DEC-004
+  execution:
+    state: completed
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-008
+    unblocks:
+    - BATON-010
+    resume_pointer: Build boat attack transport and scripts/combat-test.js for GATE-003.
+    quadrant: Q1
+    milestone: REL-002
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    - src/
+    - scripts/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    - GATE-003 combat test pass
+    reviewer_checks:
+    - Full authentic game loop verified
+    rollback_verified: false
+- id: BATON-010
+  version: 1
+  type: research
+  title: Research & Planning for World SVG Map Generation, RTS Interface Layout &
+    Minimap Engine
+  objective: Plan SVG vector path rasterization, full-screen RTS UI architecture,
+    and interactive minimap navigation.
+  scope:
+    include:
+    - SVG world map path rasterization architecture
+    - full-screen RTS UI design
+    - minimap camera sync plan
+    exclude:
+    - Production code edits
+  authority:
+    gates:
+    - GATE-004
+    requirements:
+    - REQ-009
+    - REQ-010
+    - REQ-011
+    - REQ-012
+    decisions:
+    - DEC-005
+    - DEC-006
+  execution:
+    state: completed
+    owner: mgamil.dev@gmail.com
+    depends_on:
+    - BATON-009
+    unblocks:
+    - BATON-011
+    resume_pointer: Write implementation_plan.md for REL-003 and request user review.
+    quadrant: Q1
+    milestone: REL-003
+  capabilities:
+    network_policy: allowlist
+    side_effect_class: A0
+    approval_policy: none
+  acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - d4 lint pass
+    reviewer_checks:
+    - Implementation plan approved by user
+    required_artifacts: []
+    rollback_verified: false
+- id: BATON-011
+  version: 1
+  type: implementation
+  title: Implement High-Accuracy World SVG Vector Map Generator & Terrain Rasterizer
+  objective: Implement SVG Natural Earth continent vector renderer to rasterize accurate
+    world geography into Uint8Array terrain grid.
+  scope:
+    include:
+    - SVG path parser
+    - offscreen terrain rasterizer
+    - accurate land/water/mountain mapping
+    exclude:
+    - Minimap navigation UI
+  authority:
+    gates:
+    - GATE-004
+    requirements:
+    - REQ-010
+    decisions:
+    - DEC-005
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-010
+    unblocks:
+    - BATON-012
+    resume_pointer: Implement public/src/svg-world-map.js and update MapGenerator.
+    quadrant: Q1
+    milestone: REL-003
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    - GATE-004 benchmark pass
+    reviewer_checks:
+    - World geography verified accurate
+    rollback_verified: false
+- id: BATON-012
+  version: 1
+  type: implementation
+  title: Implement Full-Screen Tactical RTS Glassmorphic Interface & Floating Action
+    Bar
+  objective: Build 100vw x 100vh full-screen canvas layout with top glassmorphic telemetry
+    header and floating combat controls.
+  scope:
+    include:
+    - Full-screen CSS grid layout
+    - glassmorphic top header
+    - floating bottom action bar
+    exclude:
+    - Minimap widget
+  authority:
+    requirements:
+    - REQ-011
+    decisions:
+    - DEC-006
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-011
+    unblocks:
+    - BATON-013
+    resume_pointer: Update public/index.html and public/styles.css for full-screen
+      RTS UI.
+    quadrant: Q1
+    milestone: REL-003
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Full-screen RTS layout verified
+    rollback_verified: false
+- id: BATON-013
+  version: 1
+  type: implementation
+  title: Implement Interactive RTS Minimap Navigation Widget & Viewport Bounds Sync
+  objective: Build bottom-right minimap canvas widget displaying full map overview,
+    territory colors, camera viewport bounds, and click/drag navigation.
+  scope:
+    include:
+    - Minimap canvas renderer
+    - camera viewport rectangle
+    - click/drag map panning
+    exclude:
+    - Multiplayer WebSockets
+  authority:
+    gates:
+    - GATE-004
+    requirements:
+    - REQ-012
+    decisions:
+    - DEC-006
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-012
+    unblocks:
+    - BATON-014
+    resume_pointer: Scaffold public/src/minimap.js and integrate with TerritoryRenderer.
+    quadrant: Q1
+    milestone: REL-003
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Minimap navigation verified
+    rollback_verified: false
+- id: BATON-014
+  version: 1
+  type: implementation
+  title: Implement Untimed Spawn Selection Phase & Post-Pick 3..2..1 Countdown Overlay
+  objective: Build untimed spawn selection flow, explicit Lock Spawn trigger, post-pick
+    3..2..1 GO countdown overlay, and camera auto-centering.
+  scope:
+    include:
+    - Untimed spawn pick state
+    - Lock Spawn button action
+    - 3..2..1 GO countdown overlay
+    - camera auto-centering
+    exclude: []
+  authority:
+    requirements:
+    - REQ-009
+    decisions:
+    - DEC-003
+    - DEC-006
+  execution:
+    state: completed
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-013
+    unblocks:
+    - BATON-015
+    resume_pointer: Update simulation state machine and main loop for un-timed spawn
+      pick.
+    quadrant: Q1
+    milestone: REL-003
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    - src/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Untimed spawn pick and countdown overlay verified
+    rollback_verified: false
+- id: BATON-015
+  version: 1
+  type: research
+  title: Research & Specification for Detailed GeoJSON World Map, Click Disambiguation
+    & Context Menu
+  objective: Plan high-detail GeoJSON world vector path rasterization, distance-threshold
+    click gesture engine, and right-click RTS context menu.
+  scope:
+    include:
+    - Design GeoJSON continent vector model
+    - specify click vs drag distance threshold
+    - design right-click context menu
+    exclude:
+    - Production code edits
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-013
+    - REQ-014
+    - REQ-015
+    decisions:
+    - DEC-007
+    - DEC-008
+  execution:
+    state: completed
+    owner: mgamil.dev@gmail.com
+    depends_on:
+    - BATON-014
+    unblocks:
+    - BATON-016
+    resume_pointer: Update implementation_plan.md for REL-004 and request user feedback.
+    quadrant: Q1
+    milestone: REL-004
+  capabilities:
+    network_policy: allowlist
+    side_effect_class: A0
+    approval_policy: none
+  acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    - d4 lint pass
+    reviewer_checks:
+    - Implementation plan approved by user
+    required_artifacts: []
+    rollback_verified: false
+- id: BATON-016
+  version: 1
+  type: implementation
+  title: Implement High-Accuracy GeoJSON Natural Earth World Vector Map Rasterizer
+  objective: Implement detailed GeoJSON continent polygon renderer producing true
+    geographical coastlines, peninsulas, gulfs, and island archipelagoes.
+  scope:
+    include:
+    - GeoJSON multi-polygon parser
+    - high-detail continent shapes
+    - equirectangular map projection
+    exclude:
+    - Gesture engine
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-013
+    decisions:
+    - DEC-007
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-015
+    unblocks:
+    - BATON-017
+    resume_pointer: Scaffold public/src/geojson-world-map.js and integrate with MapGenerator.
+    quadrant: Q1
+    milestone: REL-004
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    - GATE-005 benchmark pass
+    reviewer_checks:
+    - GeoJSON world geography verified accurate
+    rollback_verified: false
+- id: BATON-017
+  version: 1
+  type: implementation
+  title: Implement Mouse Gesture Engine & Spawn Pick Selection Click Repair
+  objective: Implement distance-threshold (dragDistance <= 4px) click vs drag disambiguation
+    engine in TerritoryRenderer to guarantee 100% reliable spawn picking.
+  scope:
+    include:
+    - Mouse down/up distance calculation
+    - drag threshold filtering
+    - spawn pick click repair
+    exclude:
+    - Context menu
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-014
+    decisions:
+    - DEC-008
+  execution:
+    state: completed
+    owner: agent-role/frontend-implementer
+    depends_on:
+    - BATON-016
+    unblocks:
+    - BATON-018
+    resume_pointer: Refactor canvas mouse listeners in public/src/renderer.js and
+      public/src/main.js.
+    quadrant: Q1
+    milestone: REL-004
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Spawn pick clicking 100% reliable without drag misfires
+    rollback_verified: false
+- id: BATON-018
+  version: 1
+  type: implementation
+  title: Implement Tactical Canvas Right-Click RTS Context Menu Overlay
+  objective: Build glassmorphic right-click canvas context menu providing instant
+    combat commands (Attack Land, Send Boat across water, Stop Attack, Lock Target).
+  scope:
+    include:
+    - Right-click contextmenu event handler
+    - glassmorphic context menu UI
+    - smart target recommendation
+    exclude: []
+  authority:
+    requirements:
+    - REQ-015
+    decisions:
+    - DEC-008
+  execution:
+    state: completed
+    owner: agent-role/fullstack-implementer
+    depends_on:
+    - BATON-017
+    unblocks: []
+    resume_pointer: Build
+    quadrant: Q1
+    milestone: REL-004
+  capabilities:
+    network_policy: deny
+    filesystem_scope:
+    - public/
+    side_effect_class: A1
+    approval_policy: review-before-merge
+  acceptance:
+    deterministic_checks:
+    - compile
+    - lint
+    reviewer_checks:
+    - Right-click context menu functional
+    rollback_verified: false
+- acceptance:
+    deterministic_checks:
+    - npm run test:map
+    required_artifacts: []
+    reviewer_checks:
+    - Verify high-precision GeoJSON shorelines & mountains
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-021
+  capabilities:
+    approval_policy: none
+    network_policy: allowlist
+    side_effect_class: A0
+  execution:
+    depends_on:
+    - BATON-018
+    milestone: REL-004
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready for implementation
+    state: leased
+    unblocks:
+    - BATON-019
+    - BATON-020
+    lease_owner: mgamil.dev@gmail.com
+  id: BATON-024
+  objective: Replace simplified bezier paths with high-detail Natural Earth GeoJSON
+    vector paths and mountain ranges.
+  scope:
+    exclude:
+    - Multiplayer backend changes
+    include:
+    - public/src/geojson-world-map.js
+    - public/src/map-generator.js
+  title: Authentic High-Precision GeoJSON World Map Engine Overhaul (Prerequisite)
+  type: implementation
+  version: 1
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    required_artifacts: []
+    reviewer_checks:
+    - Audio feedback sounds crisp
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-016
+  capabilities:
+    approval_policy: none
+    network_policy: allowlist
+    side_effect_class: A0
+  execution:
+    depends_on:
+    - BATON-024
+    milestone: REL-004
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-024
+    state: draft
+    unblocks: []
+  id: BATON-019
+  objective: Synthesize expansion clicks, attacks, and capture fanfares via WebAudio
+    API.
+  scope:
+    exclude: []
+    include:
+    - public/src/audio.js
+  title: WebAudio Real-Time Sound Effects Engine
+  type: implementation
+  version: 1
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    required_artifacts: []
+    reviewer_checks:
+    - Custom seeds generate consistent terrain grid
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-017
+  capabilities:
+    approval_policy: none
+    network_policy: allowlist
+    side_effect_class: A0
+  execution:
+    depends_on:
+    - BATON-024
+    milestone: REL-004
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-024
+    state: draft
+    unblocks: []
+  id: BATON-020
+  objective: Build custom map seed inputs and preset selection UI.
+  scope:
+    exclude: []
+    include:
+    - public/src/map-generator.js
+  title: Procedural & Preset Map Generator Controls
+  type: implementation
+  version: 1
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    required_artifacts: []
+    reviewer_checks:
+    - AI profiles adopt distinct expansion speeds
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-018
+  capabilities:
+    approval_policy: none
+    network_policy: allowlist
+    side_effect_class: A0
+  execution:
+    depends_on:
+    - BATON-024
+    milestone: REL-004
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-024
+    state: draft
+    unblocks: []
+  id: BATON-021
+  objective: Implement distinct bot personalities (Rusher, Balancer, Expansionist,
+    Adaptive).
+  scope:
+    exclude: []
+    include:
+    - public/src/ai.js
+  title: Multi-Personality AI Strategy Engine
+  type: implementation
+  version: 1
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    required_artifacts: []
+    reviewer_checks:
+    - Particle FX render smoothly at 60 FPS
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-019
+  capabilities:
+    approval_policy: none
+    network_policy: allowlist
+    side_effect_class: A0
+  execution:
+    depends_on:
+    - BATON-024
+    milestone: REL-004
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-024
+    state: draft
+    unblocks: []
+  id: BATON-022
+  objective: Add territory expansion wave ripples and battle impact sparks.
+  scope:
+    exclude: []
+    include:
+    - public/src/renderer.js
+  title: Dynamic Visual Juiciness & Particle Systems
+  type: implementation
+  version: 1
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    required_artifacts: []
+    reviewer_checks:
+    - Post-game stats display coverage graph
+    rollback_verified: false
+  authority:
+    gates:
+    - GATE-005
+    requirements:
+    - REQ-020
+  capabilities:
+    approval_policy: none
+    network_policy: allowlist
+    side_effect_class: A0
+  execution:
+    depends_on:
+    - BATON-024
+    milestone: REL-004
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-024
+    state: draft
+    unblocks: []
+  id: BATON-023
+  objective: Build match replay chart and APM leaderboard dashboard.
+  scope:
+    exclude: []
+    include:
+    - public/src/dashboard.js
+  title: Post-Match Replay & Statistics Dashboard
+  type: implementation
+  version: 1
 releases:
-  - id: REL-001
-    version: 0.1.0
-    name: Terra MVP Singleplayer Walking Skeleton
-    is_mvp: true
-    exit_criteria:
-      - Player can launch singleplayer match against AI bots.
-      - Canvas renders 1000x1000 pixel territory grid at >= 60 FPS.
-      - Interest (0.5s), Income (5s), and 2:1 combat mechanics execute deterministically.
-      - Player can conquer territory and win or lose against AI bots.
-    requirements: [REQ-001, REQ-002, REQ-003, REQ-004]
-    batons: [BATON-002, BATON-003, BATON-004]
-    delivery_form: deployable
-    status: released
-
-  - id: REL-002
-    version: 0.2.0
-    name: Terra Authentic Game Loop & Player Combat Controls
-    is_mvp: false
-    exit_criteria:
-      - Main Lobby Menu allows setting Name, Color, Bot Count, Difficulty, and Map (World, Archipelago, Black Arena).
-      - Interactive Spawn Selection Phase lets player click land location with 10s timer.
-      - Player Combat Controls allow click-to-target, force slider (1%-100%), and 1.17% attack tax.
-      - Naval Boat Attacks execute across ocean cells with 3.125% deployment tax.
-      - GATE-003 automated combat test suite passes 100%.
-    requirements: [REQ-005, REQ-006, REQ-007, REQ-008]
-    batons: [BATON-006, BATON-007, BATON-008, BATON-009]
-    delivery_form: deployable
-    status: released
-
-  - id: REL-003
-    version: 0.3.0
-    name: Terra Tactical RTS UI, High-Accuracy World Map & Interactive Minimap
-    is_mvp: false
-    exit_criteria:
-      - Players have untimed spawn position selection followed by explicit LOCK SPAWN and 3..2..1 GO countdown overlay.
-      - World map accurately rasterizes Real World Natural Earth SVG vector continents into terrain grid (< 150ms).
-      - Full-screen 100vw x 100vh canvas viewport with glassmorphic top header and floating bottom action controls.
-      - Interactive bottom-right RTS minimap displays full map overview, territory colors, camera viewport bounds, and click/drag navigation.
-      - GATE-004 benchmark evaluation passes.
-    requirements: [REQ-009, REQ-010, REQ-011, REQ-012]
-    batons: [BATON-010, BATON-011, BATON-012, BATON-013, BATON-014]
-    delivery_form: deployable
-    status: released
-
-  - id: REL-004
-    version: 0.4.0
-    name: Terra High-Accuracy Geography, Reliable Gesture Engine & Tactical Context Menu
-    is_mvp: false
-    exit_criteria:
-      - World map accurately rasterizes detailed GeoJSON Natural Earth multi-polygon landmasses (> 350,000 land pixels with precise coastlines).
-      - Click vs Drag gesture engine guarantees 100% reliable spawn location picking without camera pan misfires.
-      - Canvas right-click context menu provides instant tactical commands (Attack Land, Send Boat, Clear Target, Lock Target).
-      - GATE-005 verification test suite passes.
-    requirements: [REQ-013, REQ-014, REQ-015]
-    batons: [BATON-015, BATON-016, BATON-017, BATON-018]
-    delivery_form: deployable
-    status: released
+- id: REL-001
+  version: 0.1.0
+  name: Terra MVP Singleplayer Walking Skeleton
+  is_mvp: true
+  exit_criteria:
+  - Player can launch singleplayer match against AI bots.
+  - Canvas renders 1000x1000 pixel territory grid at >= 60 FPS.
+  - Interest (0.5s), Income (5s), and 2:1 combat mechanics execute deterministically.
+  - Player can conquer territory and win or lose against AI bots.
+  requirements:
+  - REQ-001
+  - REQ-002
+  - REQ-003
+  - REQ-004
+  batons:
+  - BATON-002
+  - BATON-003
+  - BATON-004
+  delivery_form: deployable
+  status: released
+- id: REL-002
+  version: 0.2.0
+  name: Terra Authentic Game Loop & Player Combat Controls
+  is_mvp: false
+  exit_criteria:
+  - Main Lobby Menu allows setting Name, Color, Bot Count, Difficulty, and Map (World,
+    Archipelago, Black Arena).
+  - Interactive Spawn Selection Phase lets player click land location with 10s timer.
+  - Player Combat Controls allow click-to-target, force slider (1%-100%), and 1.17%
+    attack tax.
+  - Naval Boat Attacks execute across ocean cells with 3.125% deployment tax.
+  - GATE-003 automated combat test suite passes 100%.
+  requirements:
+  - REQ-005
+  - REQ-006
+  - REQ-007
+  - REQ-008
+  batons:
+  - BATON-006
+  - BATON-007
+  - BATON-008
+  - BATON-009
+  delivery_form: deployable
+  status: released
+- id: REL-003
+  version: 0.3.0
+  name: Terra Tactical RTS UI, High-Accuracy World Map & Interactive Minimap
+  is_mvp: false
+  exit_criteria:
+  - Players have untimed spawn position selection followed by explicit LOCK SPAWN
+    and 3..2..1 GO countdown overlay.
+  - World map accurately rasterizes Real World Natural Earth SVG vector continents
+    into terrain grid (< 150ms).
+  - Full-screen 100vw x 100vh canvas viewport with glassmorphic top header and floating
+    bottom action controls.
+  - Interactive bottom-right RTS minimap displays full map overview, territory colors,
+    camera viewport bounds, and click/drag navigation.
+  - GATE-004 benchmark evaluation passes.
+  requirements:
+  - REQ-009
+  - REQ-010
+  - REQ-011
+  - REQ-012
+  batons:
+  - BATON-010
+  - BATON-011
+  - BATON-012
+  - BATON-013
+  - BATON-014
+  delivery_form: deployable
+  status: released
+- id: REL-004
+  version: 0.4.0
+  name: Terra High-Accuracy Geography, Reliable Gesture Engine & Tactical Context
+    Menu
+  is_mvp: false
+  exit_criteria:
+  - World map accurately rasterizes detailed GeoJSON Natural Earth multi-polygon landmasses
+    (> 350,000 land pixels with precise coastlines).
+  - Click vs Drag gesture engine guarantees 100% reliable spawn location picking without
+    camera pan misfires.
+  - Canvas right-click context menu provides instant tactical commands (Attack Land,
+    Send Boat, Clear Target, Lock Target).
+  - GATE-005 verification test suite passes.
+  requirements:
+  - REQ-013
+  - REQ-014
+  - REQ-015
+  batons:
+  - BATON-015
+  - BATON-016
+  - BATON-017
+  - BATON-018
+  delivery_form: deployable
+  status: released
+evaluations:
+- id: EVAL-001
+  layer: outcome
+  target: BATON-001
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-002
+  layer: outcome
+  target: BATON-002
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-003
+  layer: outcome
+  target: BATON-003
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-004
+  layer: outcome
+  target: BATON-004
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-005
+  layer: outcome
+  target: BATON-005
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-006
+  layer: outcome
+  target: BATON-006
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-007
+  layer: outcome
+  target: BATON-007
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-008
+  layer: outcome
+  target: BATON-008
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-009
+  layer: outcome
+  target: BATON-009
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-010
+  layer: outcome
+  target: BATON-010
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-011
+  layer: outcome
+  target: BATON-011
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-012
+  layer: outcome
+  target: BATON-012
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-013
+  layer: outcome
+  target: BATON-013
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-014
+  layer: outcome
+  target: BATON-014
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-015
+  layer: outcome
+  target: BATON-015
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-016
+  layer: outcome
+  target: BATON-016
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-017
+  layer: outcome
+  target: BATON-017
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-018
+  layer: outcome
+  target: BATON-018
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
