@@ -696,14 +696,24 @@ export class TerritorySimulation {
 
       if (dist < 8) {
         const owner = this.players[boat.ownerId];
-        if (owner && owner.isAlive) {
+        if (owner && owner.isAlive && boat.troops >= 1) {
           this.resolveNavalLanding(boat.ownerId, boat.targetX, boat.targetY, boat.troops);
         }
         this.boats.splice(i, 1);
       } else {
         const step = (boat.speed * deltaTimeMs) / 16.6;
-        boat.x += (dx / dist) * step;
-        boat.y += (dy / dist) * step;
+        const actualStep = Math.min(dist, step);
+        boat.x += (dx / dist) * actualStep;
+        boat.y += (dy / dist) * actualStep;
+
+        // Apply sea travel attrition decay (0.0015 per pixel)
+        boat.troops = Math.max(0, boat.troops - boat.troops * 0.0015 * actualStep);
+        if (boat.troops < 1) {
+          if (boat.ownerId === 1) {
+            this.addToast('⛵ A naval transport boat sank due to sea attrition!', 'warning');
+          }
+          this.boats.splice(i, 1);
+        }
       }
     }
   }

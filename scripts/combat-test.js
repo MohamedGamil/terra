@@ -95,17 +95,29 @@ assert(sim.players[1].balance === expectedBalance, `1.17% attack tax deducted co
 // --- Test 4: Naval Boat Deployment Tax (3.125%) (REQ-008) ---
 console.log('\n[Test 4] Naval Boat Attack Tax (3.125%) Across Water');
 const pBalance = sim.players[1].balance;
+const hsX = landIdx % 1000;
+const hsY = Math.floor(landIdx / 1000);
+
 let shorelineTargetIdx = -1;
 for (let i = 0; i < sim.terrainGrid.length; i++) {
   if (sim.isShorelinePixel(i) && sim.grid[i] !== 1) {
-    shorelineTargetIdx = i;
-    break;
+    const tx = i % 1000;
+    const ty = Math.floor(i / 1000);
+    if (Math.hypot(tx - hsX, ty - hsY) > 150) {
+      shorelineTargetIdx = i;
+      break;
+    }
   }
 }
 
 const boatOk = sim.launchBoatAttack(1, shorelineTargetIdx, 25);
 assert(boatOk, 'Player launched naval boat attack across ocean cell to a shoreline');
 assert(sim.boats.length === 1, 'Naval boat instance spawned in active boats list');
+
+const initialBoatTroops = sim.boats[0].troops;
+sim.updateBoats(100); // 100ms simulation tick
+assert(sim.boats.length === 1, 'Boat is still traveling (not landed yet)');
+assert(sim.boats[0].troops < initialBoatTroops, `Naval boat troop count decayed from ${initialBoatTroops} to ${sim.boats[0].troops}`);
 
 const expectedBoatTax = Math.ceil(pBalance * 0.03125);
 const expectedBoatForce = Math.floor((pBalance - expectedBoatTax) * 0.25);

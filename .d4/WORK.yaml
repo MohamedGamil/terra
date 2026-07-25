@@ -1979,8 +1979,10 @@ batons:
     - BATON-046
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-046
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-047
   objective: Implement Naval Travel Attrition & Attrition Decay (REQ-044).
   title: Naval Travel Attrition & Attrition Decay
@@ -2526,6 +2528,13 @@ evaluations:
 - id: EVAL-046
   layer: outcome
   target: BATON-046
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-047
+  layer: outcome
+  target: BATON-047
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
