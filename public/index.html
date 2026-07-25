@@ -68,7 +68,16 @@
               <div class="map-title">Black Arena</div>
               <div class="map-desc">Solid Continent</div>
             </div>
+            <div class="map-card" data-map="custom" id="map-card-custom">
+              <div class="map-icon">🎨</div>
+              <div class="map-title">Custom Map</div>
+              <div class="map-desc">User Designed</div>
+            </div>
           </div>
+        </div>
+
+        <div class="lobby-section" style="margin-top: 10px; margin-bottom: 20px;">
+          <button class="btn btn-secondary" id="btn-open-map-editor" style="width: 100%; padding: 12px; font-weight: 600;">🎨 Open Interactive Map Editor</button>
         </div>
 
         <div class="lobby-section">
@@ -279,9 +288,63 @@
         <div class="benchmark-metrics">
           <div class="metric-box"><div class="metric-title">Territory %</div><div class="metric-val highlight-emerald" id="gov-final-pct">100%</div></div>
           <div class="metric-box"><div class="metric-title">Peak Troops</div><div class="metric-val highlight-cyan" id="gov-peak-troops">1.2M</div></div>
-          <div class="metric-box"><div class="metric-title">Bots Defeated</div><div class="metric-val highlight-amber" id="gov-bots-killed">100</div></div>
+                <div class="brand-title">TERRA MAP EDITOR</div>
+                <span class="brand-badge">Interactive Territory Designer</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary" id="btn-close-map-editor" style="width: auto; padding: 6px 12px; font-size: 14px;">✕ Close</button>
+          </div>
+
+          <div style="display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;">
+            <!-- Editor Controls Sidebar -->
+            <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 14px;">
+              <div class="lobby-section">
+                <label class="input-label">Drawing Tools</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <button class="btn-diff editor-tool-btn active" data-tool="land">🌱 Land</button>
+                  <button class="btn-diff editor-tool-btn" data-tool="ocean">🌊 Ocean</button>
+                  <button class="btn-diff editor-tool-btn" data-tool="mountain">⛰️ Mountain</button>
+                  <button class="btn-diff editor-tool-btn" data-tool="eraser">🧹 Eraser</button>
+                  <button class="btn-diff editor-tool-btn" data-tool="spawn">📍 Spawn</button>
+                  <button class="btn-diff editor-tool-btn" data-tool="fill">🪣 Bucket</button>
+                </div>
+              </div>
+
+              <div class="lobby-section">
+                <div class="control-label">
+                  <span>Brush Radius</span>
+                  <span id="editor-brush-val" style="color: var(--accent-cyan); font-family: var(--font-mono);">8px</span>
+                </div>
+                <input type="range" id="editor-brush-slider" min="1" max="25" value="8">
+              </div>
+
+              <div class="lobby-section" style="background: rgba(255, 255, 255, 0.04); padding: 12px; border-radius: 8px;">
+                <label class="input-label" style="margin-bottom: 6px;">Geography Statistics</label>
+                <div style="font-size: 12px; display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono);">
+                  <div>Land Area: <span id="stat-land-pct" style="color: var(--accent-emerald);">0.0%</span></div>
+                  <div>Ocean Water: <span id="stat-ocean-pct" style="color: var(--accent-cyan);">100.0%</span></div>
+                  <div>Mountains: <span id="stat-mountain-pct" style="color: var(--accent-amber);">0.0%</span></div>
+                  <div>Spawn Points: <span id="stat-spawn-count" style="color: #ff0055;">0</span></div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-secondary" id="btn-editor-clear" style="padding: 10px;">🗑️ Clear Canvas</button>
+                <button class="btn btn-secondary" id="btn-editor-export" style="padding: 10px;">💾 Export Map JSON</button>
+                <label class="btn btn-secondary" style="padding: 10px; text-align: center; cursor: pointer; margin: 0;">
+                  📂 Import Map JSON
+                  <input type="file" id="input-editor-import" accept=".json" style="display: none;">
+                </label>
+                <button class="btn btn-primary" id="btn-editor-use-map" style="padding: 12px; margin-top: 8px; font-size: 15px;">🎮 PLAY THIS MAP</button>
+              </div>
+            </div>
+
+            <!-- Canvas Preview -->
+            <div style="flex: 2; min-width: 320px; display: flex; justify-content: center; align-items: center; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); aspect-ratio: 1 / 1;">
+              <canvas id="editor-canvas" width="1000" height="1000" style="width: 100%; height: 100%; object-fit: contain; cursor: crosshair;"></canvas>
+            </div>
+          </div>
         </div>
-        <button class="btn btn-primary" id="btn-restart-game" style="margin-top: 12px;">🔄 PLAY AGAIN</button>
       </div>
 
       <!-- GATE Benchmark Result Modal -->

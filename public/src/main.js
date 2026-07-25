@@ -7,6 +7,7 @@ import { MatchRecorder } from './match-recorder.js';
 import { StatsDashboard } from './stats-dashboard.js';
 import { ParticleSystem } from './particles.js';
 import { SoundEngine } from './audio.js';
+import { MapEditor } from './map-editor.js';
 
 class TerraApp {
   constructor() {
@@ -19,6 +20,7 @@ class TerraApp {
     this.botDifficulty = 'easy';
     this.playerColorHex = '#00f2fe';
     this.selectedForcePercent = 25;
+    this.customMapData = null;
 
     this.sound = new SoundEngine();
     this.palette = new ColorPalette(500, this.playerColorHex);
@@ -29,6 +31,7 @@ class TerraApp {
     this.particles = new ParticleSystem(500);
     this.recorder = new MatchRecorder(1.0);
     this.dashboard = new StatsDashboard('post-match-overlay', 'chart-canvas');
+    this.mapEditor = new MapEditor(1000, 1000);
 
     this.isRunning = true;
     this.lastTime = performance.now();
@@ -40,6 +43,7 @@ class TerraApp {
     this.initParticleEvents();
     this.initMinimapEvents();
     this.initLobbyUI();
+    this.initMapEditorUI();
     this.initCombatUI();
     this.initSpawnButtons();
     this.initContextMenuUI();
@@ -144,6 +148,155 @@ class TerraApp {
       this.closeContextMenu();
       this.simulation.state = 'LOBBY';
     });
+  }
+
+  initMapEditorUI() {
+    const modal = document.getElementById('map-editor-modal');
+    const openBtn = document.getElementById('btn-open-map-editor');
+    const closeBtn = document.getElementById('btn-close-map-editor');
+    const editorCanvas = document.getElementById('editor-canvas');
+
+    if (!modal || !editorCanvas) return;
+    const ctx = editorCanvas.getContext('2d');
+
+    const updateStatsUI = () => {
+      const stats = this.mapEditor.getStatistics();
+      const landEl = document.getElementById('stat-land-pct');
+      const oceanEl = document.getElementById('stat-ocean-pct');
+      const mountainEl = document.getElementById('stat-mountain-pct');
+      const spawnEl = document.getElementById('stat-spawn-count');
+
+      if (landEl) landEl.textContent = `${stats.landPct}%`;
+      if (oceanEl) oceanEl.textContent = `${stats.oceanPct}%`;
+      if (mountainEl) mountainEl.textContent = `${stats.mountainPct}%`;
+      if (spawnEl) spawnEl.textContent = stats.spawnCount;
+
+      this.mapEditor.renderToCanvas(ctx);
+    };
+
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        updateStatsUI();
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+    }
+
+    // Tool switching
+    const toolBtns = document.querySelectorAll('.editor-tool-btn');
+    toolBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toolBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.mapEditor.setTool(btn.dataset.tool);
+      });
+    });
+
+    // Brush slider
+    const brushSlider = document.getElementById('editor-brush-slider');
+    const brushVal = document.getElementById('editor-brush-val');
+    if (brushSlider && brushVal) {
+      brushSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.mapEditor.setBrushRadius(val);
+        brushVal.textContent = `${val}px`;
+      });
+    }
+
+    // Canvas drawing mouse handlers
+    let isDrawing = false;
+
+    const paintFromEvent = (e) => {
+      const rect = editorCanvas.getBoundingClientRect();
+      const scaleX = 1000 / rect.width;
+      const scaleY = 1000 / rect.height;
+
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
+      this.mapEditor.paintAt(x, y);
+      updateStatsUI();
+    };
+
+    editorCanvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      paintFromEvent(e);
+    });
+
+    editorCanvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) paintFromEvent(e);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+
+    // Clear Canvas
+    const clearBtn = document.getElementById('btn-editor-clear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.mapEditor.clearMap(0);
+        updateStatsUI();
+      });
+    }
+
+    // Export Map JSON
+    const exportBtn = document.getElementById('btn-editor-export');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        const jsonStr = JSON.stringify(this.mapEditor.exportToJSON('Custom Map'), null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'terra-custom-map.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    // Import Map JSON
+    const importInput = document.getElementById('input-editor-import');
+    if (importInput) {
+      importInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const jsonData = JSON.parse(evt.target.result);
+            this.mapEditor.importFromJSON(jsonData);
+            updateStatsUI();
+          } catch (err) {
+            alert('Failed to import map JSON: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // Play This Map
+    const playBtn = document.getElementById('btn-editor-use-map');
+    if (playBtn) {
+      playBtn.addEventListener('click', () => {
+        this.selectedMap = 'custom';
+        this.customMapData = this.mapEditor.exportToJSON('Custom Map');
+
+        // Select custom map card in lobby
+        document.querySelectorAll('.map-card').forEach(c => c.classList.remove('active'));
+        const customCard = document.getElementById('map-card-custom');
+        if (customCard) customCard.classList.add('active');
+
+        modal.classList.add('hidden');
+        this.openSpawnSelectionPhase();
+      });
+    }
   }
 
   initCombatUI() {
@@ -335,7 +488,7 @@ class TerraApp {
     document.getElementById('lobby-screen').style.display = 'none';
 
     this.palette = new ColorPalette(this.botCount + 1, this.playerColorHex);
-    this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed);
+    this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed, this.customMapData);
     
     // Start Step 2 Untimed Spawn Selection Phase FIRST
     this.simulation.startSpawnPhase();

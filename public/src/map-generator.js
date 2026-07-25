@@ -35,8 +35,12 @@ export class MapGenerator {
    * Generates a 2D Uint8Array terrain grid for the requested map type and seed.
    * Values: 0 = Ocean Water, 1 = Neutral Land, 2 = Impassable Mountain
    */
-  static generate(mapType = 'world', width = 1000, height = 1000, seed = 12345) {
+  static generate(mapType = 'world', width = 1000, height = 1000, seed = 12345, customMapData = null) {
     const prng = this.createPRNG(seed);
+
+    if (mapType === 'custom' && customMapData && customMapData.terrainGrid) {
+      return new Uint8Array(customMapData.terrainGrid);
+    }
 
     if (mapType === 'world') {
       return GeoJSONWorldMap.rasterize(width, height);

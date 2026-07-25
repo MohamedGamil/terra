@@ -1440,7 +1440,9 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Ready after BATON-020
-    state: draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-028
   objective: Implement terrain paint brushes, spawn point placement, and JSON map
     import/export.
@@ -1994,6 +1996,13 @@ evaluations:
 - id: EVAL-031
   layer: outcome
   target: BATON-036
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-032
+  layer: outcome
+  target: BATON-028
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
