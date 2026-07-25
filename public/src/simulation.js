@@ -906,7 +906,7 @@ export class TerritorySimulation {
 
       if (exp.currentRadius === undefined) {
         exp.currentRadius = 1.0;
-        exp.maxRadius = Math.hypot(exp.targetX - exp.launchX, exp.targetY - exp.launchY);
+        exp.maxRadius = exp.isRivalAttack ? 1000.0 : Math.hypot(exp.targetX - exp.launchX, exp.targetY - exp.launchY);
       }
 
       // Check if target coordinate has been captured to switch to square area expansion mode

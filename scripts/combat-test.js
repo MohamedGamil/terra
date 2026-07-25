@@ -1071,6 +1071,69 @@ assert(hasClearPath === true, 'Adjacent diagonal shoreline-to-shoreline has a cl
 
 testsPassed += 1;
 
+// --- Test 30: Encapsulated Rival Enclave Complete Conquest ---
+console.log('\n[Test 30] Encapsulated Rival Enclave Complete Conquest (REQ-090)');
+
+const sim30 = new TerritorySimulation(100, 100, 10, 'arena');
+sim30.state = 'PLAYING';
+sim30.terrainGrid.fill(1); // fill with land
+
+// Player 1 fills 48x48 to 62x62
+sim30.players[1].isAlive = true;
+sim30.players[1].balance = 5000;
+sim30.players[1].landCount = 0;
+const p1Frontier = [];
+for (let y = 48; y <= 62; y++) {
+  for (let x = 48; x <= 62; x++) {
+    const idx = y * 100 + x;
+    sim30.grid[idx] = 1;
+    sim30.players[1].landCount++;
+  }
+}
+
+// Player 2 is encapsulated at 54..56
+sim30.players[2].isAlive = true;
+sim30.players[2].balance = 50;
+sim30.players[2].landCount = 0;
+const p2Frontier = [];
+for (let y = 54; y <= 56; y++) {
+  for (let x = 54; x <= 56; x++) {
+    const idx = y * 100 + x;
+    sim30.grid[idx] = 2;
+    sim30.players[2].landCount++;
+    sim30.players[1].landCount--;
+  }
+}
+
+// Populate frontiers
+for (let idx = 0; idx < sim30.grid.length; idx++) {
+  if (sim30.grid[idx] === 1 && sim30.aiEngine.isBorderPixel(idx, sim30.grid, sim30.terrainGrid, 100, 100, 1)) {
+    p1Frontier.push(idx);
+  }
+  if (sim30.grid[idx] === 2 && sim30.aiEngine.isBorderPixel(idx, sim30.grid, sim30.terrainGrid, 100, 100, 2)) {
+    p2Frontier.push(idx);
+  }
+}
+sim30.frontiers[1] = p1Frontier;
+sim30.frontiers[2] = p2Frontier;
+
+// Target pixel is center of P2 enclave
+const targetIdx30 = 55 * 100 + 55;
+
+// Execute attack
+sim30.executeAttack(1, targetIdx30, 50);
+
+// Run simulation ticks
+for (let step = 0; step < 50; step++) {
+  sim30.update(16.6);
+}
+
+// Verify that the encapsulated enclave is completely conquered
+assert(sim30.players[2].landCount === 0, 'Encapsulated rival land count reduced to 0');
+assert(sim30.players[2].isAlive === false, 'Encapsulated rival eliminated successfully');
+
+testsPassed += 2;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);
