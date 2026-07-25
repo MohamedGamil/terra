@@ -47,6 +47,73 @@ body {
   overflow: hidden;
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* Spawn Banner Top Overlay */
+.spawn-banner-overlay {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  pointer-events: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.spawn-banner-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--accent-cyan);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  box-shadow: 0 12px 40px rgba(0, 242, 254, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  min-width: 360px;
+}
+
+.spawn-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spawn-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--accent-cyan);
+}
+
+.spawn-badge {
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+}
+
+.spawn-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.spawn-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
 /* Full-Screen Gameplay Viewport */
 .rts-viewport {
   flex: 1;
@@ -131,6 +198,188 @@ canvas#game-canvas {
 .ctx-cancel:hover {
   background: rgba(244, 63, 94, 0.2);
   color: var(--accent-rose);
+}
+
+/* Glassmorphic Gameplay Floating HUD Panels */
+.hud-panel {
+  position: absolute;
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  z-index: 50;
+  box-shadow: var(--shadow-lg);
+}
+
+.hud-top-left {
+  top: 20px;
+  left: 20px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hud-top-right {
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+}
+
+.hud-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+.hud-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.hud-ver {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.hud-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hud-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.hud-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.hud-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.hud-attack-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sys-metrics {
+  display: flex;
+  gap: 10px;
+}
+
+.metric-pill {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.pill-dot.emerald { background: var(--accent-emerald); }
+.pill-dot.cyan { background: var(--accent-cyan); }
+.pill-dot.amber { background: var(--accent-amber); }
+
+.hud-btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.hud-btn:hover {
+  background: rgba(0, 242, 254, 0.15);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+.hud-btn-danger:hover {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+}
+
+/* Bottom Target Control Panel */
+.target-bar-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--accent-cyan);
+  border-radius: 30px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 50;
+  box-shadow: 0 8px 30px rgba(0, 242, 254, 0.2);
+}
+
+.target-icon {
+  font-size: 18px;
+}
+
+.target-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.target-actions {
+  display: flex;
+  gap: 8px;
 }
 
 /* Fixed Glassmorphic Top Header Bar */

@@ -52,7 +52,90 @@ class TerraApp {
     this.initSpawnButtons();
     this.initContextMenuUI();
     this.setupRendererCallbacks();
+
+    this.updateSceneVisibility('LOBBY');
     this.startLoop();
+  }
+
+  updateSceneVisibility(stateName) {
+    const lobbyScreen = document.getElementById('lobby-screen');
+    const spawnBanner = document.getElementById('spawn-banner');
+    const playerHud = document.getElementById('player-hud');
+    const topRightHud = document.getElementById('hud-top-right');
+    const minimapContainer = document.getElementById('minimap-container');
+    const targetBar = document.getElementById('target-bar');
+    const postMatchOverlay = document.getElementById('post-match-overlay');
+    const gameOverModal = document.getElementById('gameover-modal');
+    const mapEditorModal = document.getElementById('map-editor-modal');
+    const benchmarkModal = document.getElementById('benchmark-modal');
+
+    const show = (el, flex = false) => {
+      if (el) {
+        el.classList.remove('hidden');
+        el.style.display = flex ? 'flex' : 'block';
+      }
+    };
+    const hide = (el) => {
+      if (el) {
+        el.classList.add('hidden');
+        el.style.display = 'none';
+      }
+    };
+
+    if (stateName === 'LOBBY') {
+      show(lobbyScreen, true);
+      hide(spawnBanner);
+      hide(playerHud);
+      hide(topRightHud);
+      hide(minimapContainer);
+      hide(targetBar);
+      hide(postMatchOverlay);
+      hide(gameOverModal);
+      hide(mapEditorModal);
+      hide(benchmarkModal);
+    } else if (stateName === 'MAP_EDITOR') {
+      show(mapEditorModal, true);
+      hide(lobbyScreen);
+      hide(spawnBanner);
+      hide(playerHud);
+      hide(topRightHud);
+      hide(minimapContainer);
+      hide(targetBar);
+      hide(postMatchOverlay);
+      hide(gameOverModal);
+      hide(benchmarkModal);
+    } else if (stateName === 'SPAWN_PICK') {
+      show(spawnBanner, true);
+      show(topRightHud, true);
+      hide(lobbyScreen);
+      hide(playerHud);
+      hide(minimapContainer);
+      hide(targetBar);
+      hide(postMatchOverlay);
+      hide(gameOverModal);
+      hide(mapEditorModal);
+      hide(benchmarkModal);
+    } else if (stateName === 'PLAYING') {
+      show(playerHud);
+      show(topRightHud, true);
+      show(minimapContainer);
+      show(targetBar);
+      hide(lobbyScreen);
+      hide(spawnBanner);
+      hide(postMatchOverlay);
+      hide(gameOverModal);
+      hide(mapEditorModal);
+      hide(benchmarkModal);
+    } else if (stateName === 'GAME_OVER') {
+      show(topRightHud, true);
+      show(minimapContainer);
+      hide(lobbyScreen);
+      hide(spawnBanner);
+      hide(playerHud);
+      hide(targetBar);
+      hide(mapEditorModal);
+      hide(benchmarkModal);
+    }
   }
 
   initAudioUI() {
@@ -140,17 +223,16 @@ class TerraApp {
     });
 
     document.getElementById('btn-leave-match').addEventListener('click', () => {
-      document.getElementById('lobby-screen').style.display = 'flex';
-      document.getElementById('spawn-banner').style.display = 'none';
       this.closeContextMenu();
       this.simulation.state = 'LOBBY';
+      this.updateSceneVisibility('LOBBY');
     });
 
     document.getElementById('btn-restart-game').addEventListener('click', () => {
       document.getElementById('gameover-modal').classList.remove('active');
-      document.getElementById('lobby-screen').style.display = 'flex';
       this.closeContextMenu();
       this.simulation.state = 'LOBBY';
+      this.updateSceneVisibility('LOBBY');
     });
   }
 
@@ -267,14 +349,14 @@ class TerraApp {
 
     if (openBtn) {
       openBtn.addEventListener('click', () => {
-        modal.classList.remove('hidden');
+        this.updateSceneVisibility('MAP_EDITOR');
         updateStatsUI();
       });
     }
 
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
+        this.updateSceneVisibility('LOBBY');
       });
     }
 
@@ -412,22 +494,36 @@ class TerraApp {
       btn.addEventListener('click', () => updateForceUI(btn.dataset.force));
     });
 
-    document.getElementById('btn-attack-execute').addEventListener('click', () => {
-      if (this.targetPixelIdx >= 0) {
-        this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent);
-      }
-    });
+    const attackBtn = document.getElementById('btn-attack-execute');
+    if (attackBtn) {
+      attackBtn.addEventListener('click', () => {
+        if (this.targetPixelIdx >= 0) {
+          this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent);
+        }
+      });
+    }
 
-    document.getElementById('btn-boat-execute').addEventListener('click', () => {
-      if (this.targetPixelIdx >= 0) {
-        this.simulation.launchBoatAttack(1, this.targetPixelIdx, this.selectedForcePercent);
-      }
-    });
+    const boatBtn = document.getElementById('btn-boat-execute');
+    if (boatBtn) {
+      boatBtn.addEventListener('click', () => {
+        if (this.targetPixelIdx >= 0) {
+          this.simulation.launchBoatAttack(1, this.targetPixelIdx, this.selectedForcePercent);
+        }
+      });
+    }
 
-    document.getElementById('btn-run-benchmark').addEventListener('click', () => this.runBenchmark());
-    document.getElementById('btn-close-modal').addEventListener('click', () => {
-      document.getElementById('benchmark-modal').classList.remove('active');
-    });
+    const benchBtn = document.getElementById('btn-run-benchmark');
+    if (benchBtn) {
+      benchBtn.addEventListener('click', () => this.runBenchmark());
+    }
+
+    const closeModalBtn = document.getElementById('btn-close-modal');
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        const modal = document.getElementById('benchmark-modal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
   }
 
   initSpawnButtons() {
@@ -576,7 +672,7 @@ class TerraApp {
 
   openSpawnSelectionPhase() {
     const playerName = document.getElementById('input-player-name').value || 'Commander';
-    document.getElementById('lobby-screen').style.display = 'none';
+    this.updateSceneVisibility('SPAWN_PICK');
 
     this.palette = new ColorPalette(this.botCount + 1, this.playerColorHex);
     this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed, this.customMapData);
@@ -603,33 +699,30 @@ class TerraApp {
     const confirmBtn = document.getElementById('btn-confirm-spawn');
     confirmBtn.disabled = true;
     confirmBtn.style.opacity = '0.5';
-
-    document.getElementById('spawn-banner').style.display = 'flex';
   }
 
   launchMatchWithCountdown() {
-    document.getElementById('spawn-banner').style.display = 'none';
-
     const overlay = document.getElementById('countdown-overlay');
     const numEl = document.getElementById('countdown-num');
-    overlay.style.display = 'flex';
+    if (overlay) overlay.style.display = 'flex';
 
     if (this.simulation.humanSpawnIdx !== null) {
       this.renderer.centerOnPixel(this.simulation.humanSpawnIdx, 2.5);
     }
 
     let count = 3;
-    numEl.textContent = '3';
+    if (numEl) numEl.textContent = '3';
 
     const interval = setInterval(() => {
       count--;
       if (count > 0) {
-        numEl.textContent = `${count}`;
+        if (numEl) numEl.textContent = `${count}`;
       } else if (count === 0) {
-        numEl.textContent = 'GO!';
+        if (numEl) numEl.textContent = 'GO!';
       } else {
         clearInterval(interval);
-        overlay.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
+        this.updateSceneVisibility('PLAYING');
 
         this.simulation.confirmSpawnsAndStart();
         this.recorder.start();
@@ -708,21 +801,38 @@ class TerraApp {
       if (this.fpsHistory.length > 30) this.fpsHistory.shift();
 
       const avgFps = (this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length).toFixed(1);
-      document.getElementById('hud-fps').textContent = `${avgFps} FPS`;
+      const fpsEl = document.getElementById('sys-fps');
+      if (fpsEl) fpsEl.textContent = `${avgFps} FPS`;
+
+      const renderEl = document.getElementById('sys-render-ms');
+      if (renderEl) renderEl.textContent = `${renderMs.toFixed(1)}ms`;
 
       const stats = this.simulation.getStats();
-      document.getElementById('stat-active-bots').textContent = stats.activePlayers;
-      document.getElementById('stat-territory-pct').textContent = `${stats.percentClaimed}%`;
-      document.getElementById('stat-player-troops').textContent = stats.playerBalance.toLocaleString();
-      document.getElementById('stat-player-land').textContent = `${stats.playerLandCount.toLocaleString()} px`;
+      const activeBotsEl = document.getElementById('sys-active-bots');
+      if (activeBotsEl) activeBotsEl.textContent = `${stats.activePlayers} Bots`;
 
-      const balanceEl = document.getElementById('stat-player-troops');
-      if (stats.redInterest) {
-        balanceEl.className = 'stat-value highlight-rose';
-        balanceEl.title = 'RED INTEREST WARNING: Spend troops to expand territory!';
-      } else {
-        balanceEl.className = 'stat-value highlight-amber';
-        balanceEl.title = '';
+      const troopsEl = document.getElementById('hud-troops');
+      if (troopsEl) troopsEl.textContent = stats.playerBalance.toLocaleString();
+
+      const landEl = document.getElementById('hud-land');
+      if (landEl) landEl.textContent = `${stats.playerLandCount.toLocaleString()} px² (${((stats.playerLandCount / (1000 * 1000)) * 100).toFixed(1)}%)`;
+
+      const rankEl = document.getElementById('hud-rank');
+      if (rankEl && this.simulation.players) {
+        const sorted = [...this.simulation.players].sort((a, b) => (b.landCount || 0) - (a.landCount || 0));
+        const playerRank = sorted.findIndex(p => p.id === 1) + 1;
+        rankEl.textContent = `#${playerRank || 1} / ${this.simulation.players.length - 1}`;
+      }
+
+      const interestEl = document.getElementById('hud-interest');
+      if (interestEl) {
+        if (stats.redInterest) {
+          interestEl.textContent = 'RED INTEREST (0.1%)';
+          interestEl.className = 'hud-val highlight-rose';
+        } else {
+          interestEl.textContent = 'NORMAL (1.0%)';
+          interestEl.className = 'hud-val';
+        }
       }
 
       if (this.simulation.state === 'GAME_OVER' && this.simulation.gameResult) {
