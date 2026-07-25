@@ -56,6 +56,21 @@ export class StatsDashboard {
       rankEl.textContent = `#${summaryData.humanRank} of ${summaryData.totalPlayers}`;
     }
 
+    const outcomeBadge = document.getElementById('pm-outcome-badge');
+    if (outcomeBadge && summaryData.humanRank !== undefined) {
+      if (summaryData.humanRank === 1) {
+        outcomeBadge.textContent = 'VICTORY';
+        outcomeBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        outcomeBadge.style.color = 'var(--accent-emerald)';
+        outcomeBadge.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+      } else {
+        outcomeBadge.textContent = 'DEFEAT';
+        outcomeBadge.style.background = 'rgba(244, 63, 94, 0.2)';
+        outcomeBadge.style.color = 'var(--accent-rose)';
+        outcomeBadge.style.border = '1px solid rgba(244, 63, 94, 0.4)';
+      }
+    }
+
     if (timeEl) {
       const mins = Math.floor(summaryData.durationSeconds / 60);
       const secs = summaryData.durationSeconds % 60;

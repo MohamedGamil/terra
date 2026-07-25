@@ -517,6 +517,15 @@ requirements:
   kind: functional
   statement: The renderer target crosshair MUST draw a text label above the selected
     coordinate showing the owner's name and formatted troop balance.
+- id: REQ-078
+  kind: functional
+  statement: The naval transport boats MUST undergo land collision checks for player-launched attacks and prioritize shoreline departures with clear water paths.
+- id: REQ-079
+  kind: functional
+  statement: The simulation MUST immediately prune conquered rival pixels from the defender's active frontier list to prevent concurrent pixel ownership conflicts.
+- id: REQ-080
+  kind: functional
+  statement: The game scene manager MUST properly update visibility to reveal the post-match analytics dashboard and outcomes badge upon achieving victory or defeat.
 batons:
 - id: BATON-001
   version: 1
@@ -2700,6 +2709,66 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- id: BATON-077
+  title: Naval Transport Pathing and Collision Checks
+  objective: Implement player boat land collision checks and optimized water-only departure pathing.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-078
+  execution:
+    depends_on:
+    - BATON-076
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-078
+  title: Immediate Frontier Pruning
+  objective: Implement immediate frontier pruning for defender states upon conquest.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-079
+  execution:
+    depends_on:
+    - BATON-077
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-079
+  title: Post-Match Overlay Visibility and Outcome Badge
+  objective: Implement post-match analytics overlay visibility and victory outcome badge styling.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-080
+  execution:
+    depends_on:
+    - BATON-078
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3417,6 +3486,41 @@ evaluations:
 - id: EVAL-074
   layer: outcome
   target: BATON-074
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-075
+  layer: outcome
+  target: BATON-075
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-076
+  layer: outcome
+  target: BATON-076
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-077
+  layer: outcome
+  target: BATON-077
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-078
+  layer: outcome
+  target: BATON-078
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-079
+  layer: outcome
+  target: BATON-079
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

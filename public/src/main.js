@@ -129,6 +129,7 @@ class TerraApp {
     } else if (stateName === 'GAME_OVER') {
       show(topRightHud, true);
       show(minimapContainer);
+      show(postMatchOverlay, true);
       hide(lobbyScreen);
       hide(spawnBanner);
       hide(playerHud);
