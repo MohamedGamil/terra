@@ -584,6 +584,11 @@ requirements:
   kind: functional
   statement: Land attack campaigns with a path MUST constrain frontier pixel selection
     to pixels within 5.0 units of the path to prevent water-bypassed selection conflicts.
+- id: REQ-092
+  kind: functional
+  statement: Naval invasions of islands MUST perform reverse-path snapping to match
+    closest clear-water coastlines between target and player land, and scale troop
+    allocation by distance decay and target island size.
 batons:
 - id: BATON-001
   version: 1
@@ -3025,6 +3030,26 @@ batons:
     fix enclaved rival attacks.
   title: Path Proximity Frontier Selection
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-092
+  execution:
+    depends_on:
+    - BATON-089
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-090
+  objective: Implement optimal reverse-path check, snapping, and troop budget calculations
+    for island invasions.
+  title: Island Snap & Troop Budget
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3847,6 +3872,13 @@ evaluations:
 - id: EVAL-089
   layer: outcome
   target: BATON-089
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-090
+  layer: outcome
+  target: BATON-090
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

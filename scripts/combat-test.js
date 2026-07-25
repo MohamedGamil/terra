@@ -1134,6 +1134,61 @@ assert(sim30.players[2].isAlive === false, 'Encapsulated rival eliminated succes
 
 testsPassed += 2;
 
+// --- Test 31: Island Snap & Troop Attrition Budget calculations ---
+console.log('\n[Test 31] Island Snap & Troop Attrition Budget calculations (REQ-092)');
+
+const sim31 = new TerritorySimulation(100, 100, 10, 'arena');
+sim31.state = 'PLAYING';
+sim31.terrainGrid.fill(0); // fill with water
+
+// Player 1 land at 10x10 to 12x12
+sim31.players[1].isAlive = true;
+sim31.players[1].balance = 2000;
+sim31.players[1].landCount = 0;
+for (let y = 10; y <= 12; y++) {
+  for (let x = 10; x <= 12; x++) {
+    const idx = y * 100 + x;
+    sim31.grid[idx] = 1;
+    sim31.terrainGrid[idx] = 1;
+    sim31.players[1].landCount++;
+  }
+}
+
+// Target island at 30x10 to 32x12
+for (let y = 10; y <= 12; y++) {
+  for (let x = 30; x <= 32; x++) {
+    const idx = y * 100 + x;
+    sim31.terrainGrid[idx] = 1; // land
+  }
+}
+
+// Rebuild frontiers
+const p1Frontier31 = [];
+for (let idx = 0; idx < sim31.grid.length; idx++) {
+  if (sim31.grid[idx] === 1 && (sim31.aiEngine.isBorderPixel(idx, sim31.grid, sim31.terrainGrid, 100, 100, 1) || sim31.isShorelinePixel(idx))) {
+    p1Frontier31.push(idx);
+  }
+}
+sim31.frontiers[1] = p1Frontier31;
+
+// Launch naval invasion targeting center of the island
+const targetIdx31 = 11 * 100 + 31;
+const ok = sim31.launchBoatAttack(1, targetIdx31, 25);
+
+assert(ok, 'Naval invasion launched successfully');
+assert(sim31.boats.length === 1, 'Invasion boat spawned');
+const boat = sim31.boats[0];
+
+// Verify Snap Coordinates
+assert(sim31.isShorelinePixel(boat.targetIdx), 'Landing target is a shoreline pixel');
+assert(sim31.grid[boat.startX + boat.startY * 100] === 1, 'Departure point is owned by Player 1');
+
+// Verify budget troops amount: island has 9 pixels. base cost = 13.5 (14). distance ~ 18.
+// Troops should be capped/scaled correctly (approx 15 troops).
+assert(boat.troops >= 14 && boat.troops <= 20, `Troops amount scaled correctly based on island size and distance (Actual: ${boat.troops})`);
+
+testsPassed += 5;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

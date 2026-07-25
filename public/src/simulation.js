@@ -393,29 +393,25 @@ export class TerritorySimulation {
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 50) return false;
 
-    let landingIdx = targetPixelIdx;
-
-    if (!this.isShorelinePixel(landingIdx)) {
+    let initialLandIdx = targetPixelIdx;
+    if (this.terrainGrid[initialLandIdx] === 0) {
+      // Water pixel clicked: radial search for closest land
       const startX = targetPixelIdx % this.width;
       const startY = Math.floor(targetPixelIdx / this.width);
-      let bestShorelineIdx = -1;
-      let minSearchDist = Infinity;
-
+      let closestLandIdx = -1;
+      let minLandDist = Infinity;
       for (let idx = 0; idx < this.grid.length; idx++) {
         if (this.terrainGrid[idx] === 0 || this.terrainGrid[idx] === 2) continue;
-        if (this.isShorelinePixel(idx)) {
-          const sx = idx % this.width;
-          const sy = Math.floor(idx / this.width);
-          const d = Math.hypot(sx - startX, sy - startY);
-          if (d < minSearchDist) {
-            minSearchDist = d;
-            bestShorelineIdx = idx;
-          }
+        const lx = idx % this.width;
+        const ly = Math.floor(idx / this.width);
+        const d = Math.hypot(lx - startX, ly - startY);
+        if (d < minLandDist) {
+          minLandDist = d;
+          closestLandIdx = idx;
         }
       }
-
-      if (bestShorelineIdx !== -1) {
-        landingIdx = bestShorelineIdx;
+      if (closestLandIdx !== -1) {
+        initialLandIdx = closestLandIdx;
       } else {
         if (attackerId === 1) {
           this.addToast('⚠️ Target must be a shoreline to land!', 'warning');
@@ -424,30 +420,163 @@ export class TerritorySimulation {
       }
     }
 
-    const targetX = landingIdx % this.width;
-    const targetY = Math.floor(landingIdx / this.width);
+    // 1. BFS to find contiguous island/landmass pixels
+    const islandPixels = [];
+    const islandVisited = new Uint8Array(this.width * this.height);
+    const islandQueue = new Int32Array(25000);
+    let head = 0;
+    let tail = 0;
 
-    const departure = this.findClosestCoastalPixelTo(attackerId, targetX, targetY);
-    if (!departure) {
+    islandQueue[tail++] = initialLandIdx;
+    islandVisited[initialLandIdx] = 1;
+
+    while (head < tail && islandPixels.length < 20000) {
+      const curr = islandQueue[head++];
+      islandPixels.push(curr);
+
+      const cx = curr % this.width;
+      const cy = Math.floor(curr / this.width);
+
+      const neighbors = [
+        cy > 0 ? curr - this.width : -1,
+        cy < this.height - 1 ? curr + this.width : -1,
+        cx > 0 ? curr - 1 : -1,
+        cx < this.width - 1 ? curr + 1 : -1
+      ];
+
+      for (const n of neighbors) {
+        if (n >= 0 && islandVisited[n] === 0 && this.terrainGrid[n] !== 0 && this.terrainGrid[n] !== 2) {
+          islandVisited[n] = 1;
+          if (tail < islandQueue.length) {
+            islandQueue[tail++] = n;
+          }
+        }
+      }
+    }
+
+    // 2. Identify target island shoreline pixels
+    const islandShoreline = islandPixels.filter(idx => this.isShorelinePixel(idx));
+    if (islandShoreline.length === 0) {
       if (attackerId === 1) {
-        this.addToast('⚠️ You need an accessible shoreline to launch a naval attack!', 'warning');
+        this.addToast('⚠️ Target island has no accessible shoreline!', 'warning');
       }
       return false;
     }
 
+    // 3. Find Player occupied shoreline pixels
+    const playerShoreline = [];
+    const frontier = this.frontiers[attackerId];
+    if (frontier) {
+      for (let i = 0; i < frontier.length; i++) {
+        const idx = frontier[i];
+        if (this.grid[idx] === attackerId && this.isShorelinePixel(idx)) {
+          playerShoreline.push(idx);
+        }
+      }
+    }
+
+    if (playerShoreline.length === 0) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ You need an occupied shoreline to launch a naval attack!', 'warning');
+      }
+      return false;
+    }
+
+    // 4. Reverse Path check: Find optimal (departure, landing) pair with clear water path
+    let bestDepartureIdx = -1;
+    let bestLandingIdx = -1;
+    let minClearDistance = Infinity;
+
+    const tStep = Math.max(1, Math.floor(islandShoreline.length / 50));
+    const pStep = Math.max(1, Math.floor(playerShoreline.length / 50));
+
+    for (let t = 0; t < islandShoreline.length; t += tStep) {
+      const tIdx = islandShoreline[t];
+      const tx = tIdx % this.width;
+      const ty = Math.floor(tIdx / this.width);
+
+      for (let p = 0; p < playerShoreline.length; p += pStep) {
+        const pIdx = playerShoreline[p];
+        const px = pIdx % this.width;
+        const py = Math.floor(pIdx / this.width);
+
+        const dist = Math.hypot(px - tx, py - ty);
+        if (dist < minClearDistance) {
+          const hasClearPath = this.aiEngine.isWaterPath(px, py, tx, ty, this.terrainGrid, this.width, this.height);
+          if (hasClearPath) {
+            minClearDistance = dist;
+            bestDepartureIdx = pIdx;
+            bestLandingIdx = tIdx;
+          }
+        }
+      }
+    }
+
+    if (bestDepartureIdx === -1) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ No direct water path found between your coast and the target island!', 'warning');
+      }
+      return false;
+    }
+
+    const departureX = bestDepartureIdx % this.width;
+    const departureY = Math.floor(bestDepartureIdx / this.width);
+    const targetX = bestLandingIdx % this.width;
+    const targetY = Math.floor(bestLandingIdx / this.width);
+
+    // 5. Troop budget & travel attrition scaling calculations
+    const islandSize = islandPixels.length;
+    let totalIslandDefenderBalance = 0;
+    const uniqueOwners = new Set();
+    for (const idx of islandPixels) {
+      const owner = this.grid[idx];
+      if (owner > 0 && owner !== attackerId) {
+        uniqueOwners.add(owner);
+      }
+    }
+    for (const ownerId of uniqueOwners) {
+      if (this.players[ownerId]) {
+        totalIslandDefenderBalance += this.players[ownerId].balance;
+      }
+    }
+
+    let baseConquestNeeded = islandSize * 1.5;
+    if (totalIslandDefenderBalance > 0) {
+      baseConquestNeeded += totalIslandDefenderBalance * 0.4;
+    }
+
+    const totalDistance = Math.hypot(targetX - departureX, targetY - departureY);
+    const initialTroopsNeeded = Math.ceil(baseConquestNeeded / Math.exp(-0.0015 * totalDistance));
+
     const tax = Math.ceil(attacker.balance * 0.03125);
+    const balanceAfterTax = attacker.balance - tax;
+    const maxAllowedLaunch = Math.floor(balanceAfterTax * forcePercent / 100);
+    let forceTroops = Math.max(10, Math.min(maxAllowedLaunch, initialTroopsNeeded));
+    forceTroops = Math.max(10, Math.min(balanceAfterTax - 10, forceTroops));
+
+    if (forceTroops < 10) {
+      if (attackerId === 1) {
+        this.addToast('⚠️ Insufficient troops to launch naval invasion!', 'warning');
+      }
+      return false;
+    }
+
+    if (attackerId === 1) {
+      if (forceTroops < initialTroopsNeeded) {
+        this.addToast(`⚔️ Offense budget limit reached! Launching ${forceTroops} troops (Needed: ${initialTroopsNeeded}) for beachhead.`, 'info');
+      } else {
+        this.addToast(`⚔️ Launching targeted naval invasion of ${forceTroops} troops to conquer target island.`, 'info');
+      }
+    }
+
     attacker.balance -= tax;
-
-    const forceTroops = Math.floor((attacker.balance * forcePercent) / 100);
-    if (forceTroops < 10) return false;
-
     attacker.balance -= forceTroops;
+
+    const departure = { x: departureX, y: departureY };
 
     if (this.onParticleEvent) {
       this.onParticleEvent('BOAT_LAUNCH', { x: departure.x, y: departure.y, color: attacker.color || '#00f2fe', troops: forceTroops });
     }
-
-    const totalDistance = Math.hypot(targetX - departure.x, targetY - departure.y);
     const distanceThreshold = Math.max(this.width, this.height) * 0.15;
     const speedScale = Math.max(0.2, distanceThreshold / Math.max(distanceThreshold, totalDistance));
 
@@ -457,9 +586,11 @@ export class TerritorySimulation {
       troops: forceTroops,
       x: departure.x,
       y: departure.y,
+      startX: departure.x,
+      startY: departure.y,
       targetX,
       targetY,
-      targetIdx: targetPixelIdx,
+      targetIdx: bestLandingIdx,
       speed: 4.5 * speedScale
     });
 
@@ -1378,7 +1509,8 @@ export class TerritorySimulation {
       const frontier = this.frontiers[id];
       if (!frontier || frontier.length === 0) continue;
       this.frontiers[id] = frontier.filter(idx => 
-        this.aiEngine.isBorderPixel(idx, this.grid, this.terrainGrid, this.width, this.height, id)
+        this.aiEngine.isBorderPixel(idx, this.grid, this.terrainGrid, this.width, this.height, id) ||
+        this.isShorelinePixel(idx)
       );
     }
   }
