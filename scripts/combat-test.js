@@ -677,6 +677,18 @@ mockGrid[41] = 1;
 MapGenerator.cleanupGrid(10, 10, mockGrid);
 assert(mockGrid[40] === 1 || mockGrid[31] === 1, 'Diagonal tearing land connections normalized to solid orthogonal land bridge');
 
+// Set up diagonal mountain tear at (x=2, y=3) and (x=3, y=4) connected to main landmass
+const mockGrid2 = new Uint8Array(100);
+for (let i = 0; i <= 32; i++) {
+  mockGrid2[i] = 1;
+}
+mockGrid2[32] = 2; // mountain
+mockGrid2[33] = 0;
+mockGrid2[42] = 0;
+mockGrid2[43] = 2; // mountain
+MapGenerator.cleanupGrid(10, 10, mockGrid2);
+assert(mockGrid2[42] === 2 || mockGrid2[33] === 2, 'Diagonal tearing mountain connections normalized to solid orthogonal mountain bridge');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

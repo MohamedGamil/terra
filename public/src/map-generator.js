@@ -223,20 +223,23 @@ export class MapGenerator {
 
   static cleanupGrid(width, height, grid) {
     // Normalize diagonal tearing land connections to form solid 4-connected land bridges
-    for (let y = 0; y < height - 1; y++) {
-      const row = y * width;
-      const nextRow = (y + 1) * width;
-      for (let x = 0; x < width - 1; x++) {
-        const topLeft = grid[row + x];
-        const topRight = grid[row + x + 1];
-        const bottomLeft = grid[nextRow + x];
-        const bottomRight = grid[nextRow + x + 1];
+    // Run 2 iterations to resolve cascade diagonal tears
+    for (let iter = 0; iter < 2; iter++) {
+      for (let y = 0; y < height - 1; y++) {
+        const row = y * width;
+        const nextRow = (y + 1) * width;
+        for (let x = 0; x < width - 1; x++) {
+          const topLeft = grid[row + x];
+          const topRight = grid[row + x + 1];
+          const bottomLeft = grid[nextRow + x];
+          const bottomRight = grid[nextRow + x + 1];
 
-        if (bottomLeft > 0 && topRight > 0 && topLeft === 0 && bottomRight === 0) {
-          grid[row + x] = 1;
-        }
-        if (topLeft > 0 && bottomRight > 0 && bottomLeft === 0 && topRight === 0) {
-          grid[nextRow + x] = 1;
+          if (bottomLeft > 0 && topRight > 0 && topLeft === 0 && bottomRight === 0) {
+            grid[row + x] = (bottomLeft === 2 && topRight === 2) ? 2 : 1;
+          }
+          if (topLeft > 0 && bottomRight > 0 && bottomLeft === 0 && topRight === 0) {
+            grid[nextRow + x] = (topLeft === 2 && bottomRight === 2) ? 2 : 1;
+          }
         }
       }
     }
