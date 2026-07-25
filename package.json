@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite public --port 3000 --host",
     "build": "vite build public",
+    "build:map": "node scripts/build-authentic-geojson.js",
     "test:benchmark": "node scripts/benchmark-cli.js",
     "test:server": "node scripts/server-benchmark.js",
     "test:combat": "node scripts/combat-test.js",
