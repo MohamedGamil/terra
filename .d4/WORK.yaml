@@ -1154,8 +1154,10 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Ready after BATON-024
-    state: draft
+    state: completed
     unblocks: []
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-019
   objective: Synthesize expansion clicks, attacks, and capture fanfares via WebAudio
     API.
@@ -1565,6 +1567,13 @@ evaluations:
 - id: EVAL-023
   layer: outcome
   target: BATON-020
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-024
+  layer: outcome
+  target: BATON-019
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

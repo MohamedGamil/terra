@@ -6,6 +6,7 @@ import { BenchmarkRunner } from './benchmark.js';
 import { MatchRecorder } from './match-recorder.js';
 import { StatsDashboard } from './stats-dashboard.js';
 import { ParticleSystem } from './particles.js';
+import { SoundEngine } from './audio.js';
 
 class TerraApp {
   constructor() {
@@ -19,6 +20,7 @@ class TerraApp {
     this.playerColorHex = '#00f2fe';
     this.selectedForcePercent = 25;
 
+    this.sound = new SoundEngine();
     this.palette = new ColorPalette(500, this.playerColorHex);
     this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed);
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
@@ -34,6 +36,7 @@ class TerraApp {
     this.targetPixelIdx = -1;
     this.matchElapsedSec = 0;
 
+    this.initAudioUI();
     this.initParticleEvents();
     this.initMinimapEvents();
     this.initLobbyUI();
@@ -44,12 +47,25 @@ class TerraApp {
     this.startLoop();
   }
 
+  initAudioUI() {
+    const audioBtn = document.getElementById('btn-toggle-audio');
+    if (audioBtn) {
+      audioBtn.addEventListener('click', () => {
+        const isMuted = this.sound.toggleMute();
+        audioBtn.textContent = isMuted ? '🔇 Muted' : '🔊 Sound';
+        audioBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
+      });
+    }
+  }
+
   initParticleEvents() {
     this.simulation.onParticleEvent = (type, data) => {
       if (type === 'ATTACK_LAUNCH') {
+        this.sound.playAttack();
         this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 22);
         this.particles.spawnFloatingText(data.x, data.y, `-${data.troops}`, '#ff0055');
       } else if (type === 'BOAT_LAUNCH') {
+        this.sound.playBoat();
         this.particles.spawnShockwave(data.x, data.y, '#00f2fe', 16);
         this.particles.spawnFloatingText(data.x, data.y, `⛵ BOAT (${data.troops})`, '#00f2fe');
       }
@@ -468,6 +484,11 @@ class TerraApp {
       if (this.simulation.state === 'GAME_OVER' && this.simulation.gameResult) {
         const overlay = document.getElementById('post-match-overlay');
         if (overlay && overlay.style.display === 'none') {
+          if (this.simulation.gameResult === 'VICTORY') {
+            this.sound.playVictoryFanfare();
+          } else {
+            this.sound.playDefeatStinger();
+          }
           const summary = this.recorder.getSummary();
           this.dashboard.show(
             summary,
