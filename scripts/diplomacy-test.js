@@ -29,7 +29,7 @@ function assert(condition, message) {
 console.log('[Test 1] Singleplayer Non-Aggression Pact Formation & Combat Blockage');
 const sim = new TerritorySimulation(100, 100, 4, 'world', 12345);
 sim.startSpawnPhase();
-sim.setHumanSpawn(10 * 100 + 10);
+sim.setHumanSpawn(30 * 100 + 75);
 sim.confirmSpawnsAndStart();
 
 // Manually establish NAP between Player 1 (Human) and Bot 2
@@ -45,12 +45,12 @@ assert(sim.hasPact(1, 2) === true, 'hasPact returns true for active NAP between 
 
 // Verify conquest blockage: simulate expansion attempt from Player 1 into Bot 2's land
 const p1LandBefore = sim.players[1].landCount;
-sim.grid[11 * 100 + 10] = 2; // Set neighbor pixel to Bot 2
-sim.frontiers[1] = [10 * 100 + 10]; // Put border pixel in P1 frontier
-sim.advanceFrontierTowards(1, 10, 11, 500);
+sim.grid[31 * 100 + 75] = 2; // Set neighbor pixel to Bot 2
+sim.frontiers[1] = [30 * 100 + 75]; // Put border pixel in P1 frontier
+sim.advanceFrontierTowards(1, 75, 31, 500);
 const p1LandAfter = sim.players[1].landCount;
 
-assert(sim.grid[11 * 100 + 10] === 2, 'Frontier expansion into NAP ally pixel was BLOCKED as expected');
+assert(sim.grid[31 * 100 + 75] === 2, 'Frontier expansion into NAP ally pixel was BLOCKED as expected');
 
 // -------------------------------------------------------------
 // Test 2: Pact Breaking Penalties & Combat Unblocking
@@ -66,9 +66,9 @@ assert(sim.players[1].balance === 850, `15% troop penalty deducted correctly (Ex
 assert(sim.pactLockTimers.get(1) === 10.0, '10-second interest lock timer set on pact breaker');
 
 // Unblocked expansion test
-sim.frontiers[1] = [10 * 100 + 10];
-sim.advanceFrontierTowards(1, 10, 11, 500);
-assert(sim.grid[11 * 100 + 10] === 1, 'Frontier expansion unblocked after NAP breakage and conquered pixel');
+sim.frontiers[1] = [30 * 100 + 75];
+sim.advanceFrontierTowards(1, 75, 31, 500);
+assert(sim.grid[31 * 100 + 75] === 1, 'Frontier expansion unblocked after NAP breakage and conquered pixel');
 
 // -------------------------------------------------------------
 // Test 3: Troop Aid & Tax Deduction

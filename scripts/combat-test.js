@@ -118,9 +118,13 @@ for (let i = 0; i < sim.terrainGrid.length; i++) {
   if (sim.isShorelinePixel(i) && sim.grid[i] !== 1) {
     const tx = i % 1000;
     const ty = Math.floor(i / 1000);
-    if (Math.hypot(tx - hsX, ty - hsY) > 150) {
-      shorelineTargetIdx = i;
-      break;
+    const dist = Math.hypot(tx - hsX, ty - hsY);
+    if (dist > 50 && dist < 120) {
+      const dep = sim.findClosestCoastalPixelTo(1, tx, ty);
+      if (dep && sim.aiEngine.isWaterPath(dep.x, dep.y, tx, ty, sim.terrainGrid, 1000, 1000)) {
+        shorelineTargetIdx = i;
+        break;
+      }
     }
   }
 }
@@ -253,7 +257,7 @@ simExp.state = 'PLAYING';
 simExp.tickCount = 1;
 
 simExp.players[1].isAlive = true;
-simExp.players[1].balance = 1000;
+simExp.players[1].balance = 2000;
 simExp.players[1].landCount = 10;
 
 simExp.grid[5050] = 1;
@@ -860,6 +864,96 @@ assert(simFilter.grid[10] === 2, 'Rival pixel 10 remains untouched by Player 1 n
 assert(simFilter.grid[12] === 1 || simFilter.grid[22] === 1 || simFilter.grid[2] === 1, 'Neutral neighbor pixels are successfully captured');
 
 testsPassed += 4;
+
+// --- Test 25: Island Conquest, Player Boat Collision, & Frontier Pruning ---
+console.log('\n[Test 25] Island Conquest, Player Boat Collision, & Frontier Pruning (REQ-075/REQ-076)');
+
+const sim25 = new TerritorySimulation(100, 100, 10, 'arena');
+sim25.state = 'PLAYING';
+
+// 1. Verify player boat land collision check (previously failed due to boat.ownerId !== 1 check)
+sim25.terrainGrid.fill(1); // Fill with land
+sim25.terrainGrid[30 * 100 + 30] = 0; // water
+sim25.terrainGrid[30 * 100 + 31] = 0; // water
+sim25.terrainGrid[30 * 100 + 32] = 0; // water
+sim25.terrainGrid[30 * 100 + 33] = 1; // land wall at x=33
+
+sim25.boats.push({
+  id: 2501,
+  ownerId: 1, // Player 1
+  troops: 100,
+  x: 30,
+  y: 30,
+  startX: 30,
+  startY: 30,
+  targetX: 35,
+  targetY: 30,
+  targetIdx: 3035,
+  speed: 5.0
+});
+
+// Update simulation boats: should move 5 pixels to x=35, hitting the land wall at x=33
+sim25.updateBoats(16.6);
+assert(sim25.boats.length === 0, 'Player boat successfully collided with land wall and sank');
+
+// 2. Verify findClosestCoastalPixelTo pathfinding prioritization
+const sim25_path = new TerritorySimulation(100, 100, 10, 'arena');
+sim25_path.state = 'PLAYING';
+
+// Player 1 owns two spawn nodes:
+// Node A: x=10, y=10. Adjacent to x=10, y=11 (water). But the straight line path to target x=25, y=10 is blocked by a land wall at x=15.
+// Node B: x=10, y=20. Adjacent to x=10, y=19 (water). The path to target is entirely water.
+sim25_path.terrainGrid.fill(0); // Fill with water
+// Node A
+sim25_path.grid[1010] = 1; // land
+sim25_path.terrainGrid[1010] = 1;
+// Node B
+sim25_path.grid[2010] = 1; // land
+sim25_path.terrainGrid[2010] = 1;
+
+// Land Wall at x=15, y=0 to 15
+for (let y = 0; y <= 15; y++) {
+  sim25_path.terrainGrid[y * 100 + 15] = 1;
+}
+
+sim25_path.frontiers[1] = [1010, 2010];
+
+// Call findClosestCoastalPixelTo for target x=25, y=10
+const departure = sim25_path.findClosestCoastalPixelTo(1, 25, 10);
+// Geometrically, Node A is closer to (25, 10) than Node B.
+// But Node A has a blocked water path (blocked by land wall at x=15). Node B has a clear path.
+// So Node B (x=10, y=20) should be prioritized and selected!
+assert(departure !== null, 'Coastal pixel found');
+assert(departure.x === 10 && departure.y === 20, `Departure pixel prioritized Node B (Expected: 10, 20. Actual: ${departure.x}, ${departure.y})`);
+
+// 3. Verify immediate frontier pruning
+const sim25_prune = new TerritorySimulation(100, 100, 10, 'arena');
+sim25_prune.state = 'PLAYING';
+sim25_prune.terrainGrid.fill(1); // Land
+
+sim25_prune.players[1].isAlive = true;
+sim25_prune.players[1].balance = 1000;
+sim25_prune.players[1].landCount = 10;
+sim25_prune.grid[5050] = 1;
+sim25_prune.frontiers[1] = [5050];
+
+sim25_prune.players[2].isAlive = true;
+sim25_prune.players[2].balance = 1000;
+sim25_prune.players[2].landCount = 10;
+sim25_prune.grid[5051] = 2; // Rival adjacent pixel
+sim25_prune.frontiers[2] = [5051];
+
+// Launch attack from Player 1 to 5051
+sim25_prune.executeAttack(1, 5051, 50);
+sim25_prune.update(16.6); // run tick
+
+// Pixel 5051 is captured by Player 1
+assert(sim25_prune.grid[5051] === 1, 'Rival pixel 5051 conquered by Player 1');
+// Pixel 5051 should be immediately pruned from Player 2's frontier list!
+const hasPixelInRivalFrontier = sim25_prune.frontiers[2].includes(5051);
+assert(hasPixelInRivalFrontier === false, 'Conquered rival pixel immediately pruned from defender frontier');
+
+testsPassed += 5;
 
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);

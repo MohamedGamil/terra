@@ -658,40 +658,50 @@ export class TerritorySimulation {
   findClosestCoastalPixelTo(ownerId, tx, ty) {
     const width = this.width;
     const height = this.height;
-    let bestPixel = null;
-    let minDistance = Infinity;
+    const frontier = this.frontiers[ownerId];
+    if (!frontier || frontier.length === 0) return null;
 
-    for (let idx = 0; idx < this.grid.length; idx++) {
+    let bestClearPixel = null;
+    let minClearDistance = Infinity;
+    let bestFallbackPixel = null;
+    let minFallbackDistance = Infinity;
+
+    for (let i = 0; i < frontier.length; i++) {
+      const idx = frontier[i];
       if (this.grid[idx] !== ownerId) continue;
 
       const cx = idx % width;
       const cy = Math.floor(idx / width);
-      
+
       let isCoast = false;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue;
-          const nx = cx + dx;
-          const ny = cy + dy;
-          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-            if (this.terrainGrid[ny * width + nx] === 0) {
-              isCoast = true;
-              break;
-            }
-          }
-        }
-        if (isCoast) break;
+      if (
+        (cy > 0 && this.terrainGrid[idx - width] === 0) ||
+        (cy < height - 1 && this.terrainGrid[idx + width] === 0) ||
+        (cx > 0 && this.terrainGrid[idx - 1] === 0) ||
+        (cx < width - 1 && this.terrainGrid[idx + 1] === 0)
+      ) {
+        isCoast = true;
       }
 
       if (isCoast) {
         const dist = Math.hypot(cx - tx, cy - ty);
-        if (dist < minDistance) {
-          minDistance = dist;
-          bestPixel = { x: cx, y: cy };
+        const hasClearPath = this.aiEngine.isWaterPath(cx, cy, tx, ty, this.terrainGrid, width, height);
+
+        if (hasClearPath) {
+          if (dist < minClearDistance) {
+            minClearDistance = dist;
+            bestClearPixel = { x: cx, y: cy };
+          }
+        } else {
+          if (dist < minFallbackDistance) {
+            minFallbackDistance = dist;
+            bestFallbackPixel = { x: cx, y: cy };
+          }
         }
       }
     }
-    return bestPixel;
+
+    return bestClearPixel || bestFallbackPixel;
   }
 
   findLandPath(startIdx, endIdx) {
@@ -896,6 +906,8 @@ export class TerritorySimulation {
         }
       }
 
+      const excludedFrontierIndices = new Set();
+
       while (exp.remainingTroops > 2 && stepCount < stepLimit) {
         let bestIdx = -1;
         let minDist = Infinity;
@@ -904,6 +916,7 @@ export class TerritorySimulation {
         if (exp.path !== null) {
           for (let i = frontier.length - 1; i >= 0; i--) {
             const fIdx = frontier[i];
+            if (excludedFrontierIndices.has(fIdx)) continue;
             const fx = fIdx % width;
             const fy = Math.floor(fIdx / width);
             const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
@@ -1043,7 +1056,15 @@ export class TerritorySimulation {
                 defender.balance = Math.max(0, defender.balance - defenderCasualties);
               }
               player.landCount++;
-              if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
+              if (defender) {
+                defender.landCount = Math.max(0, defender.landCount - 1);
+                if (this.frontiers[defenderOwner]) {
+                  const fIdx = this.frontiers[defenderOwner].indexOf(nIdx);
+                  if (fIdx !== -1) {
+                    this.frontiers[defenderOwner].splice(fIdx, 1);
+                  }
+                }
+              }
               this.grid[nIdx] = exp.ownerId;
 
               if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
@@ -1086,7 +1107,8 @@ export class TerritorySimulation {
         }
 
         if (!localExpanded) {
-          break;
+          excludedFrontierIndices.add(bestIdx);
+          continue;
         }
       }
 
@@ -1183,7 +1205,15 @@ export class TerritorySimulation {
               defender.balance = Math.max(0, defender.balance - defenderCasualties);
             }
             player.landCount++;
-            if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
+            if (defender) {
+              defender.landCount = Math.max(0, defender.landCount - 1);
+              if (this.frontiers[defenderOwner]) {
+                const fIdx = this.frontiers[defenderOwner].indexOf(nIdx);
+                if (fIdx !== -1) {
+                  this.frontiers[defenderOwner].splice(fIdx, 1);
+                }
+              }
+            }
             this.grid[nIdx] = ownerId;
             if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
               frontier.push(nIdx);
@@ -1489,7 +1519,7 @@ export class TerritorySimulation {
               const checkIdx = py * this.width + px;
               const distToTarget = Math.hypot(boat.targetX - px, boat.targetY - py);
               const distFromStart = Math.hypot(px - boat.startX, py - boat.startY);
-              if (boat.ownerId !== 1 && distToTarget >= 8 && distFromStart >= 2 && this.terrainGrid[checkIdx] !== 0) {
+              if (distToTarget >= 8 && distFromStart >= 2 && this.terrainGrid[checkIdx] !== 0) {
                 collided = true;
                 break;
               }
@@ -1555,6 +1585,7 @@ export class TerritorySimulation {
 
     if (this.terrainGrid[landingIdx] !== 1) return;
 
+    const landingOwner = this.grid[landingIdx];
     const cx = landingIdx % width;
     const cy = Math.floor(landingIdx / width);
     const radius = 4;
@@ -1583,7 +1614,18 @@ export class TerritorySimulation {
                 this.grid[idx] = ownerId;
                 owner.landCount++;
                 if (defOwner > 0 && this.players[defOwner]) {
-                  this.players[defOwner].landCount = Math.max(0, this.players[defOwner].landCount - 1);
+                  const defender = this.players[defOwner];
+                  defender.landCount = Math.max(0, defender.landCount - 1);
+                  // Inflict casualties on defender
+                  const casualties = Math.min(defender.balance, Math.ceil(4 * (1.0 + remainingTroops * 0.0005)));
+                  defender.balance = Math.max(0, defender.balance - casualties);
+                  // Prune defender's frontier list
+                  if (this.frontiers[defOwner]) {
+                    const fIdx = this.frontiers[defOwner].indexOf(idx);
+                    if (fIdx !== -1) {
+                      this.frontiers[defOwner].splice(fIdx, 1);
+                    }
+                  }
                 }
 
                 if (!frontierSet.has(idx)) {
@@ -1602,31 +1644,18 @@ export class TerritorySimulation {
     }
 
     if (remainingTroops > 10) {
-      let launchX = cx;
-      let launchY = cy;
-      if (frontier && frontier.length > 0) {
-        let minDist = Infinity;
-        for (let i = 0; i < frontier.length; i++) {
-          const idx = frontier[i];
-          const fx = idx % width;
-          const fy = Math.floor(idx / width);
-          const dist = Math.hypot(fx - cx, fy - cy);
-          if (dist < minDist) {
-            minDist = dist;
-            launchX = fx;
-            launchY = fy;
-          }
-        }
-      }
-
+      const isRivalAttack = (landingOwner > 0 && landingOwner !== ownerId);
       this.activeExpansions.push({
         ownerId: ownerId,
-        targetX: targetX,
-        targetY: targetY,
-        launchX: launchX,
-        launchY: launchY,
+        targetX: cx,
+        targetY: cy,
+        launchX: cx,
+        launchY: cy,
         remainingTroops: remainingTroops,
-        isCounterPush: false
+        isCounterPush: false,
+        path: null,
+        isRivalAttack: isRivalAttack,
+        targetOwner: landingOwner
       });
     }
   }

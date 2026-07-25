@@ -503,6 +503,20 @@ requirements:
   statement: All interactive player land attacks targeting neutral land MUST expand
     radially/uniformly outwards from the player's borders (centroid-outward non-targeted
     mode) with optimized frontier checking to avoid sluggish captures.
+- id: REQ-075
+  kind: functional
+  statement: The simulation expansions MUST support non-blocking rival and neutral
+    conquest by allowing active expansions to bypass stalled or blocked frontier pixels
+    and continue expanding via other active frontier pixels.
+- id: REQ-076
+  kind: functional
+  statement: 'Active expansions spawned from successful naval landings MUST expand
+    outwards from the landing coordinates as non-targeted expansions (path: null)
+    to capture the remaining island pixels.'
+- id: REQ-077
+  kind: functional
+  statement: The renderer target crosshair MUST draw a text label above the selected
+    coordinate showing the owner's name and formatted troop balance.
 batons:
 - id: BATON-001
   version: 1
@@ -2643,6 +2657,49 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- id: BATON-075
+  title: Stalled Frontier Bypass & Island Expansion
+  objective: Implement frontier bypassing via excludedFrontierIndices and update resolveNavalLanding
+    to spawn non-targeted expansions.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-075
+    - REQ-076
+  execution:
+    depends_on:
+    - BATON-074
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-076
+  title: Target Info Rendering
+  objective: Draw owner name and formatted troop balance text label above the target
+    marker crosshair.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-077
+  execution:
+    depends_on:
+    - BATON-075
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2825,6 +2882,26 @@ releases:
   - BATON-074
   delivery_form: deployable
   status: released
+- id: REL-010
+  version: 1.0.0
+  name: 'Terra Territory Conquest & UI Info Overlay: Island Conquest & Stuck Pixel
+    Fix'
+  is_mvp: false
+  exit_criteria:
+  - Land expansions bypass stalled or blocked frontier pixels to prevent conquest
+    freezes.
+  - Successful naval landings trigger non-targeted expansions from the landing site
+    to conquer the rest of the island.
+  - Renderer target selection displays the owner name and troop count above the crosshair.
+  requirements:
+  - REQ-075
+  - REQ-076
+  - REQ-077
+  batons:
+  - BATON-075
+  - BATON-076
+  delivery_form: deployable
+  status: draft
 evaluations:
 - id: EVAL-001
   layer: outcome

@@ -310,6 +310,36 @@ export class TerritoryRenderer {
       this.ctx.beginPath();
       this.ctx.arc(sx, sy, 2, 0, Math.PI * 2);
       this.ctx.fill();
+
+      // Display owner and troop count above the target crosshair
+      if (grid && this.players) {
+        const targetOwner = grid[this.targetPixelIdx];
+        if (targetOwner > 0) {
+          const p = this.players[targetOwner];
+          if (p && p.isAlive) {
+            const formatTroops = (val) => {
+              if (val >= 1e9) return (val / 1e9).toFixed(1) + 'B';
+              if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
+              if (val >= 1e3) return (val / 1e3).toFixed(1) + 'K';
+              return Math.floor(val).toString();
+            };
+            this.ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            const text = `${p.name || 'Bot ' + targetOwner} (${formatTroops(p.balance)})`;
+            this.ctx.font = 'bold 11px sans-serif';
+            const textWidth = this.ctx.measureText(text).width;
+            
+            // Draw background pill
+            this.ctx.beginPath();
+            this.ctx.roundRect(sx - textWidth / 2 - 6, sy - rad - 22, textWidth + 12, 18, 4);
+            this.ctx.fill();
+
+            // Draw text
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(text, sx, sy - rad - 9);
+          }
+        }
+      }
     }
 
     // Naval Boat Transport Icons

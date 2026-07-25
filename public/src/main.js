@@ -664,7 +664,9 @@ class TerraApp {
         } else if (targetOwner === 1) {
           statusText.textContent = `Your Kingdom (${snapX}, ${snapY})`;
         } else {
-          statusText.textContent = `Bot ${targetOwner}'s Territory (${snapX}, ${snapY})`;
+          const rival = this.simulation.players[targetOwner];
+          const troopText = rival ? ` [Troops: ${TerritorySimulation.formatTroops(rival.balance)}]` : '';
+          statusText.textContent = `Bot ${targetOwner}'s Territory (${snapX}, ${snapY})${troopText}`;
         }
 
         if (buttonType === 'right') {
