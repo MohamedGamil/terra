@@ -197,7 +197,7 @@ export class TerritorySimulation {
     this.players[ownerId].capitalY = cy;
   }
 
-  executeAttack(attackerId, targetPixelIdx, forcePercent = 25) {
+  executeAttack(attackerId, targetPixelIdx, forcePercent = 25, isTargeted = true) {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 20) return false;
@@ -280,6 +280,29 @@ export class TerritorySimulation {
 
     const targetOwner = this.grid[targetPixelIdx];
     const isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);
+
+    if (targetOwner === 0 && !isTargeted) {
+      const capX = attacker.capitalX !== undefined ? attacker.capitalX : launchX;
+      const capY = attacker.capitalY !== undefined ? attacker.capitalY : launchY;
+      const initialRadius = Math.hypot(launchX - capX, launchY - capY);
+      const maxRadius = initialRadius + Math.sqrt(forceTroops) * 1.5;
+
+      this.activeExpansions.push({
+        ownerId: attackerId,
+        targetX: capX,
+        targetY: capY,
+        launchX: capX,
+        launchY: capY,
+        remainingTroops: forceTroops,
+        isCounterPush: false,
+        path: null,
+        isRivalAttack: false,
+        targetOwner: 0,
+        currentRadius: initialRadius,
+        maxRadius: maxRadius
+      });
+      return true;
+    }
 
     this.activeExpansions.push({
       ownerId: attackerId,
@@ -776,7 +799,7 @@ export class TerritorySimulation {
 
       // Check if target coordinate has been captured to switch to square area expansion mode
       const targetIdx = Math.floor(exp.targetY) * width + Math.floor(exp.targetX);
-      if (this.grid[targetIdx] === exp.ownerId) {
+      if (this.grid[targetIdx] === exp.ownerId && exp.path !== null) {
         exp.targetReached = true;
       }
 

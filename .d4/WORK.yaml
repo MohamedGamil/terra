@@ -477,6 +477,18 @@ requirements:
   kind: functional
   statement: Attacking troop travel durations on land and sea MUST scale dynamically
     based on the straight-line distance from launch to target coordinates.
+- id: REQ-069
+  kind: functional
+  statement: The client application MUST display the post-match victory/defeat overlay
+    immediately when entering the GAME_OVER state.
+- id: REQ-070
+  kind: functional
+  statement: Canvas click targeting MUST snap to the closest rival player land pixel
+    within a 25-pixel radius if not clicked directly on a rival.
+- id: REQ-071
+  kind: functional
+  statement: Neutral land expansions MUST expand in all available directions starting
+    outward from the player's border relative to their capital/centroid.
 batons:
 - id: BATON-001
   version: 1
@@ -2511,6 +2523,49 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- id: BATON-070
+  title: GAME_OVER Overlay & Radial Snapped Targeting
+  objective: Display post-match overlay immediately on GAME_OVER state and implement
+    25px radial click snapping to closest rival pixel.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-069
+    - REQ-070
+  execution:
+    depends_on:
+    - BATON-069
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-071
+  title: Centroid-Outward Neutral Expansion Wavefront
+  objective: Implement dynamic centroid-outward border expansions for neutral land
+    attacks.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-071
+  execution:
+    depends_on:
+    - BATON-070
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2643,6 +2698,24 @@ releases:
   batons:
   - BATON-068
   - BATON-069
+  delivery_form: deployable
+  status: released
+- id: REL-007
+  version: 0.7.0
+  name: 'Terra UI & Controls Refinements: Post-Match Overlay, Snapped Targeting &
+    Centroid Expansion'
+  is_mvp: false
+  exit_criteria:
+  - Game over and victory screens render immediately in GAME_OVER state.
+  - Clicking snaps to closest rival pixel within 25px radius.
+  - Neutral land attacks expand in all directions from border based on capital centroid.
+  requirements:
+  - REQ-069
+  - REQ-070
+  - REQ-071
+  batons:
+  - BATON-070
+  - BATON-071
   delivery_form: deployable
   status: released
 evaluations:
@@ -3111,6 +3184,34 @@ evaluations:
 - id: EVAL-067
   layer: outcome
   target: BATON-067
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-068
+  layer: outcome
+  target: BATON-068
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-069
+  layer: outcome
+  target: BATON-069
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-070
+  layer: outcome
+  target: BATON-070
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-071
+  layer: outcome
+  target: BATON-071
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

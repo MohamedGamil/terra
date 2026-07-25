@@ -758,6 +758,38 @@ assert(boat1 !== undefined, 'Short distance boat launched successfully');
 assert(boat2 !== undefined, 'Long distance boat launched successfully');
 assert(boat2.speed < boat1.speed, `Naval transport boat speed scales down for long-distance voyages (Short: ${boat1.speed.toFixed(2)}, Long: ${boat2.speed.toFixed(2)})`);
 
+// --- Test 22: Centroid-Outward Neutral Expansion Wavefront (REQ-071) ---
+console.log('\n[Test 22] Centroid-Outward Neutral Expansion Wavefront (REQ-071)');
+const simCentroid = new TerritorySimulation(10, 10, 2, 'arena');
+simCentroid.state = 'PLAYING';
+simCentroid.players[1].isAlive = true;
+simCentroid.players[1].balance = 1000;
+simCentroid.players[1].landCount = 4;
+simCentroid.players[1].capitalX = 1;
+simCentroid.players[1].capitalY = 1;
+
+// Player owns (0,0), (0,1), (1,0), (1,1)
+simCentroid.grid[0] = 1;
+simCentroid.grid[1] = 1;
+simCentroid.grid[10] = 1;
+simCentroid.grid[11] = 1;
+simCentroid.frontiers[1] = [0, 1, 10, 11];
+
+simCentroid.terrainGrid.fill(1);
+
+// Execute a neutral land attack with isTargeted = false
+const launchOk = simCentroid.executeAttack(1, 2, 25, false); // Target index 2 is neutral
+assert(launchOk === true, 'Neutral expansion launched successfully');
+assert(simCentroid.activeExpansions.length === 1, 'One expansion queued');
+
+const neutralExp = simCentroid.activeExpansions[0];
+assert(neutralExp.path === null, 'Centroid expansion has no path constraint');
+assert(neutralExp.targetX === 1 && neutralExp.targetY === 1, 'Target snaps to capital centroid X and Y');
+assert(neutralExp.launchX === 1 && neutralExp.launchY === 1, 'Launch coordinate set to capital centroid');
+assert(neutralExp.currentRadius > 0.0, 'currentRadius is initialized to capital-to-border distance');
+
+testsPassed += 8;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

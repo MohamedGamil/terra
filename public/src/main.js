@@ -638,19 +638,31 @@ class TerraApp {
           }
         }
       } else if (this.simulation.state === 'PLAYING') {
-        this.targetPixelIdx = coords.idx;
-        this.renderer.targetPixelIdx = coords.idx;
+        let idx = coords.idx;
+        const initialOwner = this.simulation.grid[idx];
+        if (initialOwner <= 1) {
+          const rivalIdx = this.findClosestRivalPixel(idx, 25);
+          if (rivalIdx !== -1) {
+            idx = rivalIdx;
+          }
+        }
 
-        const targetOwner = this.simulation.grid[coords.idx];
-        const terrainType = this.simulation.terrainGrid[coords.idx];
+        this.targetPixelIdx = idx;
+        this.renderer.targetPixelIdx = idx;
+
+        const targetOwner = this.simulation.grid[idx];
+        const terrainType = this.simulation.terrainGrid[idx];
         const statusText = document.getElementById('target-status-text');
 
+        const snapX = idx % this.simulation.width;
+        const snapY = Math.floor(idx / this.simulation.width);
+
         if (targetOwner === 0) {
-          statusText.textContent = terrainType === 0 ? `Ocean Water Cell (${coords.mapX}, ${coords.mapY})` : `Unclaimed Neutral Land (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = terrainType === 0 ? `Ocean Water Cell (${snapX}, ${snapY})` : `Unclaimed Neutral Land (${snapX}, ${snapY})`;
         } else if (targetOwner === 1) {
-          statusText.textContent = `Your Kingdom (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = `Your Kingdom (${snapX}, ${snapY})`;
         } else {
-          statusText.textContent = `Bot ${targetOwner}'s Territory (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = `Bot ${targetOwner}'s Territory (${snapX}, ${snapY})`;
         }
 
         if (buttonType === 'right') {
@@ -661,7 +673,15 @@ class TerraApp {
 
     this.renderer.onCanvasDoubleClick = (coords, e) => {
       if (this.simulation && this.simulation.state === 'PLAYING') {
-        const idx = coords.idx;
+        let idx = coords.idx;
+        const initialOwner = this.simulation.grid[idx];
+        if (initialOwner <= 1) {
+          const rivalIdx = this.findClosestRivalPixel(idx, 25);
+          if (rivalIdx !== -1) {
+            idx = rivalIdx;
+          }
+        }
+
         this.targetPixelIdx = idx;
         this.renderer.targetPixelIdx = idx;
 
@@ -749,6 +769,41 @@ class TerraApp {
       document.getElementById('target-status-text').textContent = 'Click or right-click any territory on map.';
       this.closeContextMenu();
     });
+  }
+
+  findClosestRivalPixel(idx, maxRadius = 25) {
+    if (!this.simulation) return -1;
+    const width = this.simulation.width;
+    const height = this.simulation.height;
+    const cx = idx % width;
+    const cy = Math.floor(idx / width);
+
+    let closestIdx = -1;
+    let minDistance = Infinity;
+
+    for (let r = 1; r <= maxRadius; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+
+          const nx = cx + dx;
+          const ny = cy + dy;
+          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            const nIdx = ny * width + nx;
+            const owner = this.simulation.grid[nIdx];
+            if (owner > 1) {
+              const d = Math.hypot(dx, dy);
+              if (d < minDistance) {
+                minDistance = d;
+                closestIdx = nIdx;
+              }
+            }
+          }
+        }
+      }
+      if (closestIdx !== -1) break;
+    }
+    return closestIdx;
   }
 
   openContextMenu(screenX, screenY, terrainType) {
@@ -985,7 +1040,8 @@ class TerraApp {
 
       if (this.simulation.state === 'GAME_OVER' && this.simulation.gameResult) {
         const overlay = document.getElementById('post-match-overlay');
-        if (overlay && overlay.style.display === 'none') {
+        if (overlay && overlay.style.display !== 'flex') {
+          this.updateSceneVisibility('GAME_OVER');
           if (this.simulation.gameResult === 'VICTORY') {
             this.sound.playVictoryFanfare();
           } else {
