@@ -4,28 +4,15 @@
  * Antimeridian-unwrapped & split to prevent diagonal lines and polar distortion.
  */
 
-let cachedPolygons = null;
+import worldPolygonsAsset from '../assets/natural-earth-world-50m.json' with { type: 'json' };
+
+let cachedPolygons = worldPolygonsAsset;
 
 export class GeoJSONWorldMap {
-  static async loadPolygonsAsync() {
-    if (cachedPolygons) return cachedPolygons;
-
-    if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
-      try {
-        const res = await fetch('/assets/natural-earth-world-50m.json');
-        if (res.ok) {
-          cachedPolygons = await res.json();
-          return cachedPolygons;
-        }
-      } catch (e) {
-        console.warn('Failed to fetch /assets/natural-earth-world-50m.json:', e);
-      }
-    }
-    return this.getAuthenticWorldPolygons();
-  }
-
   static getAuthenticWorldPolygons() {
-    if (cachedPolygons) return cachedPolygons;
+    if (cachedPolygons && cachedPolygons.length > 0) {
+      return cachedPolygons;
+    }
 
     if (typeof process !== 'undefined' && process.versions && process.versions.node) {
       try {
@@ -38,7 +25,7 @@ export class GeoJSONWorldMap {
           return cachedPolygons;
         }
       } catch (err) {
-        // Fallback for Node ESM dynamic import
+        // Fallback
       }
     }
 
