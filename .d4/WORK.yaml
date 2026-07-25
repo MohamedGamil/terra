@@ -372,6 +372,41 @@ requirements:
   kind: functional
   statement: The system MUST display a live top players leaderboard HUD widget sorted
     by land owned during gameplay screen.
+- id: REQ-043
+  kind: functional
+  statement: The system MUST restrict naval attacks to launch and land only on shoreline
+    pixels bordering ocean.
+- id: REQ-044
+  kind: functional
+  statement: The system MUST reduce naval troop strength proportionally to the travel
+    distance across water.
+- id: REQ-045
+  kind: functional
+  statement: A player or bot with 0px land area MUST be eliminated and blocked from
+    launching attacks.
+- id: REQ-046
+  kind: functional
+  statement: The procedural map generator MUST prune artifact lines and inaccessible
+    land pockets.
+- id: REQ-047
+  kind: functional
+  statement: Screen-to-world click coordinates MUST perfectly align with zoom, pan,
+    and canvas bounding client rect.
+- id: REQ-048
+  kind: functional
+  statement: Frontiers MUST push and pull based on local troop strength and land ratios
+    over time.
+- id: REQ-049
+  kind: functional
+  statement: Land capture MUST execute incrementally over time rather than instantaneously.
+- id: REQ-050
+  kind: functional
+  statement: Defender casualties MUST scale with attacker size without halting the
+    attack's forward movement.
+- id: REQ-051
+  kind: functional
+  statement: The player capital center MUST shift dynamically to the territory's centroid
+    in real time.
 batons:
 - id: BATON-001
   version: 1
@@ -1911,6 +1946,168 @@ batons:
   objective: Implement live top players leaderboard HUD widget ordered by land owned
     during gameplay screen (REQ-042).
   title: Live Top Players Leaderboard HUD Widget
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-043
+  execution:
+    depends_on:
+    - BATON-045
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-045
+    state: draft
+  id: BATON-046
+  objective: Implement Shoreline-to-Shoreline Naval Attacks (REQ-043).
+  title: Shoreline-to-Shoreline Naval Attacks
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-044
+  execution:
+    depends_on:
+    - BATON-046
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-046
+    state: draft
+  id: BATON-047
+  objective: Implement Naval Travel Attrition & Attrition Decay (REQ-044).
+  title: Naval Travel Attrition & Attrition Decay
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-045
+  execution:
+    depends_on:
+    - BATON-047
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-047
+    state: draft
+  id: BATON-048
+  objective: Implement 0px Land Defeat & Elimination State (REQ-045).
+  title: 0px Land Defeat & Elimination State
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-046
+  execution:
+    depends_on:
+    - BATON-048
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-048
+    state: draft
+  id: BATON-049
+  objective: Implement Map Topography & Coastline Path Cleanup (REQ-046).
+  title: Map Topography & Coastline Path Cleanup
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-047
+  execution:
+    depends_on:
+    - BATON-049
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-049
+    state: draft
+  id: BATON-050
+  objective: Implement High-Precision Viewport Coordinate Mapping (REQ-047).
+  title: High-Precision Viewport Coordinate Mapping
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-048
+  execution:
+    depends_on:
+    - BATON-050
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-050
+    state: draft
+  id: BATON-051
+  objective: Implement Continuous Border Tug-of-War Pressure (REQ-048).
+  title: Continuous Border Tug-of-War Pressure
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-049
+  execution:
+    depends_on:
+    - BATON-051
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-051
+    state: draft
+  id: BATON-052
+  objective: Implement Incremental Frontier Capture & Distance Scaling (REQ-049).
+  title: Incremental Frontier Capture & Distance Scaling
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-050
+  execution:
+    depends_on:
+    - BATON-052
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-052
+    state: draft
+  id: BATON-053
+  objective: Implement Non-Blocking Defensive Casualties (REQ-050).
+  title: Non-Blocking Defensive Casualties
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-051
+  execution:
+    depends_on:
+    - BATON-053
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-053
+    state: draft
+  id: BATON-054
+  objective: Implement Real-Time Dynamic Capital Centroid (REQ-051).
+  title: Real-Time Dynamic Capital Centroid
   type: implementation
 releases:
 - id: REL-001
