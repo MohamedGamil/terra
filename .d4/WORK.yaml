@@ -2823,7 +2823,7 @@ batons:
   objective: 'Fulfill proposed requirement REQ-082: naval attacks still can go over
     land terrain, its path finding and firing is still mishandled'
   execution:
-    state: draft
+    state: completed
     resume_pointer: Fulfill proposed requirement REQ-082
     depends_on:
     - BATON-021
@@ -2837,6 +2837,8 @@ batons:
     - BATON-036
     - BATON-080
     quadrant: Q2
+    lease_owner: null
+    lease_expires_at: null
   acceptance:
     deterministic_checks: []
 - id: BATON-082
@@ -2846,11 +2848,13 @@ batons:
   objective: 'Fulfill proposed requirement REQ-083: some rivals territories seem to
     switch colors instantanously hinting at 2 rivals occupying the same tile/pixel'
   execution:
-    state: draft
+    state: completed
     resume_pointer: Fulfill proposed requirement REQ-083
     depends_on:
     - BATON-081
     quadrant: Q2
+    lease_owner: null
+    lease_expires_at: null
   acceptance:
     deterministic_checks: []
 - id: BATON-083
@@ -2860,11 +2864,13 @@ batons:
   objective: 'Fulfill proposed requirement REQ-084: victory screen is still not visible
     after achieving victory conditions'
   execution:
-    state: draft
+    state: completed
     resume_pointer: Fulfill proposed requirement REQ-084
     depends_on:
     - BATON-082
     quadrant: Q2
+    lease_owner: null
+    lease_expires_at: null
   acceptance:
     deterministic_checks: []
 releases:
@@ -3626,6 +3632,27 @@ evaluations:
 - id: EVAL-080
   layer: outcome
   target: BATON-080
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-081
+  layer: outcome
+  target: BATON-081
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-082
+  layer: outcome
+  target: BATON-082
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-083
+  layer: outcome
+  target: BATON-083
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

@@ -465,14 +465,13 @@ const isDiagShoreline = simSnap.isShorelinePixel(5050);
 assert(isDiagShoreline === true, 'Diagonal-only water adjacency is successfully identified as shoreline');
 
 // 2. Verify radial target coordinate snapping
-// Initialize entire map to land (1)
-simSnap.terrainGrid.fill(1);
+// Initialize entire map to water (0)
+simSnap.terrainGrid.fill(0);
 
 // Set up a player coastal departure point
 simSnap.players[1].balance = 1000;
-simSnap.spawnCircularSeed(1, 1010, 2); // Player 1 owns x=10, y=10 area
-// Make x=10, y=11 water so the player has a shoreline
-simSnap.terrainGrid[1110] = 0;
+simSnap.grid[1010] = 1;
+simSnap.terrainGrid[1010] = 1;
 simSnap.frontiers[1] = [1010];
 
 // Define a landing target shoreline far away at x=80, y=80
@@ -698,11 +697,10 @@ console.log('\n[Test 21] Balanced Troop Growth & Distance Travel Delay');
 
 // Create a custom 10x10 grid with land and water
 const customGrid = new Uint8Array(100);
-customGrid.fill(1); // land
-// Row 4 is water channel (0)
-for (let x = 0; x < 10; x++) {
-  customGrid[4 * 10 + x] = 0;
-}
+customGrid.fill(0); // water
+customGrid[32] = 1; // departure node (land)
+customGrid[52] = 1; // target 1 node (land)
+customGrid[58] = 1; // target 2 node (land)
 
 const simRefine = new TerritorySimulation(10, 10, 5, 'custom', 12345, { terrainGrid: customGrid });
 simRefine.state = 'PLAYING';
@@ -997,6 +995,35 @@ sim26.update(16.6);
 const duration = Date.now() - startTime;
 
 assert(duration < 100, `Blocked centroid expansion exited quickly without freezing (Duration: ${duration}ms)`);
+testsPassed += 1;
+
+// --- Test 27: Strict Water-Path Selection for Naval Attacks ---
+console.log('\n[Test 27] Strict Water-Path Selection for Naval Attacks (REQ-082)');
+
+const sim27 = new TerritorySimulation(100, 100, 10, 'arena');
+sim27.state = 'PLAYING';
+sim27.terrainGrid.fill(0); // Fill with water
+
+// Player 1 owns a single node at x=10, y=10. Adjacent to water.
+sim27.grid[1010] = 1;
+sim27.terrainGrid[1010] = 1;
+sim27.frontiers[1] = [1010];
+
+sim27.players[1].isAlive = true;
+sim27.players[1].balance = 1000;
+
+// Target at x=25, y=10 is a shoreline (land)
+sim27.terrainGrid[10 * 100 + 25] = 1;
+
+// Land obstacle blocking the straight water path to target x=25, y=10
+for (let y = 0; y <= 20; y++) {
+  sim27.terrainGrid[y * 100 + 15] = 1;
+}
+
+// Attempt to launch boat attack to target x=25, y=10
+const success = sim27.launchBoatAttack(1, 10 * 100 + 25);
+assert(success === false, 'Naval attack without straight-line water path was rejected and not launched');
+
 testsPassed += 1;
 
 // --- Final Evaluation ---

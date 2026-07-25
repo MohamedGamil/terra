@@ -663,8 +663,6 @@ export class TerritorySimulation {
 
     let bestClearPixel = null;
     let minClearDistance = Infinity;
-    let bestFallbackPixel = null;
-    let minFallbackDistance = Infinity;
 
     for (let i = 0; i < frontier.length; i++) {
       const idx = frontier[i];
@@ -692,16 +690,11 @@ export class TerritorySimulation {
             minClearDistance = dist;
             bestClearPixel = { x: cx, y: cy };
           }
-        } else {
-          if (dist < minFallbackDistance) {
-            minFallbackDistance = dist;
-            bestFallbackPixel = { x: cx, y: cy };
-          }
         }
       }
     }
 
-    return bestClearPixel || bestFallbackPixel;
+    return bestClearPixel;
   }
 
   findLandPath(startIdx, endIdx) {
