@@ -658,7 +658,6 @@ export class TerritorySimulation {
   updateBots() {
     this.aiEngine.updateBots(
       this,
-      this.players,
       this.frontiers,
       this.terrainGrid,
       this.grid,

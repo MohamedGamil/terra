@@ -135,8 +135,11 @@ export class TerritoryRenderer {
 
   screenToMapCoords(screenX, screenY) {
     const rect = this.canvas.getBoundingClientRect();
-    const clientX = screenX - rect.left;
-    const clientY = screenY - rect.top;
+    const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
+    const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
+
+    const clientX = (screenX - rect.left) * scaleX;
+    const clientY = (screenY - rect.top) * scaleY;
 
     const mapX = Math.floor((clientX - this.panX) / this.zoom);
     const mapY = Math.floor((clientY - this.panY) / this.zoom);
@@ -200,8 +203,8 @@ export class TerritoryRenderer {
 
     // Hover Spawn Circle Preview
     if (this.hoverSpawnPoint) {
-      const hx = this.panX + this.hoverSpawnPoint.x * this.zoom;
-      const hy = this.panY + this.hoverSpawnPoint.y * this.zoom;
+      const hx = this.panX + (this.hoverSpawnPoint.x + 0.5) * this.zoom;
+      const hy = this.panY + (this.hoverSpawnPoint.y + 0.5) * this.zoom;
       this.ctx.beginPath();
       this.ctx.arc(hx, hy, Math.max(12, 16 * this.zoom), 0, Math.PI * 2);
       this.ctx.strokeStyle = 'rgba(0, 242, 254, 0.6)';
@@ -213,8 +216,8 @@ export class TerritoryRenderer {
 
     // Selected Spawn Pick Point Indicator
     if (this.spawnPickPoint) {
-      const sx = this.panX + this.spawnPickPoint.x * this.zoom;
-      const sy = this.panY + this.spawnPickPoint.y * this.zoom;
+      const sx = this.panX + (this.spawnPickPoint.x + 0.5) * this.zoom;
+      const sy = this.panY + (this.spawnPickPoint.y + 0.5) * this.zoom;
       this.ctx.beginPath();
       this.ctx.arc(sx, sy, Math.max(14, 18 * this.zoom), 0, Math.PI * 2);
       this.ctx.strokeStyle = '#00f2fe';
@@ -234,8 +237,8 @@ export class TerritoryRenderer {
     if (this.targetPixelIdx >= 0) {
       const tx = (this.targetPixelIdx % this.width);
       const ty = Math.floor(this.targetPixelIdx / this.width);
-      const sx = this.panX + tx * this.zoom;
-      const sy = this.panY + ty * this.zoom;
+      const sx = this.panX + (tx + 0.5) * this.zoom;
+      const sy = this.panY + (ty + 0.5) * this.zoom;
 
       this.ctx.beginPath();
       this.ctx.arc(sx, sy, Math.max(14, 20 * this.zoom), 0, Math.PI * 2);
