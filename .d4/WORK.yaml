@@ -407,6 +407,18 @@ requirements:
   kind: functional
   statement: The player capital center MUST shift dynamically to the territory's centroid
     in real time.
+- id: REQ-052
+  kind: functional
+  statement: Screen-to-world click coordinate precision MUST resolve offsets and discrepancies under all canvas zoom levels and CSS layouts.
+- id: REQ-053
+  kind: functional
+  statement: AI bot naval attacks MUST perform water-only pathfinding and collision checks, preventing travel over land segments.
+- id: REQ-054
+  kind: functional
+  statement: Player naval attacks launched to accessible shorelines MUST be accurately identified as valid and accessible.
+- id: REQ-055
+  kind: functional
+  statement: Land capture expansion MUST incrementally branch and spread from the frontier to the target coordinate rather than instant distant captures.
 batons:
 - id: BATON-001
   version: 1
@@ -2126,6 +2138,78 @@ batons:
   id: BATON-054
   objective: Implement Real-Time Dynamic Capital Centroid (REQ-051).
   title: Real-Time Dynamic Capital Centroid
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-052
+  execution:
+    depends_on:
+    - BATON-054
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-054
+    state: draft
+  id: BATON-055
+  title: Resolve Viewport Click Coordinates Offsets
+  objective: Eliminate click-to-attack discrepancy offsets under zoom and scale.
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-053
+  execution:
+    depends_on:
+    - BATON-055
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-055
+    state: draft
+  id: BATON-056
+  title: AI Bot Water-Only Naval Pathfinding
+  objective: Restrict AI bot naval transports to water/ocean paths without crossing land.
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-054
+  execution:
+    depends_on:
+    - BATON-056
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-056
+    state: draft
+  id: BATON-057
+  title: Robust Shoreline Naval Access Checks
+  objective: Resolve false negatives in shoreline accessibility checks for player boat attacks.
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-055
+  execution:
+    depends_on:
+    - BATON-057
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Ready after BATON-057
+    state: draft
+  id: BATON-058
+  title: Incremental Area Expansion Routing
+  objective: Branch and expand land capture incrementally along the path leading to the target coordinate.
   type: implementation
 releases:
 - id: REL-001
