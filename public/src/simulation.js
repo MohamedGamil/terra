@@ -675,6 +675,7 @@ export class TerritorySimulation {
     this.updateBoats(deltaTimeMs);
     this.updateRadarPulses(deltaTimeMs);
     this.checkPlayerEliminations();
+    this.simulateContinuousBorderPressure();
     this.updateBots();
 
     if (this.tickCount % 5 === 0) {
@@ -682,6 +683,78 @@ export class TerritorySimulation {
     }
 
     this.checkGameResolution();
+  }
+
+  simulateContinuousBorderPressure() {
+    if (this.tickCount % 5 !== 0) return;
+
+    const width = this.width;
+    const height = this.height;
+
+    // Calculate troop density (pressure) for each active player
+    const pressures = new Float32Array(this.numPlayers + 1);
+    for (let id = 1; id <= this.numPlayers; id++) {
+      const p = this.players[id];
+      if (p && p.isAlive && p.landCount > 0) {
+        pressures[id] = p.balance / p.landCount;
+      }
+    }
+
+    // Process border pressure pushes
+    for (let id = 1; id <= this.numPlayers; id++) {
+      const p = this.players[id];
+      if (!p || !p.isAlive || p.balance < 15) continue;
+
+      const frontier = this.frontiers[id];
+      if (!frontier || frontier.length === 0) continue;
+
+      const pPressure = pressures[id];
+
+      // Safe copy to iterate while updating frontier lists
+      const frontierCopy = [...frontier];
+      for (let i = 0; i < frontierCopy.length; i++) {
+        const idx = frontierCopy[i];
+        const cx = idx % width;
+        const cy = Math.floor(idx / width);
+
+        const neighbors = [
+          cy > 0 ? idx - width : -1,
+          cy < height - 1 ? idx + width : -1,
+          cx > 0 ? idx - 1 : -1,
+          cx < width - 1 ? idx + 1 : -1
+        ];
+
+        for (const nIdx of neighbors) {
+          if (nIdx < 0) continue;
+
+          if (this.terrainGrid[nIdx] === 0 || this.terrainGrid[nIdx] === 2) continue;
+
+          const neighborOwner = this.grid[nIdx];
+          if (neighborOwner > 0 && neighborOwner !== id) {
+            // Non-Aggression Pact check
+            if (this.hasPact(id, neighborOwner)) continue;
+
+            const nPressure = pressures[neighborOwner];
+
+            // Push border if attacker density significantly exceeds defender density (15% gap)
+            if (pPressure > nPressure * 1.15 && p.balance > 10) {
+              const defender = this.players[neighborOwner];
+
+              this.grid[nIdx] = id;
+              p.landCount++;
+              if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
+
+              p.balance = Math.max(0, p.balance - 1);
+              if (defender) defender.balance = Math.max(0, defender.balance - 1);
+
+              if (!this.frontiers[id].includes(nIdx)) {
+                this.frontiers[id].push(nIdx);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   checkPlayerEliminations() {

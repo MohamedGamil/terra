@@ -2059,8 +2059,10 @@ batons:
     - BATON-050
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-050
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-051
   objective: Implement Continuous Border Tug-of-War Pressure (REQ-048).
   title: Continuous Border Tug-of-War Pressure
@@ -2562,6 +2564,13 @@ evaluations:
 - id: EVAL-050
   layer: outcome
   target: BATON-050
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-051
+  layer: outcome
+  target: BATON-051
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

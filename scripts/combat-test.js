@@ -215,6 +215,38 @@ assert(mapped !== null, 'Mapped coordinates returned successfully');
 assert(mapped.mapX === 150, `Calculated mapX matches high-precision layout translation (Expected: 150, Actual: ${mapped.mapX})`);
 assert(mapped.mapY === 100, `Calculated mapY matches high-precision layout translation (Expected: 100, Actual: ${mapped.mapY})`);
 
+// --- Test 10: Continuous Border Tug-of-War Pressure (REQ-048) ---
+console.log('\n[Test 10] Continuous Border Tug-of-War Pressure (REQ-048)');
+const simPress = new TerritorySimulation(100, 100, 10, 'arena');
+simPress.state = 'PLAYING';
+simPress.tickCount = 5;
+
+simPress.players[1].isAlive = true;
+simPress.players[1].balance = 5000;
+simPress.players[1].landCount = 10;
+
+simPress.players[2].isAlive = true;
+simPress.players[2].balance = 10;
+simPress.players[2].landCount = 100;
+
+simPress.grid[5050] = 1;
+simPress.grid[5051] = 2;
+simPress.frontiers[1] = [5050];
+simPress.frontiers[2] = [5051];
+
+simPress.simulateContinuousBorderPressure();
+
+assert(simPress.grid[5051] === 1, 'High-pressure Player 1 successfully captured adjacent pixel 5051 from Bot 2');
+assert(simPress.players[1].landCount === 11, 'Player 1 landCount incremented');
+assert(simPress.players[2].landCount === 99, 'Bot 2 landCount decremented');
+
+simPress.grid[5052] = 2;
+simPress.frontiers[2].push(5052);
+simPress.pacts.set(simPress.getPactKey(1, 2), 'ACTIVE');
+
+simPress.simulateContinuousBorderPressure();
+assert(simPress.grid[5052] === 2, 'NAP blocks continuous border pressure');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);
