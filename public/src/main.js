@@ -28,14 +28,12 @@ class TerraApp {
   }
 
   initLobbyUI() {
-    // Player Name & Color Picker
     const colorPicker = document.getElementById('input-player-color');
     colorPicker.addEventListener('change', (e) => {
       this.playerColorHex = e.target.value;
       this.palette.setPlayerColor(1, this.playerColorHex);
     });
 
-    // Map Card Selection
     const mapCards = document.querySelectorAll('.map-card');
     mapCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -45,7 +43,6 @@ class TerraApp {
       });
     });
 
-    // Bot Count Slider
     const botSlider = document.getElementById('slider-bot-count');
     const botLbl = document.getElementById('lbl-bot-count');
     botSlider.addEventListener('input', (e) => {
@@ -53,7 +50,6 @@ class TerraApp {
       botLbl.textContent = `${this.botCount} Bots`;
     });
 
-    // Bot Difficulty
     const diffBtns = document.querySelectorAll('.btn-diff');
     diffBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -63,14 +59,15 @@ class TerraApp {
       });
     });
 
-    // Start Match Button
+    // Enter Match -> Transitions to Step 2 Spawn Selection
     document.getElementById('btn-start-match').addEventListener('click', () => {
-      this.startNewMatch();
+      this.openSpawnSelectionPhase();
     });
 
     // Leave Match Button
     document.getElementById('btn-leave-match').addEventListener('click', () => {
       document.getElementById('lobby-screen').style.display = 'flex';
+      document.getElementById('spawn-banner').style.display = 'none';
       this.simulation.state = 'LOBBY';
     });
 
@@ -83,7 +80,6 @@ class TerraApp {
   }
 
   initCombatUI() {
-    // Force Slider & Quick Buttons
     const attackSlider = document.getElementById('attack-slider');
     const attackVal = document.getElementById('attack-val');
 
@@ -105,21 +101,18 @@ class TerraApp {
       btn.addEventListener('click', () => updateForceUI(btn.dataset.force));
     });
 
-    // Execute Attack Button
     document.getElementById('btn-attack-execute').addEventListener('click', () => {
       if (this.targetPixelIdx >= 0) {
         this.simulation.executeAttack(1, this.targetPixelIdx, this.selectedForcePercent);
       }
     });
 
-    // Execute Boat Attack Button
     document.getElementById('btn-boat-execute').addEventListener('click', () => {
       if (this.targetPixelIdx >= 0) {
         this.simulation.launchBoatAttack(1, this.targetPixelIdx, this.selectedForcePercent);
       }
     });
 
-    // Benchmark Buttons
     document.getElementById('btn-run-benchmark').addEventListener('click', () => this.runBenchmark());
     document.getElementById('btn-close-modal').addEventListener('click', () => {
       document.getElementById('benchmark-modal').classList.remove('active');
@@ -127,18 +120,41 @@ class TerraApp {
   }
 
   initCanvasEvents() {
+    // Mouse Move Hover Preview during Spawn Pick
+    this.canvas.addEventListener('mousemove', (e) => {
+      if (this.simulation.state === 'SPAWN_PICK') {
+        const coords = this.renderer.screenToMapCoords(e.clientX, e.clientY);
+        if (coords && this.simulation.terrainGrid[coords.idx] === 1) {
+          this.renderer.hoverSpawnPoint = { x: coords.mapX, y: coords.mapY };
+        } else {
+          this.renderer.hoverSpawnPoint = null;
+        }
+      } else {
+        this.renderer.hoverSpawnPoint = null;
+      }
+    });
+
+    // Click Selection
     this.canvas.addEventListener('click', (e) => {
       const coords = this.renderer.screenToMapCoords(e.clientX, e.clientY);
       if (!coords) return;
 
       if (this.simulation.state === 'SPAWN_PICK') {
-        // Set Human Spawn Point
         const ok = this.simulation.setHumanSpawn(coords.idx);
+        const subText = document.getElementById('spawn-sub-text');
+        const confirmBtn = document.getElementById('btn-confirm-spawn');
+
         if (ok) {
           this.renderer.spawnPickPoint = { x: coords.mapX, y: coords.mapY };
+          if (subText) subText.textContent = '✓ Spawn Selected! Click START GAME or pick another land spot.';
+          if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.style.opacity = '1.0';
+          }
+        } else {
+          if (subText) subText.textContent = '⚠️ Invalid Location! Click on green neutral land area.';
         }
       } else if (this.simulation.state === 'PLAYING') {
-        // Set Target Selection Lock
         this.targetPixelIdx = coords.idx;
         this.renderer.targetPixelIdx = coords.idx;
 
@@ -148,21 +164,42 @@ class TerraApp {
         if (targetOwner === 0) {
           statusText.textContent = `Target: Unclaimed Neutral Land (${coords.mapX}, ${coords.mapY})`;
         } else if (targetOwner === 1) {
-          statusText.textContent = `Target: Your Own Territory (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = `Target: Your Kingdom (${coords.mapX}, ${coords.mapY})`;
         } else {
           statusText.textContent = `Target: Bot ${targetOwner}'s Territory (${coords.mapX}, ${coords.mapY})`;
         }
       }
     });
 
-    // Lock Spawn Button
+    // Confirm Spawn Button
     document.getElementById('btn-confirm-spawn').addEventListener('click', () => {
-      this.simulation.confirmSpawnsAndStart();
-      document.getElementById('spawn-banner').style.display = 'none';
+      this.launchMatchWithCountdown();
+    });
+
+    // Random Spawn Button
+    document.getElementById('btn-random-spawn').addEventListener('click', () => {
+      const width = this.simulation.width;
+      const height = this.simulation.height;
+      let rIdx = 0;
+      do {
+        rIdx = Math.floor(Math.random() * (width * height));
+      } while (this.simulation.terrainGrid[rIdx] !== 1);
+
+      this.simulation.setHumanSpawn(rIdx);
+      const rx = rIdx % width;
+      const ry = Math.floor(rIdx / width);
+      this.renderer.spawnPickPoint = { x: rx, y: ry };
+
+      const confirmBtn = document.getElementById('btn-confirm-spawn');
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1.0';
+
+      const subText = document.getElementById('spawn-sub-text');
+      if (subText) subText.textContent = '✓ Random Spawn Selected! Click START GAME to launch.';
     });
   }
 
-  startNewMatch() {
+  openSpawnSelectionPhase() {
     const playerName = document.getElementById('input-player-name').value || 'Commander';
     document.getElementById('lobby-screen').style.display = 'none';
 
@@ -172,12 +209,53 @@ class TerraApp {
 
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
     this.renderer.spawnPickPoint = null;
+    this.renderer.hoverSpawnPoint = null;
     this.renderer.targetPixelIdx = -1;
     this.targetPixelIdx = -1;
 
-    // Start Spawn Selection Phase
+    // Start Step 2 Spawn Phase
     this.simulation.startSpawnPhase();
+
+    const subText = document.getElementById('spawn-sub-text');
+    if (subText) subText.textContent = 'Click anywhere on green land to set your starting kingdom';
+
+    const confirmBtn = document.getElementById('btn-confirm-spawn');
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = '0.5';
+
     document.getElementById('spawn-banner').style.display = 'flex';
+  }
+
+  launchMatchWithCountdown() {
+    document.getElementById('spawn-banner').style.display = 'none';
+
+    // Show 3.. 2.. 1.. GO Overlay
+    const overlay = document.getElementById('countdown-overlay');
+    const numEl = document.getElementById('countdown-num');
+    overlay.style.display = 'flex';
+
+    let count = 3;
+    numEl.textContent = '3';
+
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        numEl.textContent = `${count}`;
+      } else if (count === 0) {
+        numEl.textContent = 'GO!';
+      } else {
+        clearInterval(interval);
+        overlay.style.display = 'none';
+
+        // Lock spawn and transition to PLAYING
+        this.simulation.confirmSpawnsAndStart();
+
+        // Auto-center camera on player's spawn point!
+        if (this.simulation.humanSpawnIdx !== null) {
+          this.renderer.centerOnPixel(this.simulation.humanSpawnIdx, 2.5);
+        }
+      }
+    }, 600);
   }
 
   runBenchmark() {
@@ -228,16 +306,11 @@ class TerraApp {
       const delta = now - this.lastTime;
       this.lastTime = now;
 
-      // Advance simulation state
       this.simulation.update(delta);
-
-      // Pass active boats to renderer
       this.renderer.boats = this.simulation.boats;
 
-      // Render map frame
       const renderMs = this.renderer.render(this.simulation.grid, this.simulation.terrainGrid, true);
 
-      // FPS stats
       const fps = delta > 0 ? 1000 / delta : 60;
       this.fpsHistory.push(fps);
       if (this.fpsHistory.length > 30) this.fpsHistory.shift();
@@ -245,13 +318,6 @@ class TerraApp {
       const avgFps = (this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length).toFixed(1);
       document.getElementById('hud-fps').textContent = `${avgFps} FPS`;
       document.getElementById('hud-render-ms').textContent = `${renderMs.toFixed(2)}ms`;
-
-      // Update Spawn Banner Timer
-      if (this.simulation.state === 'SPAWN_PICK') {
-        document.getElementById('spawn-timer').textContent = `${Math.ceil(this.simulation.spawnTimer)}s`;
-      } else {
-        document.getElementById('spawn-banner').style.display = 'none';
-      }
 
       // Update Telemetry Panel
       const stats = this.simulation.getStats();

@@ -2,7 +2,7 @@
  * Authentic Territorial.io Engine Simulation.
  * Implements LOBBY -> SPAWN_PICK -> PLAYING -> GAME_OVER state machine,
  * 1.17% attack tax, 3.125% boat deployment tax, 2:1 defender combat advantage,
- * and 50-pixel bot spawn separation buffer.
+ * circular spawn blob seeding (radius 6px), and 50-pixel bot spawn separation buffer.
  */
 
 import { MapGenerator } from './map-generator.js';
@@ -14,32 +14,25 @@ export class TerritorySimulation {
     this.numPlayers = numPlayers;
     this.mapType = mapType;
 
-    // Client State Machine: 'LOBBY' | 'SPAWN_PICK' | 'PLAYING' | 'GAME_OVER'
     this.state = 'LOBBY';
 
-    // Terrain grid (0 = Water, 1 = Neutral Land, 2 = Impassable Mountain)
     this.terrainGrid = MapGenerator.generate(mapType, width, height);
-
-    // Territory owner grid (0 = Neutral, 1 = Human Player, 2..N = AI Bots)
     this.grid = new Uint16Array(width * height);
 
     this.players = new Array(numPlayers + 1);
     this.frontiers = new Array(numPlayers + 1);
-    this.boats = []; // Active naval boat transports
+    this.boats = [];
 
-    this.spawnTimer = 10.0; // 10s Spawn pick countdown timer
+    this.spawnTimer = 10.0;
     this.humanSpawnIdx = null;
 
     this.interestTimer = 0;
     this.incomeTimer = 0;
     this.tickCount = 0;
 
-    this.gameResult = null; // { outcome: 'VICTORY'|'DEFEAT', stats }
+    this.gameResult = null;
   }
 
-  /**
-   * Initialize Spawn Picking Phase.
-   */
   startSpawnPhase() {
     this.state = 'SPAWN_PICK';
     this.spawnTimer = 10.0;
@@ -47,7 +40,6 @@ export class TerritorySimulation {
     this.boats = [];
     this.humanSpawnIdx = null;
 
-    // Reset player states
     for (let id = 1; id <= this.numPlayers; id++) {
       this.players[id] = {
         id,
@@ -63,21 +55,14 @@ export class TerritorySimulation {
     }
   }
 
-  /**
-   * Human Player sets starting spawn point.
-   */
   setHumanSpawn(pixelIdx) {
     if (this.state !== 'SPAWN_PICK') return false;
-    // Verify spawn point is valid land (terrain === 1)
     if (this.terrainGrid[pixelIdx] !== 1) return false;
 
     this.humanSpawnIdx = pixelIdx;
     return true;
   }
 
-  /**
-   * Lock spawn choices and launch active game match.
-   */
   confirmSpawnsAndStart() {
     if (this.state !== 'SPAWN_PICK') return;
     this.state = 'PLAYING';
@@ -85,7 +70,7 @@ export class TerritorySimulation {
     const width = this.width;
     const height = this.height;
 
-    // Default human spawn if not set
+    // Default human spawn if not set by user
     if (!this.humanSpawnIdx) {
       let rIdx = 0;
       do {
@@ -94,16 +79,14 @@ export class TerritorySimulation {
       this.humanSpawnIdx = rIdx;
     }
 
-    // Set Human Spawn (ID 1)
-    this.grid[this.humanSpawnIdx] = 1;
-    this.frontiers[1] = [this.humanSpawnIdx];
-    this.players[1].landCount = 1;
+    // Seed Human Player Spawn Blob (radius 6px)
+    this.spawnCircularSeed(1, this.humanSpawnIdx, 6);
 
     const humanX = this.humanSpawnIdx % width;
     const humanY = Math.floor(this.humanSpawnIdx / width);
-    const minBufferSq = 50 * 50; // 50-pixel bot buffer radius
+    const minBufferSq = 50 * 50;
 
-    // Spawn N AI Bots on land avoiding 50px buffer from human spawn
+    // Seed AI Bots (radius 6px) avoiding 50-pixel buffer from human spawn
     for (let id = 2; id <= this.numPlayers; id++) {
       let botIdx = 0;
       let valid = false;
@@ -124,9 +107,7 @@ export class TerritorySimulation {
       }
 
       if (valid) {
-        this.grid[botIdx] = id;
-        this.frontiers[id] = [botIdx];
-        this.players[id].landCount = 1;
+        this.spawnCircularSeed(id, botIdx, 6);
       } else {
         this.players[id].isAlive = false;
       }
@@ -134,14 +115,46 @@ export class TerritorySimulation {
   }
 
   /**
-   * Execute Player Attack Vector with Force Slider % and 1.17% attack tax.
+   * Helper: Spawn circular territory blob of radius R around center pixel.
    */
+  spawnCircularSeed(ownerId, centerIdx, radius = 6) {
+    const width = this.width;
+    const height = this.height;
+    const cx = centerIdx % width;
+    const cy = Math.floor(centerIdx / width);
+    const rSq = radius * radius;
+
+    let count = 0;
+    this.frontiers[ownerId] = [];
+
+    for (let dy = -radius; dy <= radius; dy++) {
+      const ny = cy + dy;
+      if (ny < 0 || ny >= height) continue;
+
+      for (let dx = -radius; dx <= radius; dx++) {
+        const nx = cx + dx;
+        if (nx < 0 || nx >= width) continue;
+
+        if (dx * dx + dy * dy <= rSq) {
+          const idx = ny * width + nx;
+          if (this.terrainGrid[idx] === 1 && (this.grid[idx] === 0 || this.grid[idx] === ownerId)) {
+            this.grid[idx] = ownerId;
+            this.frontiers[ownerId].push(idx);
+            count++;
+          }
+        }
+      }
+    }
+
+    this.players[ownerId].landCount = count;
+    this.players[ownerId].balance = 500;
+  }
+
   executeAttack(attackerId, targetPixelIdx, forcePercent = 25) {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 20) return false;
 
-    // 1.17% Land Attack Tax Deduction
     const tax = Math.ceil(attacker.balance * 0.0117);
     attacker.balance -= tax;
 
@@ -150,7 +163,6 @@ export class TerritorySimulation {
 
     attacker.balance -= forceTroops;
 
-    // Direct frontier expansion thrust towards target coordinate
     const targetX = targetPixelIdx % this.width;
     const targetY = Math.floor(targetPixelIdx / this.width);
 
@@ -158,15 +170,11 @@ export class TerritorySimulation {
     return true;
   }
 
-  /**
-   * Launch Naval Boat Transport across water with 3.125% deployment tax.
-   */
   launchBoatAttack(attackerId, targetPixelIdx, forcePercent = 25) {
     if (this.state !== 'PLAYING') return false;
     const attacker = this.players[attackerId];
     if (!attacker || !attacker.isAlive || attacker.balance < 50) return false;
 
-    // 3.125% Boat Deployment Tax Deduction
     const tax = Math.ceil(attacker.balance * 0.03125);
     attacker.balance -= tax;
 
@@ -175,7 +183,6 @@ export class TerritorySimulation {
 
     attacker.balance -= forceTroops;
 
-    // Find closest coastal pixel for boat departure
     const targetX = targetPixelIdx % this.width;
     const targetY = Math.floor(targetPixelIdx / this.width);
 
@@ -203,7 +210,6 @@ export class TerritorySimulation {
     for (const idx of frontier) {
       const cx = idx % width;
       const cy = Math.floor(idx / width);
-      // Check if adjacent to water
       if ((cy > 0 && this.terrainGrid[idx - width] === 0) ||
           (cy < this.height - 1 && this.terrainGrid[idx + width] === 0) ||
           (cx > 0 && this.terrainGrid[idx - 1] === 0) ||
@@ -222,7 +228,6 @@ export class TerritorySimulation {
     let remainingTroops = troops;
 
     while (remainingTroops > 2 && frontier.length > 0) {
-      // Pick frontier pixel closest to target
       let bestIdx = -1;
       let minDist = Infinity;
       let bestArrayIdx = -1;
@@ -255,11 +260,10 @@ export class TerritorySimulation {
 
       for (const nIdx of neighbors) {
         if (nIdx < 0) continue;
-        if (this.terrainGrid[nIdx] === 0 || this.terrainGrid[nIdx] === 2) continue; // Impassable
+        if (this.terrainGrid[nIdx] === 0 || this.terrainGrid[nIdx] === 2) continue;
 
         const defenderOwner = this.grid[nIdx];
 
-        // Annex Unclaimed Neutral Land
         if (defenderOwner === 0) {
           const cost = 2;
           if (remainingTroops >= cost) {
@@ -270,7 +274,6 @@ export class TerritorySimulation {
             expandedAny = true;
           }
         }
-        // Combat Attack on Rival Territory (2:1 defender loss ratio)
         else if (defenderOwner !== ownerId) {
           const defender = this.players[defenderOwner];
           const cost = 4;
@@ -305,27 +308,16 @@ export class TerritorySimulation {
 
     this.tickCount++;
 
-    // 0.5s Interest Tick
-    this.interestTimer += deltaTimeMs;
-    if (this.interestTimer >= 500) {
-      this.interestTimer = 0;
+    if (this.tickCount % 10 === 0) {
       this.processInterest();
     }
 
-    // 5.0s Income Cycle
-    this.incomeTimer += deltaTimeMs;
-    if (this.incomeTimer >= 5000) {
-      this.incomeTimer = 0;
+    if (this.tickCount % 100 === 0) {
       this.processIncome();
     }
 
-    // Update active naval boats
     this.updateBoats(deltaTimeMs);
-
-    // AI Bot Expansion Loop
     this.updateBots();
-
-    // Check Win / Defeat Resolution
     this.checkGameResolution();
   }
 
@@ -337,11 +329,9 @@ export class TerritorySimulation {
       const dist = Math.hypot(dx, dy);
 
       if (dist < 8) {
-        // Boat Landed: Expand target location
         this.advanceFrontierTowards(boat.ownerId, boat.targetX, boat.targetY, boat.troops);
         this.boats.splice(i, 1);
       } else {
-        // Advance boat position
         const step = (boat.speed * deltaTimeMs) / 16.6;
         boat.x += (dx / dist) * step;
         boat.y += (dy / dist) * step;
@@ -360,7 +350,6 @@ export class TerritorySimulation {
       const frontier = this.frontiers[id];
       if (frontier.length === 0) continue;
 
-      // Expand into neutral or neighbor
       const expansionRate = Math.min(Math.floor(bot.balance * 0.04), 15);
       let count = 0;
 
@@ -407,7 +396,6 @@ export class TerritorySimulation {
       const p = this.players[id];
       if (!p || !p.isAlive) continue;
 
-      // Red Interest Decay Check (balance > 100x land count)
       if (p.balance > p.landCount * 100) {
         p.redInterest = true;
         p.interestRate = Math.max(0.01, p.interestRate * 0.95);
@@ -432,7 +420,6 @@ export class TerritorySimulation {
     const player = this.players[1];
     if (!player) return;
 
-    // Defeat Condition: Player land reaches 0 after match start
     if (player.landCount === 0 && this.tickCount > 100) {
       this.state = 'GAME_OVER';
       this.gameResult = {
@@ -444,7 +431,6 @@ export class TerritorySimulation {
       return;
     }
 
-    // Victory Condition: Player controls all claimed land or total land > 90%
     let totalLandClaimed = 0;
     const totalLandAvailable = this.width * this.height;
 

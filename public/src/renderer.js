@@ -1,6 +1,7 @@
 /**
  * Ultra-Fast Canvas 2D Renderer for Terra.
- * Renders 1000x1000 pixel maps, territory frontiers, target crosshairs, and naval boats.
+ * Renders 1000x1000 pixel maps, territory frontiers, spawn pick previews,
+ * target crosshairs, and naval boats.
  */
 
 export class TerritoryRenderer {
@@ -19,9 +20,10 @@ export class TerritoryRenderer {
     this.imageData = this.offCtx.createImageData(gridWidth, gridHeight);
     this.pixelBuffer = new Uint32Array(this.imageData.data.buffer);
 
-    // ABGR color constants
-    this.waterAbgr = (255 << 24) | (30 << 16) | (16 << 8) | 7;     // #07101e Ocean
-    this.mountainAbgr = (255 << 24) | (64 << 16) | (52 << 8) | 44;  // #2c3440 Mountain
+    // High-contrast terrain ABGR colors (Little-Endian: 0xAABBGGRR)
+    this.waterAbgr = (255 << 24) | (40 << 16) | (22 << 8) | 10;      // #0a1628 Deep Ocean
+    this.landAbgr = (255 << 24) | (72 << 16) | (56 << 8) | 42;       // #2a3848 Neutral Land
+    this.mountainAbgr = (255 << 24) | (36 << 16) | (26 << 8) | 18;   // #121a24 Impassable Mountain
 
     this.zoom = 1.0;
     this.panX = 0;
@@ -32,6 +34,7 @@ export class TerritoryRenderer {
 
     this.targetPixelIdx = -1;
     this.spawnPickPoint = null;
+    this.hoverSpawnPoint = null;
     this.boats = [];
 
     this.setupInteractions();
@@ -82,8 +85,18 @@ export class TerritoryRenderer {
   }
 
   /**
-   * Convert Screen (canvas) click coordinates to Map Grid (X, Y) pixel index.
+   * Auto-center camera viewport on a target map pixel coordinate.
    */
+  centerOnPixel(pixelIdx, targetZoom = 2.0) {
+    if (pixelIdx < 0) return;
+    const px = pixelIdx % this.width;
+    const py = Math.floor(pixelIdx / this.width);
+
+    this.zoom = targetZoom;
+    this.panX = (this.canvas.width / 2) - (px * this.zoom);
+    this.panY = (this.canvas.height / 2) - (py * this.zoom);
+  }
+
   screenToMapCoords(screenX, screenY) {
     const rect = this.canvas.getBoundingClientRect();
     const clientX = screenX - rect.left;
@@ -102,27 +115,26 @@ export class TerritoryRenderer {
     const startTime = performance.now();
     const len = this.width * this.height;
     const colors = this.palette.colors;
-    const defaultAbgr = colors[0].abgr;
     const width = this.width;
 
     for (let i = 0; i < len; i++) {
       const owner = grid[i];
 
       if (owner > 0) {
-        this.pixelBuffer[i] = colors[owner]?.abgr || defaultAbgr;
+        this.pixelBuffer[i] = colors[owner]?.abgr || this.landAbgr;
       } else if (terrainGrid) {
         const terrain = terrainGrid[i];
         if (terrain === 0) this.pixelBuffer[i] = this.waterAbgr;
         else if (terrain === 2) this.pixelBuffer[i] = this.mountainAbgr;
-        else this.pixelBuffer[i] = defaultAbgr;
+        else this.pixelBuffer[i] = this.landAbgr;
       } else {
-        this.pixelBuffer[i] = defaultAbgr;
+        this.pixelBuffer[i] = this.landAbgr;
       }
     }
 
     // Border highlights
     if (drawBorders) {
-      const borderAbgr = (200 << 24) | (0 << 16) | (0 << 8) | 0;
+      const borderAbgr = (220 << 24) | (0 << 16) | (0 << 8) | 0;
       for (let y = 1; y < this.height - 1; y += 2) {
         const row = y * width;
         for (let x = 1; x < width - 1; x += 2) {
@@ -150,21 +162,40 @@ export class TerritoryRenderer {
       this.panX, this.panY, this.width * this.zoom, this.height * this.zoom
     );
 
-    // Overlay 1: Spawn Pick Point Indicator
+    // Overlay 1: Hover Spawn Circle Preview
+    if (this.hoverSpawnPoint) {
+      const hx = this.panX + this.hoverSpawnPoint.x * this.zoom;
+      const hy = this.panY + this.hoverSpawnPoint.y * this.zoom;
+      this.ctx.beginPath();
+      this.ctx.arc(hx, hy, Math.max(12, 16 * this.zoom), 0, Math.PI * 2);
+      this.ctx.strokeStyle = 'rgba(0, 242, 254, 0.6)';
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([4, 4]);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+    }
+
+    // Overlay 2: Selected Spawn Pick Point Indicator
     if (this.spawnPickPoint) {
       const sx = this.panX + this.spawnPickPoint.x * this.zoom;
       const sy = this.panY + this.spawnPickPoint.y * this.zoom;
       this.ctx.beginPath();
-      this.ctx.arc(sx, sy, Math.max(12, 16 * this.zoom), 0, Math.PI * 2);
+      this.ctx.arc(sx, sy, Math.max(14, 18 * this.zoom), 0, Math.PI * 2);
       this.ctx.strokeStyle = '#00f2fe';
-      this.ctx.lineWidth = 3;
+      this.ctx.lineWidth = 3.5;
       this.ctx.stroke();
 
-      this.ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
+      this.ctx.fillStyle = 'rgba(0, 242, 254, 0.4)';
       this.ctx.fill();
+
+      // Label text
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = 'bold 13px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('YOUR SPAWN', sx, sy - 24);
     }
 
-    // Overlay 2: Target Selection Crosshair
+    // Overlay 3: Target Selection Crosshair
     if (this.targetPixelIdx >= 0) {
       const tx = (this.targetPixelIdx % this.width);
       const ty = Math.floor(this.targetPixelIdx / this.width);
@@ -177,7 +208,6 @@ export class TerritoryRenderer {
       this.ctx.lineWidth = 2.5;
       this.ctx.stroke();
 
-      // Crosshair lines
       this.ctx.beginPath();
       this.ctx.moveTo(sx - 10, sy); this.ctx.lineTo(sx + 10, sy);
       this.ctx.moveTo(sx, sy - 10); this.ctx.lineTo(sx, sy + 10);
@@ -186,7 +216,7 @@ export class TerritoryRenderer {
       this.ctx.stroke();
     }
 
-    // Overlay 3: Naval Boat Transport Icons
+    // Overlay 4: Naval Boat Transport Icons
     for (const boat of this.boats) {
       const bx = this.panX + boat.x * this.zoom;
       const by = this.panY + boat.y * this.zoom;
