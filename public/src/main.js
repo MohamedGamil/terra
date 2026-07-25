@@ -693,6 +693,17 @@ class TerraApp {
         const targetOwner = this.simulation.grid[idx];
         const isTargeted = (targetOwner !== 0);
         const terrainType = this.simulation.terrainGrid[idx];
+
+        if (this.particles) {
+          const tx = idx % this.simulation.width;
+          const ty = Math.floor(idx / this.simulation.width);
+          this.particles.spawnShockwave(tx, ty, '#ff00aa', 24);
+          for (let i = 0; i < 6; i++) {
+            this.particles.spawnSpark(tx, ty, '#ff00aa');
+          }
+          this.particles.spawnFloatingText(tx, ty - 5, '🎯 TARGET', '#ff00aa');
+        }
+
         if (terrainType === 0) {
           this.simulation.launchBoatAttack(1, idx, this.selectedForcePercent);
         } else if (terrainType === 1) {

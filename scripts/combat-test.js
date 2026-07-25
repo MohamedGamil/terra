@@ -1026,6 +1026,34 @@ assert(success === false, 'Naval attack without straight-line water path was rej
 
 testsPassed += 1;
 
+// --- Test 28: Land Pathfinder Traversal through Defender Territory ---
+console.log('\n[Test 28] Land Pathfinder Traversal through Defender Territory (REQ-085)');
+
+const sim28 = new TerritorySimulation(100, 100, 10, 'arena');
+sim28.state = 'PLAYING';
+sim28.terrainGrid.fill(1); // fill with land
+
+// Player 1 owns x=10, y=10
+sim28.grid[1010] = 1;
+sim28.frontiers[1] = [1010];
+sim28.players[1].isAlive = true;
+sim28.players[1].balance = 1000;
+
+// Player 2 (defender) owns x=11, y=10 and x=12, y=10
+sim28.grid[1011] = 2;
+sim28.grid[1012] = 2;
+sim28.players[2].isAlive = true;
+sim28.players[2].balance = 1000;
+
+// Execute attack to x=12, y=10 (index 1012)
+sim28.executeAttack(1, 1012, 50, true);
+
+// Verify that it was executed as a land attack (it created an active expansion)
+assert(sim28.activeExpansions.length === 1, 'Land attack to a coordinate deep in defender territory successfully launched land expansion');
+assert(sim28.boats.length === 0, 'Land attack did not fall back to naval attack');
+
+testsPassed += 2;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

@@ -252,23 +252,66 @@ export class TerritorySimulation {
       this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
     }
 
-    const frontier = this.frontiers[attackerId];
-    let launchX = targetX;
-    let launchY = targetY;
-    let launchIdx = targetPixelIdx;
-    if (frontier && frontier.length > 0) {
-      let minDist = Infinity;
-      for (let i = 0; i < frontier.length; i++) {
-        const idx = frontier[i];
-        const fx = idx % this.width;
-        const fy = Math.floor(idx / this.width);
-        const dist = Math.hypot(fx - targetX, fy - targetY);
-        if (dist < minDist) {
-          minDist = dist;
-          launchX = fx;
-          launchY = fy;
-          launchIdx = idx;
+    let launchIdx = -1;
+    const width = this.width;
+    const height = this.height;
+
+    // BFS starting from targetPixelIdx to find the closest land-connected attacker pixel
+    const queue = new Int32Array(20000);
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = targetPixelIdx;
+
+    const visited = new Uint8Array(width * height);
+    visited[targetPixelIdx] = 1;
+
+    const maxBfsIterations = 15000;
+    let bfsIterations = 0;
+
+    while (head < tail && bfsIterations++ < maxBfsIterations) {
+      const curr = queue[head++];
+      if (this.grid[curr] === attackerId) {
+        launchIdx = curr;
+        break;
+      }
+
+      const cx = curr % width;
+      const cy = Math.floor(curr / width);
+
+      const neighbors = [
+        cy > 0 ? curr - width : -1,
+        cy < height - 1 ? curr + width : -1,
+        cx > 0 ? curr - 1 : -1,
+        cx < width - 1 ? curr + 1 : -1
+      ];
+
+      for (const n of neighbors) {
+        if (n >= 0 && visited[n] === 0 && this.terrainGrid[n] !== 0 && this.terrainGrid[n] !== 2) {
+          visited[n] = 1;
+          if (tail < queue.length) {
+            queue[tail++] = n;
+          }
         }
+      }
+    }
+
+    // If no land-connected frontier pixel was found, fall back to simple closest distance
+    if (launchIdx === -1) {
+      const frontier = this.frontiers[attackerId];
+      if (frontier && frontier.length > 0) {
+        let minDist = Infinity;
+        for (let i = 0; i < frontier.length; i++) {
+          const idx = frontier[i];
+          const fx = idx % width;
+          const fy = Math.floor(idx / width);
+          const dist = Math.hypot(fx - targetX, fy - targetY);
+          if (dist < minDist) {
+            minDist = dist;
+            launchIdx = idx;
+          }
+        }
+      } else {
+        launchIdx = targetPixelIdx;
       }
     }
 
@@ -277,6 +320,9 @@ export class TerritorySimulation {
       attacker.balance += tax + forceTroops;
       return this.launchBoatAttack(attackerId, targetPixelIdx, forcePercent);
     }
+
+    const launchX = launchIdx % width;
+    const launchY = Math.floor(launchIdx / width);
 
     const targetOwner = this.grid[targetPixelIdx];
     const isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);

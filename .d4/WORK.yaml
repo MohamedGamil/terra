@@ -551,6 +551,15 @@ requirements:
   kind: functional
   scope_state: proposed
   state: proposed
+- id: REQ-085
+  kind: functional
+  statement: The simulation's land pathfinder MUST be able to traverse player-owned
+    land, target owner's land, and neutral land to reach target coordinates.
+- id: REQ-086
+  kind: functional
+  statement: The canvas interface MUST spawn a visual particle click effect (shockwave,
+    sparks, and floating text) at the target coordinates when the player performs
+    a double click.
 batons:
 - id: BATON-001
   version: 1
@@ -2873,6 +2882,27 @@ batons:
     lease_expires_at: null
   acceptance:
     deterministic_checks: []
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-085
+    - REQ-086
+  execution:
+    depends_on:
+    - BATON-083
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-084
+  objective: Implement defender/neutral land path traversal checks and double click
+    target click effects.
+  title: Land Pathfinder Traversal & Double Click Effect
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3653,6 +3683,13 @@ evaluations:
 - id: EVAL-083
   layer: outcome
   target: BATON-083
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-084
+  layer: outcome
+  target: BATON-084
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
