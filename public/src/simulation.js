@@ -224,6 +224,56 @@ export class TerritorySimulation {
       return false;
     }
 
+    const width = this.width;
+    const height = this.height;
+
+    // Pocket detection BFS (inward expansion check)
+    let isInward = false;
+    let pocketPixels = null;
+
+    if (targetOwner !== attackerId) {
+      const pocketSet = new Set();
+      const pocketQueue = [targetPixelIdx];
+      pocketSet.add(targetPixelIdx);
+      let pocketHead = 0;
+      let pocketValid = true;
+      const maxPocketSize = 25000;
+
+      while (pocketHead < pocketQueue.length) {
+        if (pocketQueue.length > maxPocketSize) {
+          pocketValid = false;
+          break;
+        }
+        const curr = pocketQueue[pocketHead++];
+        const cx = curr % width;
+        const cy = Math.floor(curr / width);
+
+        const neighbors = [
+          cy > 0 ? curr - width : -1,
+          cy < height - 1 ? curr + width : -1,
+          cx > 0 ? curr - 1 : -1,
+          cx < width - 1 ? curr + 1 : -1
+        ];
+
+        for (const n of neighbors) {
+          if (n >= 0 && this.terrainGrid[n] === 1) {
+            const owner = this.grid[n];
+            if (owner !== attackerId) {
+              if (!pocketSet.has(n)) {
+                pocketSet.add(n);
+                pocketQueue.push(n);
+              }
+            }
+          }
+        }
+      }
+
+      if (pocketValid) {
+        isInward = true;
+        pocketPixels = pocketSet;
+      }
+    }
+
     // Check for existing active expansion targeting the same area to reinforce it
     const existing = this.activeExpansions.find(e => 
       e.ownerId === attackerId && 
@@ -246,6 +296,8 @@ export class TerritorySimulation {
           existing.targetY = targetY;
           existing.targetOwner = targetOwner;
           existing.isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);
+          existing.isInward = isInward;
+          existing.pocketPixels = pocketPixels;
 
           if (existing.isRivalAttack) {
             existing.maxRadius = 1000.0;
@@ -298,8 +350,6 @@ export class TerritorySimulation {
     }
 
     let launchIdx = -1;
-    const width = this.width;
-    const height = this.height;
 
     // BFS starting from targetPixelIdx to find the closest land-connected attacker pixel
     const queue = new Int32Array(20000);
@@ -400,7 +450,9 @@ export class TerritorySimulation {
         isRivalAttack: false,
         targetOwner: 0,
         currentRadius: initialRadius,
-        maxRadius: maxRadius
+        maxRadius: maxRadius,
+        isInward: false,
+        pocketPixels: null
       });
       return true;
     }
@@ -415,7 +467,9 @@ export class TerritorySimulation {
       isCounterPush: false,
       path: path,
       isRivalAttack: isRivalAttack,
-      targetOwner: targetOwner
+      targetOwner: targetOwner,
+      isInward: isInward,
+      pocketPixels: pocketPixels
     });
     return true;
   }
@@ -1222,35 +1276,41 @@ export class TerritorySimulation {
       const excludedFrontierIndices = new Set();
 
       let maxSteps = 1000;
+      let firstStep = true;
+      let hasNoCandidates = false;
       while (exp.remainingTroops > 2 && stepCount < stepLimit && maxSteps-- > 0) {
         let bestIdx = -1;
         let minDist = Infinity;
         let bestArrayIdx = -1;
 
-        if (exp.path) {
-          // Find the frontier pixel that is close to the path and closest to the target
+        if (exp.isInward) {
+          // Inward expansion: find all frontier pixels that are adjacent to pocketPixels
+          // and select the ones closest to the target coordinate
           for (let i = frontier.length - 1; i >= 0; i--) {
             const fIdx = frontier[i];
             if (excludedFrontierIndices.has(fIdx)) continue;
+            
+            const cx = fIdx % width;
+            const cy = Math.floor(fIdx / width);
+            const neighbors = [
+              cy > 0 ? fIdx - width : -1,
+              cy < height - 1 ? fIdx + width : -1,
+              cx > 0 ? fIdx - 1 : -1,
+              cx < width - 1 ? fIdx + 1 : -1
+            ];
+            
+            let isAdjacentToPocket = false;
+            for (const n of neighbors) {
+              if (n >= 0 && exp.pocketPixels.has(n)) {
+                isAdjacentToPocket = true;
+                break;
+              }
+            }
+            
+            if (!isAdjacentToPocket) continue;
+            
             const fx = fIdx % width;
             const fy = Math.floor(fIdx / width);
-
-            // Compute distance from fIdx to the path (with sampling for performance)
-            let distToPath = Infinity;
-            const pathLen = exp.path.length;
-            const pathStep = Math.max(1, Math.floor(pathLen / 20));
-            for (let p = 0; p < pathLen; p += pathStep) {
-              const px = exp.path[p] % width;
-              const py = Math.floor(exp.path[p] / width);
-              const d = Math.hypot(fx - px, fy - py);
-              if (d < distToPath) {
-                distToPath = d;
-              }
-              if (distToPath <= 3.0) break;
-            }
-
-            if (distToPath > 5.0) continue;
-
             const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
             if (distSq < minDist) {
               minDist = distSq;
@@ -1258,14 +1318,45 @@ export class TerritorySimulation {
               bestArrayIdx = i;
             }
           }
-
-          if (bestIdx === -1) {
-            // Fallback to standard closest search if no pixel is close to path
+        } else if (exp.path) {
+          if (exp.targetReached) {
+            // Target reached: expand outward from target, select frontier pixels closest to target
             for (let i = frontier.length - 1; i >= 0; i--) {
               const fIdx = frontier[i];
               if (excludedFrontierIndices.has(fIdx)) continue;
               const fx = fIdx % width;
               const fy = Math.floor(fIdx / width);
+              const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
+              if (distSq < minDist) {
+                minDist = distSq;
+                bestIdx = fIdx;
+                bestArrayIdx = i;
+              }
+            }
+          } else {
+            // Target not reached: follow the path
+            for (let i = frontier.length - 1; i >= 0; i--) {
+              const fIdx = frontier[i];
+              if (excludedFrontierIndices.has(fIdx)) continue;
+              const fx = fIdx % width;
+              const fy = Math.floor(fIdx / width);
+
+              // Compute distance from fIdx to the path (with sampling for performance)
+              let distToPath = Infinity;
+              const pathLen = exp.path.length;
+              const pathStep = Math.max(1, Math.floor(pathLen / 20));
+              for (let p = 0; p < pathLen; p += pathStep) {
+                const px = exp.path[p] % width;
+                const py = Math.floor(exp.path[p] / width);
+                const d = Math.hypot(fx - px, fy - py);
+                if (d < distToPath) {
+                  distToPath = d;
+                }
+                if (distToPath <= 3.0) break;
+              }
+
+              if (distToPath > 5.0) continue;
+
               const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
               if (distSq < minDist) {
                 minDist = distSq;
@@ -1287,11 +1378,15 @@ export class TerritorySimulation {
         }
 
         if (bestIdx < 0) {
+          if (firstStep) {
+            hasNoCandidates = true;
+          }
           if (exp.ownerId === 1 && exp.isRivalAttack) {
-            console.log(`[UPDATE DEBUG] No bestIdx found on frontier! Exiting step loop.`);
+            console.log(`[UPDATE DEBUG] No bestIdx found! Exiting step loop. Path length: ${exp.path ? exp.path.length : 'null'}, path: ${exp.path ? JSON.stringify(exp.path.slice(0, 10)) : 'null'}, frontier size: ${frontier.length}, sample frontier: ${JSON.stringify(frontier.slice(0, 10))}`);
           }
           break;
         }
+        firstStep = false;
 
         const cx = bestIdx % width;
         const cy = Math.floor(bestIdx / width);
@@ -1334,7 +1429,7 @@ export class TerritorySimulation {
             }
           } else {
             const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
-            if (exp.path !== null && distFromLaunch > exp.currentRadius) {
+            if (exp.path !== null && !exp.isInward && distFromLaunch > exp.currentRadius) {
               if (exp.ownerId === 1 && exp.isRivalAttack) {
                 console.log(`[UPDATE DEBUG] Skip neighbor nIdx=${nIdx} (owned by ${defenderOwner}): distFromLaunch=${distFromLaunch.toFixed(2)} > currentRadius=${exp.currentRadius.toFixed(2)}.`);
               }
@@ -1343,7 +1438,7 @@ export class TerritorySimulation {
 
             if (!exp.isRivalAttack) {
               let distToPath = Infinity;
-              if (exp.path) {
+              if (exp.path && !exp.isInward) {
                 for (let i = 0; i < exp.path.length; i++) {
                   const px = exp.path[i] % width;
                   const py = Math.floor(exp.path[i] / width);
@@ -1354,13 +1449,17 @@ export class TerritorySimulation {
                   if (distToPath <= 3.0) break;
                 }
               }
-              if (exp.path && distToPath > 3.0) {
+              if (exp.path && !exp.isInward && distToPath > 3.0) {
                 if (exp.ownerId === 1 && exp.isRivalAttack) {
                   console.log(`[UPDATE DEBUG] Skip neighbor nIdx=${nIdx} (owned by ${defenderOwner}): distToPath=${distToPath.toFixed(2)} > 3.0.`);
                 }
                 continue;
               }
             }
+          }
+
+          if (exp.isInward && !exp.pocketPixels.has(nIdx)) {
+            continue;
           }
 
           if (defenderOwner === 0) {
@@ -1372,6 +1471,9 @@ export class TerritorySimulation {
               exp.remainingTroops -= cost;
               player.landCount++;
               this.grid[nIdx] = exp.ownerId;
+              if (exp.isInward) {
+                exp.pocketPixels.delete(nIdx);
+              }
 
               if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
                 frontier.push(nIdx);
@@ -1466,6 +1568,9 @@ export class TerritorySimulation {
               }
               this.grid[nIdx] = exp.ownerId;
               this.handlePixelCapture(nIdx, exp.ownerId, defenderOwner);
+              if (exp.isInward) {
+                exp.pocketPixels.delete(nIdx);
+              }
 
               if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
                 frontier.push(nIdx);
@@ -1486,7 +1591,12 @@ export class TerritorySimulation {
                     launchX: nx,
                     launchY: ny,
                     remainingTroops: counterTroops,
-                    isCounterPush: true
+                    isCounterPush: true,
+                    path: null,
+                    isRivalAttack: true,
+                    targetOwner: exp.ownerId,
+                    isInward: false,
+                    pocketPixels: null
                   });
                 }
               }
@@ -1508,6 +1618,18 @@ export class TerritorySimulation {
 
         if (!localExpanded) {
           excludedFrontierIndices.add(bestIdx);
+          if (!this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
+            frontierSet.delete(bestIdx);
+            if (exp.path !== null) {
+              frontier.splice(bestArrayIdx, 1);
+            } else {
+              const fIndex = frontier.indexOf(bestIdx);
+              if (fIndex !== -1) {
+                frontier.splice(fIndex, 1);
+              }
+              validFrontier.splice(bestArrayIdx, 1);
+            }
+          }
           continue;
         }
       }
@@ -1523,7 +1645,8 @@ export class TerritorySimulation {
       const cond2 = frontier.length === 0;
       const cond3 = !!(exp.targetReached && exp.squareSize >= exp.maxRadius);
       const cond4 = !!(!exp.targetReached && exp.path !== null && exp.currentRadius >= exp.maxRadius && !expandedAny);
-      const isFinished = cond1 || cond2 || cond3 || cond4;
+      const cond5 = !!(exp.isInward && exp.pocketPixels.size === 0);
+      const isFinished = cond1 || cond2 || cond3 || cond4 || hasNoCandidates || cond5;
 
       if (exp.ownerId === 1 && exp.isRivalAttack) {
         console.log(`[UPDATE DEBUG] isFinished check: result=${isFinished}, cond1(remainingTroops<=2)=${cond1}, cond2(frontierEmpty)=${cond2}, cond3(squareSize>=maxRadius)=${cond3}, cond4(currentRadius>=maxRadius && !expandedAny)=${cond4}, expandedAny=${expandedAny}`);
@@ -2064,7 +2187,9 @@ export class TerritorySimulation {
         isCounterPush: false,
         path: null,
         isRivalAttack: isRivalAttack,
-        targetOwner: landingOwner
+        targetOwner: landingOwner,
+        isInward: false,
+        pocketPixels: null
       });
     }
   }
