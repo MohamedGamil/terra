@@ -333,6 +333,15 @@ requirements:
     real world map details.
 - id: REQ-030
   statement: Game Engine Stability, Array Mutation & Logic Bug Hardening.
+- id: REQ-031
+  statement: The game world map engine shall utilize authentic Natural Earth 50m GeoJSON
+    polygon data isolated in public/assets/natural-earth-world-50m.json.
+- id: REQ-032
+  statement: The world map vector engine shall apply Antimeridian unwrapping to eliminate
+    polygon tear lines, diagonal streaks, and polar shifts.
+- id: REQ-033
+  statement: The GeoJSONWorldMap module shall synchronously import land polygon assets
+    to prevent async timing windows and blank game canvas rendering.
 batons:
 - id: BATON-001
   version: 1
@@ -1594,6 +1603,87 @@ batons:
     - public/src/main.js
   title: Game Engine Stability, Array Mutation & Logic Bug Hardening
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - 100% of Natural Earth 50m land polygons isolated in public/assets/natural-earth-world-50m.json
+    rollback_verified: false
+  authority:
+    gates: []
+    requirements:
+    - REQ-031
+  execution:
+    depends_on: []
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-034
+  objective: Isolate authentic Natural Earth 50m GeoJSON dataset into standalone asset
+    file.
+  scope:
+    exclude: []
+    include: []
+  title: Authentic Natural Earth GeoJSON Dataset Isolation
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - Max longitude jump segment across globe reduced below 20px with zero diagonal
+      tear lines or leftward shifts.
+    rollback_verified: false
+  authority:
+    gates: []
+    requirements:
+    - REQ-032
+  execution:
+    depends_on:
+    - BATON-034
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-035
+  objective: Eliminate Antimeridian polygon tears and Arctic leftward shifts.
+  scope:
+    exclude: []
+    include: []
+  title: Antimeridian Unwrapping & Tear Line Elimination
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - d4 validate pass
+    reviewer_checks:
+    - GeoJSONWorldMap synchronously imports natural-earth-world-50m.json, rendering
+      world map immediately with 0 blank frames.
+    rollback_verified: false
+  authority:
+    gates: []
+    requirements:
+    - REQ-033
+  execution:
+    depends_on:
+    - BATON-035
+    owner: mgamil.dev@gmail.com
+    quadrant: Q1
+    resume_pointer: Ready
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-036
+  objective: Ensure instant synchronous asset loading to eliminate blank canvas startup
+    glitches.
+  scope:
+    exclude: []
+    include: []
+  title: Synchronous GeoJSON Asset Import & Instant Render
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -1883,6 +1973,27 @@ evaluations:
 - id: EVAL-028
   layer: outcome
   target: BATON-033
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-029
+  layer: outcome
+  target: BATON-034
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-030
+  layer: outcome
+  target: BATON-035
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-031
+  layer: outcome
+  target: BATON-036
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
