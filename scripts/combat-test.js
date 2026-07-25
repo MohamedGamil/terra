@@ -955,6 +955,50 @@ assert(hasPixelInRivalFrontier === false, 'Conquered rival pixel immediately pru
 
 testsPassed += 5;
 
+// --- Test 26: Centroid-Outward Expansion Wavefront Infinite Loop Fix ---
+console.log('\n[Test 26] Centroid-Outward Expansion Wavefront Infinite Loop Fix (REQ-081)');
+
+const sim26 = new TerritorySimulation(100, 100, 10, 'arena');
+sim26.state = 'PLAYING';
+sim26.terrainGrid.fill(1); // Land
+
+sim26.players[1].isAlive = true;
+sim26.players[1].balance = 1000;
+sim26.players[1].landCount = 1;
+sim26.grid[5050] = 1;
+sim26.frontiers[1] = [5050];
+
+// Surround P1 pixel with Bot 2, and give Bot 2 1,000,000 troops so P1 cannot conquer any neighbors
+sim26.players[2].isAlive = true;
+sim26.players[2].balance = 1000000;
+sim26.players[2].landCount = 10;
+sim26.grid[4950] = 2;
+sim26.grid[5150] = 2;
+sim26.grid[5049] = 2;
+sim26.grid[5051] = 2;
+
+// Launch a neutral expansion (path = null)
+sim26.activeExpansions.push({
+  ownerId: 1,
+  targetX: 50,
+  targetY: 50,
+  launchX: 50,
+  launchY: 50,
+  remainingTroops: 100,
+  isRivalAttack: false, // neutral expansion cannot attack rival pixels!
+  path: null,
+  currentRadius: 1.0,
+  maxRadius: 100
+});
+
+// Run update. Since P1 has no neutral neighbors, this expansion is completely blocked.
+const startTime = Date.now();
+sim26.update(16.6);
+const duration = Date.now() - startTime;
+
+assert(duration < 100, `Blocked centroid expansion exited quickly without freezing (Duration: ${duration}ms)`);
+testsPassed += 1;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

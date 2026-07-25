@@ -908,7 +908,8 @@ export class TerritorySimulation {
 
       const excludedFrontierIndices = new Set();
 
-      while (exp.remainingTroops > 2 && stepCount < stepLimit) {
+      let maxSteps = 1000;
+      while (exp.remainingTroops > 2 && stepCount < stepLimit && maxSteps-- > 0) {
         let bestIdx = -1;
         let minDist = Infinity;
         let bestArrayIdx = -1;
@@ -927,9 +928,10 @@ export class TerritorySimulation {
             }
           }
         } else {
-          if (validFrontier.length > 0) {
-            bestArrayIdx = Math.floor(Math.random() * validFrontier.length);
-            bestIdx = validFrontier[bestArrayIdx];
+          const availableFrontier = validFrontier.filter(fIdx => !excludedFrontierIndices.has(fIdx));
+          if (availableFrontier.length > 0) {
+            bestIdx = availableFrontier[Math.floor(Math.random() * availableFrontier.length)];
+            bestArrayIdx = validFrontier.indexOf(bestIdx);
           }
         }
 

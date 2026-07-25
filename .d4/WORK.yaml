@@ -519,13 +519,38 @@ requirements:
     coordinate showing the owner's name and formatted troop balance.
 - id: REQ-078
   kind: functional
-  statement: The naval transport boats MUST undergo land collision checks for player-launched attacks and prioritize shoreline departures with clear water paths.
+  statement: The naval transport boats MUST undergo land collision checks for player-launched
+    attacks and prioritize shoreline departures with clear water paths.
 - id: REQ-079
   kind: functional
-  statement: The simulation MUST immediately prune conquered rival pixels from the defender's active frontier list to prevent concurrent pixel ownership conflicts.
+  statement: The simulation MUST immediately prune conquered rival pixels from the
+    defender's active frontier list to prevent concurrent pixel ownership conflicts.
 - id: REQ-080
   kind: functional
-  statement: The game scene manager MUST properly update visibility to reveal the post-match analytics dashboard and outcomes badge upon achieving victory or defeat.
+  statement: The game scene manager MUST properly update visibility to reveal the
+    post-match analytics dashboard and outcomes badge upon achieving victory or defeat.
+- id: REQ-081
+  kind: functional
+  statement: The simulation's centroid-outward expansion wavefront MUST filter out
+    excluded frontier indices and use a loop safety iteration guard to prevent infinite
+    loops and client freezes.
+- id: REQ-082
+  statement: naval attacks still can go over land terrain, its path finding and firing
+    is still mishandled
+  kind: functional
+  scope_state: proposed
+  state: proposed
+- id: REQ-083
+  statement: some rivals territories seem to switch colors instantanously hinting
+    at 2 rivals occupying the same tile/pixel
+  kind: functional
+  scope_state: proposed
+  state: proposed
+- id: REQ-084
+  statement: victory screen is still not visible after achieving victory conditions
+  kind: functional
+  scope_state: proposed
+  state: proposed
 batons:
 - id: BATON-001
   version: 1
@@ -2711,7 +2736,8 @@ batons:
     lease_expires_at: null
 - id: BATON-077
   title: Naval Transport Pathing and Collision Checks
-  objective: Implement player boat land collision checks and optimized water-only departure pathing.
+  objective: Implement player boat land collision checks and optimized water-only
+    departure pathing.
   type: implementation
   acceptance:
     deterministic_checks:
@@ -2751,7 +2777,8 @@ batons:
     lease_expires_at: null
 - id: BATON-079
   title: Post-Match Overlay Visibility and Outcome Badge
-  objective: Implement post-match analytics overlay visibility and victory outcome badge styling.
+  objective: Implement post-match analytics overlay visibility and victory outcome
+    badge styling.
   type: implementation
   acceptance:
     deterministic_checks:
@@ -2769,6 +2796,77 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-081
+  execution:
+    depends_on:
+    - BATON-079
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-080
+  objective: Filter excluded frontier indices in centroid-outward expansions and add
+    a loop safety guard to prevent infinite loops.
+  title: Wavefront Infinite Loop Fix
+  type: implementation
+- id: BATON-081
+  type: implementation
+  title: 'Implement ad-hoc requirement: naval attacks still can go over land terrain,
+    its path findi...'
+  objective: 'Fulfill proposed requirement REQ-082: naval attacks still can go over
+    land terrain, its path finding and firing is still mishandled'
+  execution:
+    state: draft
+    resume_pointer: Fulfill proposed requirement REQ-082
+    depends_on:
+    - BATON-021
+    - BATON-022
+    - BATON-027
+    - BATON-028
+    - BATON-029
+    - BATON-031
+    - BATON-032
+    - BATON-033
+    - BATON-036
+    - BATON-080
+    quadrant: Q2
+  acceptance:
+    deterministic_checks: []
+- id: BATON-082
+  type: implementation
+  title: 'Implement ad-hoc requirement: some rivals territories seem to switch colors
+    instantanously...'
+  objective: 'Fulfill proposed requirement REQ-083: some rivals territories seem to
+    switch colors instantanously hinting at 2 rivals occupying the same tile/pixel'
+  execution:
+    state: draft
+    resume_pointer: Fulfill proposed requirement REQ-083
+    depends_on:
+    - BATON-081
+    quadrant: Q2
+  acceptance:
+    deterministic_checks: []
+- id: BATON-083
+  type: implementation
+  title: 'Implement ad-hoc requirement: victory screen is still not visible after
+    achieving victory ...'
+  objective: 'Fulfill proposed requirement REQ-084: victory screen is still not visible
+    after achieving victory conditions'
+  execution:
+    state: draft
+    resume_pointer: Fulfill proposed requirement REQ-084
+    depends_on:
+    - BATON-082
+    quadrant: Q2
+  acceptance:
+    deterministic_checks: []
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3521,6 +3619,13 @@ evaluations:
 - id: EVAL-079
   layer: outcome
   target: BATON-079
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-080
+  layer: outcome
+  target: BATON-080
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
