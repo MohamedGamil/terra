@@ -955,7 +955,7 @@ class TerraApp {
         let html = '';
         top7.forEach((p, idx) => {
           const isHuman = p.id === 1;
-          const hexColor = this.palette ? this.palette.getColorHex(p.id) : '#00f2fe';
+          const hexColor = this.palette ? this.palette.getHex(p.id) : '#00f2fe';
           const pct = ((p.landCount / (1000 * 1000)) * 100).toFixed(1);
           html += `
             <div class="lb-row ${isHuman ? 'human' : ''}">
