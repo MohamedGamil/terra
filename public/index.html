@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terra — High-Performance Territorial Conquest Engine</title>
+  <title>Terra — Tactical RTS Conquest Engine</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
           <div class="brand-icon">T</div>
           <div>
             <div class="brand-title">TERRA</div>
-            <span class="brand-badge">Territorial Conquest</span>
+            <span class="brand-badge">Tactical Conquest</span>
           </div>
         </div>
 
@@ -32,8 +32,8 @@
           <div class="map-selector-grid">
             <div class="map-card active" data-map="world">
               <div class="map-icon">🌍</div>
-              <div class="map-title">World</div>
-              <div class="map-desc">Continents & Seas</div>
+              <div class="map-title">World Map</div>
+              <div class="map-desc">Real Earth SVG Vectors</div>
             </div>
             <div class="map-card" data-map="archipelago">
               <div class="map-icon">🏝️</div>
@@ -71,14 +71,14 @@
       </div>
     </div>
 
-    <!-- Step 2: Spawn Selection Phase Top Banner -->
+    <!-- Step 2: Untimed Spawn Selection Banner -->
     <div class="spawn-pick-banner" id="spawn-banner" style="display: none;">
       <div class="banner-badge">STEP 2 OF 2</div>
-      <div class="banner-title">CLICK MAP TO CHOOSE STARTING SPAWN</div>
-      <div class="banner-sub" id="spawn-sub-text">Click anywhere on green land to set your starting kingdom</div>
-      <div style="display: flex; gap: 12px; align-items: center; margin-top: 8px;">
+      <div class="banner-title">CHOOSE YOUR STARTING SPAWN LOCATION</div>
+      <div class="banner-sub" id="spawn-sub-text">Click anywhere on neutral land to choose your starting kingdom</div>
+      <div style="display: flex; gap: 12px; align-items: center; margin-top: 10px;">
         <button class="btn btn-primary" id="btn-confirm-spawn" disabled style="width: auto; padding: 10px 28px; opacity: 0.5;">
-          ✓ START GAME WITH THIS SPAWN
+          ✓ LOCK SPAWN & START MATCH
         </button>
         <button class="btn btn-secondary" id="btn-random-spawn" style="width: auto; padding: 10px 18px;">
           🎲 Random Spawn
@@ -86,56 +86,64 @@
       </div>
     </div>
 
-    <!-- 3.. 2.. 1.. Countdown Overlay -->
+    <!-- 3.. 2.. 1.. GO Countdown Overlay -->
     <div id="countdown-overlay" class="countdown-overlay" style="display: none;">
       <div id="countdown-num" class="countdown-number">3</div>
     </div>
 
-    <!-- Sidebar Control Panel (Active during match) -->
-    <aside class="sidebar">
-      <div class="brand">
+    <!-- Full-Screen 100vw x 100vh RTS Layout Header Bar -->
+    <header class="rts-header" id="rts-header">
+      <div class="header-brand">
         <div class="brand-icon">T</div>
-        <div>
-          <div class="brand-title">TERRA</div>
-          <span class="brand-badge">D4 Phase 2</span>
+        <span class="brand-title" style="font-size: 18px;">TERRA</span>
+      </div>
+
+      <div class="header-telemetry">
+        <div class="stat-item">
+          <span class="stat-label">Bots</span>
+          <span class="stat-value highlight-cyan" id="stat-active-bots">100</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-label">Claimed</span>
+          <span class="stat-value highlight-emerald" id="stat-territory-pct">0.0%</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-label">Troops</span>
+          <span class="stat-value highlight-amber" id="stat-player-troops">500</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-label">Land</span>
+          <span class="stat-value" id="stat-player-land">113 px</span>
         </div>
       </div>
 
-      <!-- Quick Metrics Card -->
-      <div class="card">
-        <div class="card-title">Match Telemetry</div>
-        <div class="stat-grid">
-          <div class="stat-box">
-            <div class="stat-label">Active Bots</div>
-            <div class="stat-value highlight-cyan" id="stat-active-bots">100</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Territory Claimed</div>
-            <div class="stat-value highlight-emerald" id="stat-territory-pct">0.0%</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Your Balance</div>
-            <div class="stat-value highlight-amber" id="stat-player-troops">500</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">Your Land</div>
-            <div class="stat-value" id="stat-player-land">113 px</div>
-          </div>
+      <div class="header-controls">
+        <div class="fps-badge">
+          <div class="status-indicator"></div>
+          <span id="hud-fps">60.0 FPS</span>
         </div>
+        <button class="btn btn-secondary btn-icon" id="btn-run-benchmark" title="Run GATE-001 Benchmark">⚡ Benchmark</button>
+        <button class="btn btn-secondary btn-icon" id="btn-leave-match" title="Exit to Main Lobby">🚪 Lobby</button>
       </div>
+    </header>
 
-      <!-- Target Selection Info Card -->
-      <div class="card" id="target-info-card">
-        <div class="card-title">Attack Target</div>
-        <div id="target-status-text" style="font-size: 13px; color: var(--text-secondary);">
-          Click any territory on the map to target an attack vector.
+    <!-- Full-Screen Gameplay Canvas Viewport -->
+    <main class="rts-viewport">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Floating Bottom Tactical Combat Action Bar -->
+      <div class="rts-action-bar" id="rts-action-bar">
+        <div class="target-card">
+          <div class="target-label">Attack Target</div>
+          <div id="target-status-text" class="target-text">Click any territory on map to lock target.</div>
         </div>
-      </div>
 
-      <!-- Player Combat & Force Allocation Controls -->
-      <div class="card">
-        <div class="card-title">Attack Force Allocation</div>
-        <div class="control-group">
+        <div class="action-divider"></div>
+
+        <div class="force-slider-group">
           <div class="control-label">
             <span>Force Committed</span>
             <span id="attack-val" style="font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 700;">25%</span>
@@ -150,34 +158,16 @@
           <button class="btn-quick btn-fullsend" data-force="100">FULL SEND</button>
         </div>
 
-        <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <button class="btn btn-primary" id="btn-attack-execute" style="flex: 1;">
-            ⚔️ ATTACK
-          </button>
-          <button class="btn btn-secondary" id="btn-boat-execute" style="flex: 1;" title="Launch Boat Attack Across Water (3.125% Tax)">
-            ⛵ BOAT
-          </button>
+        <div class="action-btn-group">
+          <button class="btn btn-primary" id="btn-attack-execute">⚔️ ATTACK</button>
+          <button class="btn btn-secondary" id="btn-boat-execute" title="Launch Boat Attack Across Ocean (3.125% Tax)">⛵ BOAT</button>
         </div>
       </div>
 
-      <!-- GATE Benchmarks & Utility Buttons -->
-      <div class="card">
-        <button class="btn btn-secondary" id="btn-run-benchmark">⚡ Run GATE-001 Benchmark</button>
-        <button class="btn btn-secondary" id="btn-leave-match" style="margin-top: 6px;">🚪 Exit to Lobby</button>
-      </div>
-    </aside>
-
-    <!-- Canvas Viewport -->
-    <main class="viewport-container">
-      <canvas id="game-canvas"></canvas>
-
-      <!-- Floating HUD Overlay -->
-      <div class="hud-overlay">
-        <div class="hud-panel fps-badge">
-          <div class="status-indicator" id="fps-indicator"></div>
-          <span id="hud-fps">60.0 FPS</span>
-          <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);" id="hud-render-ms">1.2ms</span>
-        </div>
+      <!-- Interactive Bottom-Right RTS Minimap Navigation Widget -->
+      <div class="minimap-widget" id="minimap-container">
+        <div class="minimap-header">MINIMAP</div>
+        <canvas id="minimap-canvas"></canvas>
       </div>
 
       <!-- Game Over / Victory Modal -->

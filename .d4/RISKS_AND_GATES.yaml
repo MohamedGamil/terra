@@ -48,6 +48,22 @@ uncertainties:
     owner: mgamil.dev@gmail.com
     status: passed
 
+  - id: UNC-004
+    proposition: Can the SVG world map rasterizer generate high-accuracy continental boundaries and can the interactive RTS minimap maintain >= 30 FPS sync during viewport drags?
+    class: feasibility
+    decision_affected: [DEC-005, DEC-006]
+    risk_exposure: high
+    decision_criticality: 5
+    expected_information_gain: 5
+    validation_cost: 2
+    test_options:
+      - Benchmark SVG map rasterization load time and minimap camera navigation frame rates.
+    reversibility: reversible
+    threshold: "Pass if world map rasterization completes in < 150ms and minimap sync maintains >= 30 FPS."
+    stop_rule: Stop benchmark after test execution.
+    owner: mgamil.dev@gmail.com
+    status: passed
+
 gates:
   - id: GATE-001
     question: Does the prototypal HTML5 Canvas renderer maintain >= 60 FPS under 500 active expanding territories?
@@ -95,6 +111,22 @@ gates:
       tie_is_failure: true
     threshold: 100% test suite pass rate
     blocks: [DEC-003, DEC-004]
+    owner: mgamil.dev@gmail.com
+
+  - id: GATE-004
+    question: Does the SVG world map rasterization complete in < 150ms and does the RTS minimap maintain >= 30 FPS with click-to-navigate camera viewport bounds?
+    reduces: UNC-004
+    hardness: hard
+    status: passed
+    protocol:
+      frozen: true
+      fixtures: High-resolution SVG World Map rasterization & Minimap click-navigation benchmark.
+      rubric: Measure SVG rasterization duration and minimap frame rate under camera drag operations.
+      blind_scored: false
+      stop_rules: Stop benchmark after 500 minimap update operations.
+      tie_is_failure: true
+    threshold: World map generation < 150ms and Minimap update FPS >= 30 FPS
+    blocks: [DEC-005, DEC-006]
     owner: mgamil.dev@gmail.com
 
 risks:

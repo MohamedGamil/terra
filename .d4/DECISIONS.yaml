@@ -56,4 +56,32 @@ decisions:
         verdict: rejected
         rationale: Removes tactical troop allocation and tax risk management.
 
+  - id: DEC-005
+    statement: High-Accuracy World Map Generation via SVG Vector Path Rasterization onto Canvas Uint8 Array.
+    state: accepted
+    kind: architecture
+    boundary: World map generation engine and geographic terrain representation.
+    gate: GATE-004
+    options_considered:
+      - option: SVG Natural Earth continent vector paths rendered to offscreen canvas and pixel-sampled into Uint8Array terrain grid
+        verdict: selected
+        rationale: Provides 100% accurate world geography (continents, coastlines, islands) without external server dependencies.
+      - option: Procedural Perlin/Simplex noise blobs
+        verdict: rejected
+        rationale: Does not resemble real world geographic landmasses.
+
+  - id: DEC-006
+    statement: Full-Screen RTS Interface Layout (100vw Canvas + Glassmorphic Top Header + Floating Combat Action Bar + Minimap Navigation Widget).
+    state: accepted
+    kind: product
+    boundary: User interface layout and interactive camera navigation.
+    gate: GATE-004
+    options_considered:
+      - option: Full-screen 100vw x 100vh canvas viewport with glassmorphic top header, floating tactical action bar, and bottom-right interactive minimap
+        verdict: selected
+        rationale: Maximizes screen real estate for map navigation while providing authentic strategy/RTS game UX.
+      - option: Split-screen sidebar layout
+        verdict: rejected
+        rationale: Restricts canvas rendering area and crowds tactical combat controls.
+
 scope_decisions: []

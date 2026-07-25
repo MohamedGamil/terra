@@ -1,139 +1,106 @@
 /**
- * Procedural Map Generator for Terra.
- * Generates map grids (1000x1000) for World, Archipelago, and Black Arena layouts.
- * Grid cell values: 0 = Water, 1 = Neutral Land, 2 = Impassable Mountain.
+ * Procedural & SVG Vector Map Generator for Terra.
+ * Supports Real World SVG rasterization ('world'), Island Clusters ('archipelago'),
+ * and Solid Continent Arena ('arena').
  */
+
+import { SVGWorldMap } from './svg-world-map.js';
 
 export class MapGenerator {
   /**
-   * Generate map grid based on layout type.
-   * @param {'world'|'archipelago'|'arena'} type 
-   * @param {number} width 
-   * @param {number} height 
-   * @returns {Uint8Array} Map terrain array
+   * Generates a 2D Uint8Array terrain grid for the requested map type.
+   * Values: 0 = Ocean Water, 1 = Neutral Land, 2 = Impassable Mountain
    */
-  static generate(type = 'world', width = 1000, height = 1000) {
-    const grid = new Uint8Array(width * height);
-
-    switch (type.toLowerCase()) {
-      case 'archipelago':
-        return this.generateArchipelago(grid, width, height);
-      case 'arena':
-        return this.generateBlackArena(grid, width, height);
-      case 'world':
-      default:
-        return this.generateWorldMap(grid, width, height);
+  static generate(mapType = 'world', width = 1000, height = 1000) {
+    if (mapType === 'world') {
+      return SVGWorldMap.rasterize(width, height);
+    } else if (mapType === 'archipelago') {
+      return this.generateArchipelago(width, height);
+    } else if (mapType === 'arena') {
+      return this.generateArena(width, height);
     }
+    return SVGWorldMap.rasterize(width, height);
   }
 
-  static generateWorldMap(grid, width, height) {
-    // Fill ocean base
+  static generateArchipelago(width, height) {
+    const grid = new Uint8Array(width * height);
     grid.fill(0);
 
-    // Generate 6 main continental centers
-    const continents = [
-      { cx: 0.25 * width, cy: 0.35 * height, rx: 180, ry: 150 },
-      { cx: 0.70 * width, cy: 0.30 * height, rx: 220, ry: 180 },
-      { cx: 0.32 * width, cy: 0.70 * height, rx: 160, ry: 190 },
-      { cx: 0.75 * width, cy: 0.75 * height, rx: 140, ry: 120 },
-      { cx: 0.50 * width, cy: 0.50 * height, rx: 120, ry: 100 },
-      { cx: 0.88 * width, cy: 0.85 * height, rx: 90,  ry: 80  }
-    ];
+    const islandCount = 35;
+    const islandCenters = [];
 
-    const len = width * height;
-    for (let y = 0; y < height; y++) {
-      const row = y * width;
-      for (let x = 0; x < width; x++) {
-        const idx = row + x;
-        let isLand = false;
-
-        for (const c of continents) {
-          const dx = (x - c.cx) / c.rx;
-          const dy = (y - c.cy) / c.ry;
-          const dist = dx * dx + dy * dy;
-
-          // Simple Simplex-like noise wobble
-          const wobble = (Math.sin(x * 0.02) + Math.cos(y * 0.02)) * 0.15;
-          if (dist + wobble <= 1.0) {
-            isLand = true;
-            break;
-          }
-        }
-
-        if (isLand) {
-          // Inner mountain ranges (center of continents)
-          const isMountain = Math.random() < 0.015 && (x % 5 === 0);
-          grid[idx] = isMountain ? 2 : 1;
-        }
-      }
-    }
-
-    return grid;
-  }
-
-  static generateArchipelago(grid, width, height) {
-    grid.fill(0); // Ocean
-
-    // 14 island clusters
-    const numIslands = 16;
-    const islands = [];
-
-    for (let i = 0; i < numIslands; i++) {
-      islands.push({
-        cx: Math.floor(0.1 * width + Math.random() * 0.8 * width),
-        cy: Math.floor(0.1 * height + Math.random() * 0.8 * height),
-        r: 45 + Math.random() * 65
+    for (let i = 0; i < islandCount; i++) {
+      islandCenters.push({
+        x: Math.floor((0.1 + Math.random() * 0.8) * width),
+        y: Math.floor((0.1 + Math.random() * 0.8) * height),
+        radius: Math.floor(40 + Math.random() * 90)
       });
     }
 
     for (let y = 0; y < height; y++) {
       const row = y * width;
       for (let x = 0; x < width; x++) {
-        const idx = row + x;
-        let isLand = false;
+        let maxNoise = 0;
 
-        for (const isl of islands) {
-          const dx = x - isl.cx;
-          const dy = y - isl.cy;
-          const distSq = dx * dx + dy * dy;
-          const wobble = (Math.sin(x * 0.05) + Math.cos(y * 0.05)) * 12;
-          if (distSq <= (isl.r + wobble) * (isl.r + wobble)) {
-            isLand = true;
-            break;
+        for (const center of islandCenters) {
+          const dx = x - center.x;
+          const dy = y - center.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < center.radius * 1.4) {
+            const val = 1.0 - (dist / (center.radius * 1.4));
+            if (val > maxNoise) maxNoise = val;
           }
         }
 
-        if (isLand) grid[idx] = 1;
+        const idx = row + x;
+        if (maxNoise > 0.65) {
+          grid[idx] = 2; // Central Peak
+        } else if (maxNoise > 0.25) {
+          grid[idx] = 1; // Land
+        } else {
+          grid[idx] = 0; // Water
+        }
       }
     }
-
     return grid;
   }
 
-  static generateBlackArena(grid, width, height) {
-    // Solid Land Continent with 20px Ocean Border around edge
-    grid.fill(1);
+  static generateArena(width, height) {
+    const grid = new Uint8Array(width * height);
+    grid.fill(1); // Solid Land
 
-    const margin = 30;
-    // Outer water border
+    // Ocean borders
+    const borderWidth = 25;
     for (let y = 0; y < height; y++) {
       const row = y * width;
       for (let x = 0; x < width; x++) {
-        if (x < margin || x >= width - margin || y < margin || y >= height - margin) {
+        if (x < borderWidth || x >= width - borderWidth || y < borderWidth || y >= height - borderWidth) {
           grid[row + x] = 0;
         }
       }
     }
 
-    // Central cross mountain barrier
+    // Mountain Cross Barriers
     const midX = Math.floor(width / 2);
     const midY = Math.floor(height / 2);
 
-    for (let i = -150; i <= 150; i++) {
-      const idxH = midY * width + (midX + i);
-      const idxV = (midY + i) * width + midX;
-      if (idxH >= 0 && idxH < grid.length) grid[idxH] = 2; // Mountain
-      if (idxV >= 0 && idxV < grid.length) grid[idxV] = 2; // Mountain
+    for (let y = 100; y < height - 100; y++) {
+      if (Math.abs(y - midY) > 80) {
+        for (let dx = -10; dx <= 10; dx++) {
+          const idx = y * width + (midX + dx);
+          if (idx >= 0 && idx < grid.length) grid[idx] = 2;
+        }
+      }
+    }
+
+    for (let x = 100; x < width - 100; x++) {
+      if (Math.abs(x - midX) > 80) {
+        for (let dy = -10; dy <= 10; dy++) {
+          const idx = (midY + dy) * width + x;
+          if (idx >= 0 && idx < grid.length) grid[idx] = 2;
+        }
+      }
     }
 
     return grid;

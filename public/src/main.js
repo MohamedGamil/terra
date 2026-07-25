@@ -1,11 +1,13 @@
 import { ColorPalette } from './color.js';
 import { TerritoryRenderer } from './renderer.js';
 import { TerritorySimulation } from './simulation.js';
+import { MinimapRenderer } from './minimap.js';
 import { BenchmarkRunner } from './benchmark.js';
 
 class TerraApp {
   constructor() {
     this.canvas = document.getElementById('game-canvas');
+    this.minimapCanvas = document.getElementById('minimap-canvas');
     this.selectedMap = 'world';
     this.botCount = 100;
     this.botDifficulty = 'easy';
@@ -15,16 +17,25 @@ class TerraApp {
     this.palette = new ColorPalette(500, this.playerColorHex);
     this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap);
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
+    this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
 
     this.isRunning = true;
     this.lastTime = performance.now();
     this.fpsHistory = [];
     this.targetPixelIdx = -1;
 
+    this.initMinimapEvents();
     this.initLobbyUI();
     this.initCombatUI();
     this.initCanvasEvents();
     this.startLoop();
+  }
+
+  initMinimapEvents() {
+    this.minimap.onNavigate = (mapX, mapY) => {
+      const idx = Math.floor(mapY) * this.simulation.width + Math.floor(mapX);
+      this.renderer.centerOnPixel(idx, this.renderer.zoom);
+    };
   }
 
   initLobbyUI() {
@@ -59,19 +70,19 @@ class TerraApp {
       });
     });
 
-    // Enter Match -> Transitions to Step 2 Spawn Selection
+    // Enter Match -> Step 2 Untimed Spawn Selection
     document.getElementById('btn-start-match').addEventListener('click', () => {
       this.openSpawnSelectionPhase();
     });
 
-    // Leave Match Button
+    // Exit to Lobby
     document.getElementById('btn-leave-match').addEventListener('click', () => {
       document.getElementById('lobby-screen').style.display = 'flex';
       document.getElementById('spawn-banner').style.display = 'none';
       this.simulation.state = 'LOBBY';
     });
 
-    // Restart Game Button
+    // Restart Game
     document.getElementById('btn-restart-game').addEventListener('click', () => {
       document.getElementById('gameover-modal').classList.remove('active');
       document.getElementById('lobby-screen').style.display = 'flex';
@@ -120,7 +131,7 @@ class TerraApp {
   }
 
   initCanvasEvents() {
-    // Mouse Move Hover Preview during Spawn Pick
+    // Mouse Move Hover Preview
     this.canvas.addEventListener('mousemove', (e) => {
       if (this.simulation.state === 'SPAWN_PICK') {
         const coords = this.renderer.screenToMapCoords(e.clientX, e.clientY);
@@ -146,7 +157,7 @@ class TerraApp {
 
         if (ok) {
           this.renderer.spawnPickPoint = { x: coords.mapX, y: coords.mapY };
-          if (subText) subText.textContent = '✓ Spawn Selected! Click START GAME or pick another land spot.';
+          if (subText) subText.textContent = '✓ Spawn Selected! Click LOCK SPAWN & START MATCH to launch.';
           if (confirmBtn) {
             confirmBtn.disabled = false;
             confirmBtn.style.opacity = '1.0';
@@ -162,16 +173,16 @@ class TerraApp {
         const statusText = document.getElementById('target-status-text');
 
         if (targetOwner === 0) {
-          statusText.textContent = `Target: Unclaimed Neutral Land (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = `Unclaimed Neutral Land (${coords.mapX}, ${coords.mapY})`;
         } else if (targetOwner === 1) {
-          statusText.textContent = `Target: Your Kingdom (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = `Your Kingdom (${coords.mapX}, ${coords.mapY})`;
         } else {
-          statusText.textContent = `Target: Bot ${targetOwner}'s Territory (${coords.mapX}, ${coords.mapY})`;
+          statusText.textContent = `Bot ${targetOwner}'s Territory (${coords.mapX}, ${coords.mapY})`;
         }
       }
     });
 
-    // Confirm Spawn Button
+    // Explicit Lock Spawn Button -> Triggers Countdown
     document.getElementById('btn-confirm-spawn').addEventListener('click', () => {
       this.launchMatchWithCountdown();
     });
@@ -195,7 +206,7 @@ class TerraApp {
       confirmBtn.style.opacity = '1.0';
 
       const subText = document.getElementById('spawn-sub-text');
-      if (subText) subText.textContent = '✓ Random Spawn Selected! Click START GAME to launch.';
+      if (subText) subText.textContent = '✓ Random Spawn Selected! Click LOCK SPAWN & START MATCH.';
     });
   }
 
@@ -208,16 +219,19 @@ class TerraApp {
     this.simulation.players[1].name = playerName;
 
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
+    this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
+    this.initMinimapEvents();
+
     this.renderer.spawnPickPoint = null;
     this.renderer.hoverSpawnPoint = null;
     this.renderer.targetPixelIdx = -1;
     this.targetPixelIdx = -1;
 
-    // Start Step 2 Spawn Phase
+    // Start Step 2 Untimed Spawn Selection Phase
     this.simulation.startSpawnPhase();
 
     const subText = document.getElementById('spawn-sub-text');
-    if (subText) subText.textContent = 'Click anywhere on green land to set your starting kingdom';
+    if (subText) subText.textContent = 'Click anywhere on neutral land to set your starting kingdom';
 
     const confirmBtn = document.getElementById('btn-confirm-spawn');
     confirmBtn.disabled = true;
@@ -234,6 +248,11 @@ class TerraApp {
     const numEl = document.getElementById('countdown-num');
     overlay.style.display = 'flex';
 
+    // Auto-center camera on spawn location during countdown!
+    if (this.simulation.humanSpawnIdx !== null) {
+      this.renderer.centerOnPixel(this.simulation.humanSpawnIdx, 2.5);
+    }
+
     let count = 3;
     numEl.textContent = '3';
 
@@ -247,13 +266,8 @@ class TerraApp {
         clearInterval(interval);
         overlay.style.display = 'none';
 
-        // Lock spawn and transition to PLAYING
+        // Lock spawn & start match
         this.simulation.confirmSpawnsAndStart();
-
-        // Auto-center camera on player's spawn point!
-        if (this.simulation.humanSpawnIdx !== null) {
-          this.renderer.centerOnPixel(this.simulation.humanSpawnIdx, 2.5);
-        }
       }
     }, 600);
   }
@@ -311,15 +325,17 @@ class TerraApp {
 
       const renderMs = this.renderer.render(this.simulation.grid, this.simulation.terrainGrid, true);
 
+      // Render Interactive RTS Minimap
+      this.minimap.render(this.simulation.grid, this.simulation.terrainGrid, this.renderer);
+
       const fps = delta > 0 ? 1000 / delta : 60;
       this.fpsHistory.push(fps);
       if (this.fpsHistory.length > 30) this.fpsHistory.shift();
 
       const avgFps = (this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length).toFixed(1);
       document.getElementById('hud-fps').textContent = `${avgFps} FPS`;
-      document.getElementById('hud-render-ms').textContent = `${renderMs.toFixed(2)}ms`;
 
-      // Update Telemetry Panel
+      // Update Header Telemetry Bar
       const stats = this.simulation.getStats();
       document.getElementById('stat-active-bots').textContent = stats.activePlayers;
       document.getElementById('stat-territory-pct').textContent = `${stats.percentClaimed}%`;

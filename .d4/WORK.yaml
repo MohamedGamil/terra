@@ -101,6 +101,57 @@ requirements:
     release: REL-002
     priority_quadrant: Q1
 
+  - id: REQ-009
+    statement: Untimed Spawn Selection Phase where players take unhurried time to pick starting position, followed by explicit LOCK SPAWN trigger and post-pick 3..2..1 GO countdown overlay with camera auto-centering.
+    kind: functional
+    authorized_by: [DEC-003, DEC-006]
+    traces_to: [HY-001]
+    acceptance:
+      - Player position pick is un-timed; countdown timer does NOT auto-force random spawn.
+      - Lock Spawn button triggers explicit 3..2..1 GO countdown overlay.
+      - Camera smoothly pans/zooms to auto-center on player starting position during countdown.
+    scope_state: committed
+    release: REL-003
+    priority_quadrant: Q1
+
+  - id: REQ-010
+    statement: High-Accuracy Geographic World Map Generator utilizing SVG continent path vector rasterization for authentic real-world geography and scaled canvas rendering.
+    kind: functional
+    authorized_by: [DEC-005]
+    traces_to: [HY-001]
+    acceptance:
+      - World map accurately reflects Earth continents, major islands, and sea boundaries.
+      - Map generator rasterizes SVG vector data into Uint8Array terrain grid in < 150ms.
+    scope_state: committed
+    release: REL-003
+    priority_quadrant: Q1
+
+  - id: REQ-011
+    statement: Full-Screen Strategy/Tactical RTS Layout featuring 100vw x 100vh canvas viewport, glassmorphic top header bar, and floating bottom combat action bar.
+    kind: functional
+    authorized_by: [DEC-006]
+    traces_to: [HY-001]
+    acceptance:
+      - Gameplay canvas occupies 100% full screen width and height.
+      - Glassmorphic header bar displays telemetry (FPS, Active Players, Land %, Troop Balance, Red Interest).
+      - Tactical action controls float at bottom center without blocking main view.
+    scope_state: committed
+    release: REL-003
+    priority_quadrant: Q1
+
+  - id: REQ-012
+    statement: Interactive RTS Minimap Navigation Widget displaying full-map territory overview, camera viewport bounding box, and click/drag instant camera repositioning.
+    kind: functional
+    authorized_by: [DEC-006]
+    traces_to: [HY-001]
+    acceptance:
+      - Minimap renders full map territory colors in bottom-right corner.
+      - Minimap overlay draws current camera viewport rectangle.
+      - Clicking or dragging on minimap immediately shifts main canvas camera to targeted location.
+    scope_state: committed
+    release: REL-003
+    priority_quadrant: Q1
+
 batons:
   - id: BATON-001
     version: 1
@@ -350,7 +401,7 @@ batons:
       state: completed
       owner: agent-role/fullstack-implementer
       depends_on: [BATON-008]
-      unblocks: []
+      unblocks: [BATON-010]
       resume_pointer: Build boat attack transport and scripts/combat-test.js for GATE-003.
       quadrant: Q1
       milestone: REL-002
@@ -362,6 +413,154 @@ batons:
     acceptance:
       deterministic_checks: [compile, lint, GATE-003 combat test pass]
       reviewer_checks: [Full authentic game loop verified]
+      rollback_verified: false
+
+  - id: BATON-010
+    version: 1
+    type: research
+    title: Research & Planning for World SVG Map Generation, RTS Interface Layout & Minimap Engine
+    objective: Plan SVG vector path rasterization, full-screen RTS UI architecture, and interactive minimap navigation.
+    scope:
+      include: [SVG world map path rasterization architecture, full-screen RTS UI design, minimap camera sync plan]
+      exclude: [Production code edits]
+    authority:
+      gates: [GATE-004]
+      requirements: [REQ-009, REQ-010, REQ-011, REQ-012]
+      decisions: [DEC-005, DEC-006]
+    execution:
+      state: completed
+      owner: mgamil.dev@gmail.com
+      depends_on: [BATON-009]
+      unblocks: [BATON-011]
+      resume_pointer: Write implementation_plan.md for REL-003 and request user review.
+      quadrant: Q1
+      milestone: REL-003
+    capabilities:
+      network_policy: allowlist
+      side_effect_class: A0
+      approval_policy: none
+    acceptance:
+      deterministic_checks: [d4 validate pass, d4 lint pass]
+      reviewer_checks: [Implementation plan approved by user]
+      required_artifacts: []
+      rollback_verified: false
+
+  - id: BATON-011
+    version: 1
+    type: implementation
+    title: Implement High-Accuracy World SVG Vector Map Generator & Terrain Rasterizer
+    objective: Implement SVG Natural Earth continent vector renderer to rasterize accurate world geography into Uint8Array terrain grid.
+    scope:
+      include: [SVG path parser, offscreen terrain rasterizer, accurate land/water/mountain mapping]
+      exclude: [Minimap navigation UI]
+    authority:
+      gates: [GATE-004]
+      requirements: [REQ-010]
+      decisions: [DEC-005]
+    execution:
+      state: completed
+      owner: agent-role/frontend-implementer
+      depends_on: [BATON-010]
+      unblocks: [BATON-012]
+      resume_pointer: Implement public/src/svg-world-map.js and update MapGenerator.
+      quadrant: Q1
+      milestone: REL-003
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint, GATE-004 benchmark pass]
+      reviewer_checks: [World geography verified accurate]
+      rollback_verified: false
+
+  - id: BATON-012
+    version: 1
+    type: implementation
+    title: Implement Full-Screen Tactical RTS Glassmorphic Interface & Floating Action Bar
+    objective: Build 100vw x 100vh full-screen canvas layout with top glassmorphic telemetry header and floating combat controls.
+    scope:
+      include: [Full-screen CSS grid layout, glassmorphic top header, floating bottom action bar]
+      exclude: [Minimap widget]
+    authority:
+      requirements: [REQ-011]
+      decisions: [DEC-006]
+    execution:
+      state: completed
+      owner: agent-role/frontend-implementer
+      depends_on: [BATON-011]
+      unblocks: [BATON-013]
+      resume_pointer: Update public/index.html and public/styles.css for full-screen RTS UI.
+      quadrant: Q1
+      milestone: REL-003
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint]
+      reviewer_checks: [Full-screen RTS layout verified]
+      rollback_verified: false
+
+  - id: BATON-013
+    version: 1
+    type: implementation
+    title: Implement Interactive RTS Minimap Navigation Widget & Viewport Bounds Sync
+    objective: Build bottom-right minimap canvas widget displaying full map overview, territory colors, camera viewport bounds, and click/drag navigation.
+    scope:
+      include: [Minimap canvas renderer, camera viewport rectangle, click/drag map panning]
+      exclude: [Multiplayer WebSockets]
+    authority:
+      gates: [GATE-004]
+      requirements: [REQ-012]
+      decisions: [DEC-006]
+    execution:
+      state: completed
+      owner: agent-role/frontend-implementer
+      depends_on: [BATON-012]
+      unblocks: [BATON-014]
+      resume_pointer: Scaffold public/src/minimap.js and integrate with TerritoryRenderer.
+      quadrant: Q1
+      milestone: REL-003
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint]
+      reviewer_checks: [Minimap navigation verified]
+      rollback_verified: false
+
+  - id: BATON-014
+    version: 1
+    type: implementation
+    title: Implement Untimed Spawn Selection Phase & Post-Pick 3..2..1 Countdown Overlay
+    objective: Build untimed spawn selection flow, explicit Lock Spawn trigger, post-pick 3..2..1 GO countdown overlay, and camera auto-centering.
+    scope:
+      include: [Untimed spawn pick state, Lock Spawn button action, 3..2..1 GO countdown overlay, camera auto-centering]
+      exclude: []
+    authority:
+      requirements: [REQ-009]
+      decisions: [DEC-003, DEC-006]
+    execution:
+      state: completed
+      owner: agent-role/fullstack-implementer
+      depends_on: [BATON-013]
+      unblocks: []
+      resume_pointer: Update simulation state machine and main loop for un-timed spawn pick.
+      quadrant: Q1
+      milestone: REL-003
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/, src/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint]
+      reviewer_checks: [Untimed spawn pick and countdown overlay verified]
       rollback_verified: false
 
 releases:
@@ -391,5 +590,20 @@ releases:
       - GATE-003 automated combat test suite passes 100%.
     requirements: [REQ-005, REQ-006, REQ-007, REQ-008]
     batons: [BATON-006, BATON-007, BATON-008, BATON-009]
+    delivery_form: deployable
+    status: released
+
+  - id: REL-003
+    version: 0.3.0
+    name: Terra Tactical RTS UI, High-Accuracy World Map & Interactive Minimap
+    is_mvp: false
+    exit_criteria:
+      - Players have untimed spawn position selection followed by explicit LOCK SPAWN and 3..2..1 GO countdown overlay.
+      - World map accurately rasterizes Real World Natural Earth SVG vector continents into terrain grid (< 150ms).
+      - Full-screen 100vw x 100vh canvas viewport with glassmorphic top header and floating bottom action controls.
+      - Interactive bottom-right RTS minimap displays full map overview, territory colors, camera viewport bounds, and click/drag navigation.
+      - GATE-004 benchmark evaluation passes.
+    requirements: [REQ-009, REQ-010, REQ-011, REQ-012]
+    batons: [BATON-010, BATON-011, BATON-012, BATON-013, BATON-014]
     delivery_form: deployable
     status: released

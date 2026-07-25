@@ -1,6 +1,6 @@
 {
   "name": "terra",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Browser-based territorial conquest game (Territorial.io clone)",
   "type": "module",
   "scripts": {
@@ -8,7 +8,8 @@
     "build": "vite build public",
     "test:benchmark": "node scripts/benchmark-cli.js",
     "test:server": "node scripts/server-benchmark.js",
-    "test:combat": "node scripts/combat-test.js"
+    "test:combat": "node scripts/combat-test.js",
+    "test:map": "node scripts/map-minimap-benchmark.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"
