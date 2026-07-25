@@ -62,7 +62,7 @@ claims:
 hypotheses:
   - id: HY-001
     statement: A TypeScript HTML5 Canvas frontend with Node.js WebSocket backend can simulate 500 active bot/player territories at 60 FPS with < 50ms tick latency.
-    status: open
+    status: confirmed
     test: Benchmark prototypal canvas renderer (GATE-001) and server tick engine (GATE-002).
     threshold: Canvas >= 60 FPS with 500 active territories; server tick execution < 15ms per 500ms interest tick
     owner: mgamil.dev@gmail.com

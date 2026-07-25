@@ -15,7 +15,7 @@ project:
   hard_guardrails:
   - No real user data before legal + threat-model readiness exists.
   - Pause any sharing surface on a confirmed disclosure.
-  version: 0.1.0
+  version: 0.4.0
   product_version: 0.0.0
   created: '2026-07-24'
   phase: P3
