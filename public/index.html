@@ -28,17 +28,40 @@
         </div>
 
         <div class="lobby-section">
+          <label class="input-label">Map Seed & Reproducibility</label>
+          <div class="player-custom-row">
+            <input type="text" id="input-map-seed" class="text-input" value="12345" placeholder="Enter seed...">
+            <button class="btn btn-secondary" id="btn-random-seed" style="width: auto; padding: 10px 14px;">🎲 Random</button>
+          </div>
+        </div>
+
+        <div class="lobby-section">
           <label class="input-label">Select Map Layout</label>
           <div class="map-selector-grid">
             <div class="map-card active" data-map="world">
               <div class="map-icon">🌍</div>
               <div class="map-title">World Map</div>
-              <div class="map-desc">GeoJSON Natural Earth</div>
+              <div class="map-desc">GeoJSON Full World</div>
+            </div>
+            <div class="map-card" data-map="europe">
+              <div class="map-icon">🏰</div>
+              <div class="map-title">Europe</div>
+              <div class="map-desc">Regional GeoJSON</div>
+            </div>
+            <div class="map-card" data-map="asia">
+              <div class="map-icon">⛩️</div>
+              <div class="map-title">Asia & Pacific</div>
+              <div class="map-desc">Regional GeoJSON</div>
             </div>
             <div class="map-card" data-map="archipelago">
               <div class="map-icon">🏝️</div>
               <div class="map-title">Archipelago</div>
-              <div class="map-desc">Islands & Channels</div>
+              <div class="map-desc">Seeded Islands</div>
+            </div>
+            <div class="map-card" data-map="ring_of_fire">
+              <div class="map-icon">🌋</div>
+              <div class="map-title">Ring of Fire</div>
+              <div class="map-desc">Volcanic Ring Bay</div>
             </div>
             <div class="map-card" data-map="arena">
               <div class="map-icon">⚔️</div>

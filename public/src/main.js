@@ -13,13 +13,14 @@ class TerraApp {
     this.minimapCanvas = document.getElementById('minimap-canvas');
     this.contextMenu = document.getElementById('rts-context-menu');
     this.selectedMap = 'world';
+    this.mapSeed = '12345';
     this.botCount = 100;
     this.botDifficulty = 'easy';
     this.playerColorHex = '#00f2fe';
     this.selectedForcePercent = 25;
 
     this.palette = new ColorPalette(500, this.playerColorHex);
-    this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap);
+    this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed);
     this.renderer = new TerritoryRenderer(this.canvas, 1000, 1000, this.palette);
     this.minimap = new MinimapRenderer(this.minimapCanvas, 1000, 1000, this.palette);
 
@@ -68,6 +69,22 @@ class TerraApp {
       this.playerColorHex = e.target.value;
       this.palette.setPlayerColor(1, this.playerColorHex);
     });
+
+    const seedInput = document.getElementById('input-map-seed');
+    if (seedInput) {
+      seedInput.addEventListener('input', (e) => {
+        this.mapSeed = e.target.value || '12345';
+      });
+    }
+
+    const randomSeedBtn = document.getElementById('btn-random-seed');
+    if (randomSeedBtn) {
+      randomSeedBtn.addEventListener('click', () => {
+        const newSeed = Math.floor(Math.random() * 899999 + 100000).toString();
+        this.mapSeed = newSeed;
+        if (seedInput) seedInput.value = newSeed;
+      });
+    }
 
     const mapCards = document.querySelectorAll('.map-card');
     mapCards.forEach(card => {
@@ -302,7 +319,7 @@ class TerraApp {
     document.getElementById('lobby-screen').style.display = 'none';
 
     this.palette = new ColorPalette(this.botCount + 1, this.playerColorHex);
-    this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap);
+    this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed);
     
     // Start Step 2 Untimed Spawn Selection Phase FIRST
     this.simulation.startSpawnPhase();

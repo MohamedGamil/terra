@@ -1,6 +1,7 @@
 /**
  * Procedural & GeoJSON Vector Map Generator for Terra.
- * Supports High-Detail Real World GeoJSON ('world'), Island Clusters ('archipelago'),
+ * Supports High-Detail Real World GeoJSON ('world', 'europe', 'asia'),
+ * Seed-Based Island Clusters ('archipelago'), Volcanic Gulf ('ring_of_fire'),
  * and Solid Continent Arena ('arena').
  */
 
@@ -8,32 +9,100 @@ import { GeoJSONWorldMap } from './geojson-world-map.js';
 
 export class MapGenerator {
   /**
-   * Generates a 2D Uint8Array terrain grid for the requested map type.
+   * Fast deterministic Mulberry32 Pseudo-Random Number Generator.
+   * @param {string|number} seed Seed string or integer
+   */
+  static createPRNG(seed = 12345) {
+    let s = 0;
+    if (typeof seed === 'string') {
+      for (let i = 0; i < seed.length; i++) {
+        s = (Math.imul(31, s) + seed.charCodeAt(i)) | 0;
+      }
+    } else {
+      s = Math.floor(seed) | 0;
+    }
+    if (s === 0) s = 12345;
+
+    return function() {
+      let t = s += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /**
+   * Generates a 2D Uint8Array terrain grid for the requested map type and seed.
    * Values: 0 = Ocean Water, 1 = Neutral Land, 2 = Impassable Mountain
    */
-  static generate(mapType = 'world', width = 1000, height = 1000) {
+  static generate(mapType = 'world', width = 1000, height = 1000, seed = 12345) {
+    const prng = this.createPRNG(seed);
+
     if (mapType === 'world') {
       return GeoJSONWorldMap.rasterize(width, height);
+    } else if (mapType === 'europe') {
+      return this.generateRegionalCrop('europe', width, height);
+    } else if (mapType === 'asia') {
+      return this.generateRegionalCrop('asia', width, height);
     } else if (mapType === 'archipelago') {
-      return this.generateArchipelago(width, height);
+      return this.generateArchipelago(width, height, prng);
+    } else if (mapType === 'ring_of_fire') {
+      return this.generateRingOfFire(width, height, prng);
     } else if (mapType === 'arena') {
       return this.generateArena(width, height);
     }
+
     return GeoJSONWorldMap.rasterize(width, height);
   }
 
-  static generateArchipelago(width, height) {
+  /**
+   * Regional GeoJSON Crop for Europe / Asia maps.
+   */
+  static generateRegionalCrop(region, width = 1000, height = 1000) {
+    const fullWorld = GeoJSONWorldMap.rasterize(width, height);
     const grid = new Uint8Array(width * height);
     grid.fill(0);
 
-    const islandCount = 35;
+    // Bounds in 1000x1000 world space
+    let minX = 400, maxX = 660, minY = 80, maxY = 380; // Europe default
+    if (region === 'asia') {
+      minX = 580; maxX = 980; minY = 140; maxY = 600;  // Asia default
+    }
+
+    const cropW = maxX - minX;
+    const cropH = maxY - minY;
+
+    for (let y = 0; y < height; y++) {
+      const srcY = Math.floor(minY + (y / height) * cropH);
+      const row = y * width;
+      const srcRow = srcY * width;
+
+      for (let x = 0; x < width; x++) {
+        const srcX = Math.floor(minX + (x / width) * cropW);
+        const srcIdx = srcRow + srcX;
+        if (srcIdx >= 0 && srcIdx < fullWorld.length) {
+          grid[row + x] = fullWorld[srcIdx];
+        }
+      }
+    }
+    return grid;
+  }
+
+  /**
+   * Seed-Based Archipelago Island Cluster Generator.
+   */
+  static generateArchipelago(width, height, prng) {
+    const grid = new Uint8Array(width * height);
+    grid.fill(0);
+
+    const islandCount = 40;
     const islandCenters = [];
 
     for (let i = 0; i < islandCount; i++) {
       islandCenters.push({
-        x: Math.floor((0.1 + Math.random() * 0.8) * width),
-        y: Math.floor((0.1 + Math.random() * 0.8) * height),
-        radius: Math.floor(40 + Math.random() * 90)
+        x: Math.floor((0.08 + prng() * 0.84) * width),
+        y: Math.floor((0.08 + prng() * 0.84) * height),
+        radius: Math.floor(35 + prng() * 85)
       });
     }
 
@@ -54,12 +123,50 @@ export class MapGenerator {
         }
 
         const idx = row + x;
-        if (maxNoise > 0.65) {
-          grid[idx] = 2; // Central Peak
+        if (maxNoise > 0.68) {
+          grid[idx] = 2; // Central Mountain Peak
         } else if (maxNoise > 0.25) {
-          grid[idx] = 1; // Land
+          grid[idx] = 1; // Neutral Land
         } else {
-          grid[idx] = 0; // Water
+          grid[idx] = 0; // Ocean Water
+        }
+      }
+    }
+    return grid;
+  }
+
+  /**
+   * Seed-Based Volcanic Ring of Fire Island Bay Generator.
+   */
+  static generateRingOfFire(width, height, prng) {
+    const grid = new Uint8Array(width * height);
+    const midX = width / 2;
+    const midY = height / 2;
+    const outerRadius = width * 0.42;
+    const innerRadius = width * 0.22;
+
+    for (let y = 0; y < height; y++) {
+      const row = y * width;
+      for (let x = 0; x < width; x++) {
+        const dist = Math.hypot(x - midX, y - midY);
+
+        if (dist >= innerRadius && dist <= outerRadius) {
+          // Ring of land with noisy islands
+          const angle = Math.atan2(y - midY, x - midX);
+          const noise = Math.sin(angle * 6) * 20 + Math.cos(angle * 12) * 15;
+          const adjustedDist = dist + noise;
+
+          if (adjustedDist >= innerRadius + 15 && adjustedDist <= outerRadius - 15) {
+            if (Math.abs(adjustedDist - (innerRadius + outerRadius) / 2) < 25) {
+              grid[row + x] = 2; // Impassable volcanic ridge
+            } else {
+              grid[row + x] = 1; // Land
+            }
+          } else {
+            grid[row + x] = 1;
+          }
+        } else {
+          grid[row + x] = 0; // Ocean
         }
       }
     }

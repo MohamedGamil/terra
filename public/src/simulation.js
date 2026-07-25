@@ -9,15 +9,16 @@ import { MapGenerator } from './map-generator.js';
 import { AIEngine } from './ai-engine.js';
 
 export class TerritorySimulation {
-  constructor(width = 1000, height = 1000, numPlayers = 100, mapType = 'world') {
+  constructor(width = 1000, height = 1000, numPlayers = 100, mapType = 'world', seed = 12345) {
     this.width = width;
     this.height = height;
     this.numPlayers = numPlayers;
     this.mapType = mapType;
+    this.seed = seed;
 
     this.state = 'LOBBY';
 
-    this.terrainGrid = MapGenerator.generate(mapType, width, height);
+    this.terrainGrid = MapGenerator.generate(mapType, width, height, seed);
     this.grid = new Uint16Array(width * height);
     this.aiEngine = new AIEngine(numPlayers);
 
