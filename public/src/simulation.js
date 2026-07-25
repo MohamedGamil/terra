@@ -660,7 +660,10 @@ export class TerritorySimulation {
 
             if (exp.remainingTroops >= totalCost) {
               exp.remainingTroops -= totalCost;
-              if (defender) defender.balance = Math.max(0, defender.balance - baseCost);
+              if (defender) {
+                const defenderCasualties = Math.min(defender.balance, Math.ceil(baseCost * (1.0 + exp.remainingTroops * 0.0005)));
+                defender.balance = Math.max(0, defender.balance - defenderCasualties);
+              }
               player.landCount++;
               if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
               this.grid[nIdx] = exp.ownerId;
@@ -778,7 +781,10 @@ export class TerritorySimulation {
 
           if (remainingTroops >= totalCost) {
             remainingTroops -= totalCost;
-            if (defender) defender.balance = Math.max(0, defender.balance - baseCost);
+            if (defender) {
+              const defenderCasualties = Math.min(defender.balance, Math.ceil(baseCost * (1.0 + remainingTroops * 0.0005)));
+              defender.balance = Math.max(0, defender.balance - defenderCasualties);
+            }
             player.landCount++;
             if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
             this.grid[nIdx] = ownerId;

@@ -2099,8 +2099,10 @@ batons:
     - BATON-052
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-052
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-053
   objective: Implement Non-Blocking Defensive Casualties (REQ-050).
   title: Non-Blocking Defensive Casualties
@@ -2580,6 +2582,13 @@ evaluations:
 - id: EVAL-052
   layer: outcome
   target: BATON-052
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-053
+  layer: outcome
+  target: BATON-053
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

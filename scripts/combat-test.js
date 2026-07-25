@@ -283,6 +283,46 @@ for (let step = 0; step < 15; step++) {
 assert(simExp.grid[5072] === 1, 'Target pixel 5072 eventually captured after incremental ticks');
 assert(adjacentCost >= 2, 'Troop deduction occurred for adjacent capture');
 
+// --- Test 12: Non-Blocking Defensive Casualties (REQ-050) ---
+console.log('\n[Test 12] Non-Blocking Defensive Casualties (REQ-050)');
+const simCas = new TerritorySimulation(100, 100, 10, 'arena');
+simCas.state = 'PLAYING';
+simCas.tickCount = 1;
+
+simCas.players[1].isAlive = true;
+simCas.players[1].balance = 10000;
+simCas.players[1].landCount = 10;
+
+simCas.players[2].isAlive = true;
+simCas.players[2].balance = 5000;
+simCas.players[2].landCount = 100;
+
+simCas.grid[5050] = 1;
+simCas.grid[5051] = 2;
+simCas.frontiers[1] = [5050];
+simCas.frontiers[2] = [5051];
+
+// Queue large campaign of 8000 troops
+simCas.activeExpansions.push({
+  ownerId: 1,
+  targetX: 51,
+  targetY: 50,
+  launchX: 50,
+  launchY: 50,
+  remainingTroops: 8000,
+  isCounterPush: false
+});
+
+const defenderBalanceBefore = simCas.players[2].balance;
+
+// Tick simulation to resolve fight at 5051
+simCas.update(16.6);
+
+assert(simCas.grid[5051] === 1, 'Attacker captured pixel 5051 without being halted by defender high troop count');
+const defenderBalanceAfter = simCas.players[2].balance;
+const casualties = defenderBalanceBefore - defenderBalanceAfter;
+assert(casualties > 4, `Defender casualties scaled with attacker size (Expected: >4, Actual: ${casualties})`);
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);
