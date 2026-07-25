@@ -354,11 +354,7 @@ export class TerritorySimulation {
   updateVisibilityMask(playerId = 1) {
     if (!this.fogOfWarEnabled) return;
 
-    for (let i = 0; i < this.visibilityBuffer.length; i++) {
-      if (this.visibilityBuffer[i] === 2) {
-        this.visibilityBuffer[i] = 1;
-      }
-    }
+    this.visibilityBuffer.fill(1);
 
     const width = this.width;
     const height = this.height;
@@ -367,16 +363,16 @@ export class TerritorySimulation {
 
     const frontier = this.frontiers[playerId];
     if (frontier && frontier.length > 0) {
-      const step = Math.max(1, Math.floor(frontier.length / 100));
+      const step = Math.max(1, Math.floor(frontier.length / 60));
       for (let i = 0; i < frontier.length; i += step) {
         const idx = frontier[i];
         const cx = idx % width;
         const cy = Math.floor(idx / width);
 
-        for (let dy = -visionRadius; dy <= visionRadius; dy += 2) {
+        for (let dy = -visionRadius; dy <= visionRadius; dy += 3) {
           const ny = cy + dy;
           if (ny < 0 || ny >= height) continue;
-          for (let dx = -visionRadius; dx <= visionRadius; dx += 2) {
+          for (let dx = -visionRadius; dx <= visionRadius; dx += 3) {
             const nx = cx + dx;
             if (nx < 0 || nx >= width) continue;
             if (dx * dx + dy * dy <= visionSq) {
@@ -507,7 +503,12 @@ export class TerritorySimulation {
     const player = this.players[ownerId];
     let remainingTroops = troops;
 
-    while (remainingTroops > 2 && frontier.length > 0) {
+    if (!frontier || frontier.length === 0) return;
+
+    const frontierSet = new Set(frontier);
+    let maxSteps = 2000;
+
+    while (remainingTroops > 2 && frontier.length > 0 && maxSteps-- > 0) {
       let bestIdx = -1;
       let minDist = Infinity;
       let bestArrayIdx = -1;
@@ -550,8 +551,9 @@ export class TerritorySimulation {
             remainingTroops -= cost;
             player.landCount++;
             this.grid[nIdx] = ownerId;
-            if (!frontier.includes(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+            if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
               frontier.push(nIdx);
+              frontierSet.add(nIdx);
             }
             expandedAny = true;
           }
@@ -566,8 +568,9 @@ export class TerritorySimulation {
             player.landCount++;
             if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
             this.grid[nIdx] = ownerId;
-            if (!frontier.includes(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+            if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
               frontier.push(nIdx);
+              frontierSet.add(nIdx);
             }
             expandedAny = true;
           }
@@ -575,6 +578,7 @@ export class TerritorySimulation {
       }
 
       if (!expandedAny || !this.aiEngine.isBorderPixel(bestIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
+        frontierSet.delete(bestIdx);
         frontier.splice(bestArrayIdx, 1);
       }
     }

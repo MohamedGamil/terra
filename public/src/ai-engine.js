@@ -89,8 +89,8 @@ export class AIEngine {
       const profile = this.botProfiles.get(id);
       if (!profile) continue;
 
-      const frontier = frontiers[id];
-      if (!frontier || frontier.length === 0) continue;
+      const frontier = frontiers ? frontiers[id] : null;
+      if (!frontier || !Array.isArray(frontier) || frontier.length === 0) continue;
 
       // Reserve check for DEFENDER profile
       if (profile.archetype === 'DEFENDER') {
@@ -102,6 +102,8 @@ export class AIEngine {
       const baseRate = Math.floor(bot.balance * profile.attackRatio * diffMult);
       const expansionRate = Math.min(Math.max(1, baseRate), 15);
       let count = 0;
+
+      const botFrontierSet = new Set(frontier);
 
       for (let i = frontier.length - 1; i >= 0 && count < expansionRate; i--) {
         const fIdx = frontier[i];
@@ -134,8 +136,9 @@ export class AIEngine {
               bot.balance -= totalCost;
               bot.landCount++;
               grid[nIdx] = id;
-              if (!frontier.includes(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
+              if (!botFrontierSet.has(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
                 frontier.push(nIdx);
+                botFrontierSet.add(nIdx);
               }
               count++;
               expanded = true;
@@ -165,8 +168,9 @@ export class AIEngine {
                 targetPlayer.landCount = Math.max(0, targetPlayer.landCount - 1);
                 bot.landCount++;
                 grid[nIdx] = id;
-                if (!frontier.includes(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
+                if (!botFrontierSet.has(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
                   frontier.push(nIdx);
+                  botFrontierSet.add(nIdx);
                 }
                 count++;
                 expanded = true;
@@ -181,6 +185,7 @@ export class AIEngine {
 
         // Prune inland frontier pixels immediately
         if (!this.isBorderPixel(fIdx, grid, terrainGrid, width, height, id)) {
+          botFrontierSet.delete(fIdx);
           frontier.splice(i, 1);
         }
       }
