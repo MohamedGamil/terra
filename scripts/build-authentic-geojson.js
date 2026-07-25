@@ -10,15 +10,56 @@ const height = 1000;
 
 console.log(`Processing ${multiPolygon.length} land polygons from Natural Earth 50m...`);
 
-// Convert (longitude, latitude) -> (x, y) in 1000x1000 space
+function unwrapRing(ring) {
+  const unwrapped = [];
+  let currentLonOffset = 0;
+
+  for (let i = 0; i < ring.length; i++) {
+    let [lon, lat] = ring[i];
+
+    if (i > 0) {
+      const prevLon = ring[i - 1][0];
+      const deltaLon = lon - prevLon;
+
+      if (deltaLon > 180) {
+        currentLonOffset -= 360;
+      } else if (deltaLon < -180) {
+        currentLonOffset += 360;
+      }
+    }
+
+    unwrapped.push([lon + currentLonOffset, lat]);
+  }
+
+  return unwrapped;
+}
+
 const normalizedPolygons = [];
 
-multiPolygon.forEach(polygon => {
-  polygon.forEach(ring => {
-    if (ring.length >= 3) {
+multiPolygon.forEach((polygon) => {
+  polygon.forEach((ring) => {
+    if (ring.length < 3) return;
+
+    const unwrapped = unwrapRing(ring);
+
+    // Calculate bounding box in unwrapped longitude space
+    let minLon = Infinity, maxLon = -Infinity;
+    unwrapped.forEach(([lon]) => {
+      if (lon < minLon) minLon = lon;
+      if (lon > maxLon) maxLon = lon;
+    });
+
+    // Handle Antimeridian wraparound by projecting primary ring + duplicate shift if spanning boundary
+    const shifts = [0];
+    if (minLon < -180) shifts.push(360);
+    if (maxLon > 180) shifts.push(-360);
+
+    shifts.forEach(shift => {
       let minX = 1000, maxX = 0, minY = 1000, maxY = 0;
-      const projectedRing = ring.map(([lon, lat]) => {
-        const x = Math.round(((lon + 180) / 360) * width * 10) / 10;
+      const projectedRing = unwrapped.map(([lon, lat]) => {
+        const shiftedLon = lon + shift;
+        const x = Math.round(((shiftedLon + 180) / 360) * width * 10) / 10;
+        // Clamp latitude to [-85, 85] to avoid polar distortion
         const clampedLat = Math.max(-85, Math.min(85, lat));
         const y = Math.round(((90 - clampedLat) / 180) * height * 10) / 10;
 
@@ -35,15 +76,16 @@ multiPolygon.forEach(polygon => {
       if (bboxArea >= 0.25 || ring.length > 8) {
         normalizedPolygons.push(projectedRing);
       }
-    }
+    });
   });
 });
 
-console.log(`Generated ${normalizedPolygons.length} optimized authentic 2D boundary rings.`);
+console.log(`Generated ${normalizedPolygons.length} antimeridian-unwrapped 2D boundary rings.`);
 
 const code = `/**
  * Authentic Natural Earth GeoJSON World Map Data Engine for Terra.
  * 100% Real-world geographic polygon data derived from Natural Earth 50m dataset.
+ * Antimeridian-unwrapped & split to prevent diagonal lines and polar distortion.
  */
 
 export class GeoJSONWorldMap {
@@ -160,7 +202,6 @@ export class GeoJSONWorldMap {
   }
 
   static applyMountains(width, height, grid) {
-    // Generate impassable mountain ranges over major mountain systems (Himalayas, Andes, Rockies, Alps, Urals)
     for (let i = 0; i < grid.length; i++) {
       if (grid[i] === 1) {
         const y = Math.floor(i / width);
@@ -182,4 +223,4 @@ export class GeoJSONWorldMap {
 `;
 
 fs.writeFileSync('./public/src/geojson-world-map.js', code);
-console.log('Successfully updated public/src/geojson-world-map.js with optimized authentic Natural Earth GeoJSON data!');
+console.log('Successfully wrote antimeridian-unwrapped GeoJSON Natural Earth world map to public/src/geojson-world-map.js!');
