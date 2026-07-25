@@ -420,6 +420,37 @@ export class TerritorySimulation {
     return true;
   }
 
+  handlePixelCapture(nIdx, attackerId, defenderOwner) {
+    if (defenderOwner > 0 && this.frontiers[defenderOwner]) {
+      const fIdx = this.frontiers[defenderOwner].indexOf(nIdx);
+      if (fIdx !== -1) {
+        this.frontiers[defenderOwner].splice(fIdx, 1);
+      }
+
+      const cx = nIdx % this.width;
+      const cy = Math.floor(nIdx / this.width);
+      const neighbors = [
+        cy > 0 ? nIdx - this.width : -1,
+        cy < this.height - 1 ? nIdx + this.width : -1,
+        cx > 0 ? nIdx - 1 : -1,
+        cx < this.width - 1 ? nIdx + 1 : -1
+      ];
+
+      for (const n of neighbors) {
+        if (n >= 0 && this.grid[n] === defenderOwner) {
+          const defenderFrontier = this.frontiers[defenderOwner];
+          if (defenderFrontier && !defenderFrontier.includes(n)) {
+            const isBorder = this.aiEngine.isBorderPixel(n, this.grid, this.terrainGrid, this.width, this.height, defenderOwner);
+            const isShore = this.isShorelinePixel(n);
+            if (isBorder || isShore) {
+              defenderFrontier.push(n);
+            }
+          }
+        }
+      }
+    }
+  }
+
   isShorelinePixel(idx) {
     if (this.terrainGrid[idx] === 0) return false;
     const cx = idx % this.width;
@@ -1387,7 +1418,26 @@ export class TerritorySimulation {
             const defender = this.players[defenderOwner];
 
             if (defender) {
-              const defenseThreshold = Math.max(10, Math.floor(defender.balance * 0.20));
+              const attackerLand = player.landCount || 1;
+              const defenderLand = defender.landCount || 1;
+              let defenseThreshold = Math.max(10, Math.floor(defender.balance * 0.20));
+
+              if (attackerLand > defenderLand) {
+                // Attacker is larger: scale down defender's defense threshold proportionally
+                const sizeRatio = defenderLand / attackerLand;
+                defenseThreshold = Math.max(10, Math.floor(defenseThreshold * sizeRatio));
+              } else if (attackerLand < defenderLand) {
+                // Attacker is smaller: strict defense requirements, and attacker faces higher attrition
+                if (exp.remainingTroops < defenseThreshold) {
+                  const smallAttackerAttrition = 15;
+                  if (exp.ownerId === 1 && exp.isRivalAttack) {
+                    console.log(`[UPDATE DEBUG] Skip rival nIdx=${nIdx} (owned by ${defenderOwner}): Small attacker attrition ${smallAttackerAttrition} applied.`);
+                  }
+                  exp.remainingTroops = Math.max(0, exp.remainingTroops - smallAttackerAttrition);
+                  continue;
+                }
+              }
+
               if (exp.remainingTroops < defenseThreshold) {
                 if (exp.ownerId === 1 && exp.isRivalAttack) {
                   console.log(`[UPDATE DEBUG] Skip rival nIdx=${nIdx} (owned by ${defenderOwner}): exp.remainingTroops=${exp.remainingTroops} < defenseThreshold=${defenseThreshold}. Attrition 5 troops applied.`);
@@ -1413,14 +1463,9 @@ export class TerritorySimulation {
               player.landCount++;
               if (defender) {
                 defender.landCount = Math.max(0, defender.landCount - 1);
-                if (this.frontiers[defenderOwner]) {
-                  const fIdx = this.frontiers[defenderOwner].indexOf(nIdx);
-                  if (fIdx !== -1) {
-                    this.frontiers[defenderOwner].splice(fIdx, 1);
-                  }
-                }
               }
               this.grid[nIdx] = exp.ownerId;
+              this.handlePixelCapture(nIdx, exp.ownerId, defenderOwner);
 
               if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, exp.ownerId)) {
                 frontier.push(nIdx);
@@ -1574,14 +1619,9 @@ export class TerritorySimulation {
             player.landCount++;
             if (defender) {
               defender.landCount = Math.max(0, defender.landCount - 1);
-              if (this.frontiers[defenderOwner]) {
-                const fIdx = this.frontiers[defenderOwner].indexOf(nIdx);
-                if (fIdx !== -1) {
-                  this.frontiers[defenderOwner].splice(fIdx, 1);
-                }
-              }
             }
             this.grid[nIdx] = ownerId;
+            this.handlePixelCapture(nIdx, ownerId, defenderOwner);
             if (!frontierSet.has(nIdx) && this.aiEngine.isBorderPixel(nIdx, this.grid, this.terrainGrid, this.width, this.height, ownerId)) {
               frontier.push(nIdx);
               frontierSet.add(nIdx);
@@ -1810,6 +1850,7 @@ export class TerritorySimulation {
               const defender = this.players[neighborOwner];
 
               this.grid[nIdx] = id;
+              this.handlePixelCapture(nIdx, id, neighborOwner);
               p.landCount++;
               if (defender) defender.landCount = Math.max(0, defender.landCount - 1);
 
@@ -2054,6 +2095,22 @@ export class TerritorySimulation {
         rate = Math.max(0.0005, rate * 0.5);
       } else {
         p.redInterest = false;
+      }
+
+      // Check if this smaller player is currently attacking a larger player
+      let attackingLarger = false;
+      for (const exp of this.activeExpansions) {
+        if (exp.ownerId === id && exp.isRivalAttack) {
+          const defender = this.players[exp.targetOwner];
+          if (defender && defender.landCount > p.landCount) {
+            attackingLarger = true;
+            break;
+          }
+        }
+      }
+
+      if (attackingLarger) {
+        rate *= 0.5; // 50% slower troop growth rate penalty for attacking larger players
       }
 
       p.interestRate = rate;

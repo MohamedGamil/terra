@@ -1283,6 +1283,71 @@ assert(initialExp.path !== null && initialExp.path[initialExp.path.length - 1] =
 
 testsPassed += 7;
 
+// --- Test 34: Enclave Defense Threshold Scaling & Frontier Sync ---
+console.log('\n[Test 34] Enclave Defense Threshold Scaling & Frontier Sync (REQ-096/REQ-097/REQ-098)');
+
+const sim34 = new TerritorySimulation(100, 100, 10, 'arena');
+sim34.state = 'PLAYING';
+sim34.terrainGrid.fill(1); // all land
+
+// Attacker (Player 1) setup: large player
+sim34.players[1].isAlive = true;
+sim34.players[1].balance = 150; // Set to 150 so 10% force = 15 troops, allowing only 1 capture
+sim34.players[1].landCount = 1000; // very large
+
+// Defender (Player 2) setup: tiny enclaved player with high balance
+sim34.players[2] = { isAlive: true, balance: 10000, landCount: 5 }; // high balance, tiny size
+sim34.grid[1010] = 1;
+sim34.grid[910] = 1; // set other neighbors to 1 so they are not captured
+sim34.grid[1110] = 1;
+sim34.grid[1009] = 1;
+sim34.grid[1011] = 2; // adjacent rival
+sim34.grid[1012] = 2; // another pixel owned by Player 2 to receive the frontier update!
+sim34.frontiers[1] = [1010];
+sim34.frontiers[2] = [1011];
+
+// 1. Attacker is larger: defense threshold of defender is scaled down from 2000 to min (10)
+// Attacker launches with 15 troops (which is < defender's normal defense threshold of 2000)
+const attackOk34 = sim34.executeAttack(1, 1011, 10); // 10% of 150 = 15 troops
+assert(attackOk34 === true, 'Attack launched successfully');
+assert(sim34.activeExpansions.length === 1, 'Expansion queued');
+
+sim34.update(16.6); // run tick
+
+// The attacker should succeed in capturing the pixel because defenseThreshold is scaled down
+assert(sim34.grid[1011] === 1, 'Large player successfully conquered tiny player pixel despite defender having high balance');
+// Defender's frontier should have been updated to include neighbor of 1011 (since they lost 1011)
+// Let's verify that defender's frontier is updated
+console.log('[DEBUG TEST 34] frontiers[2]:', sim34.frontiers[2]);
+assert(sim34.frontiers[2].length > 0, 'Defender frontier dynamically updated during conquest');
+
+// 2. Attacker is smaller (Player 2 attacks Player 1): strict defense requirements and slower growth
+sim34.activeExpansions = [];
+sim34.players[2].landCount = 5;
+sim34.players[2].balance = 2000; // larger balance to start with 500 troops (25% of 2000)
+sim34.players[1].landCount = 1000; // massive defender
+sim34.players[1].balance = 10000; // massive defender balance
+sim34.grid[1012] = 2;
+sim34.grid[1013] = 1; // target owned by Player 1
+sim34.frontiers[2] = [1012];
+sim34.frontiers[1] = [1013];
+
+// Player 2 attacks Player 1 with 500 troops (which is < Player 1's defense threshold of 2000)
+const attackOk34_2 = sim34.executeAttack(2, 1013, 25);
+assert(attackOk34_2 === true, 'Smaller player launched attack on larger player');
+
+// Check interest rate penalty for Player 2 while attacking larger player
+sim34.processInterest();
+assert(sim34.players[2].interestRate < 0.015, 'Attacking larger player penalizes smaller player interest rate growth');
+
+// Update tick: smaller player should face high attrition (15 troops) and not capture the pixel
+const initialRemaining = sim34.activeExpansions[0].remainingTroops;
+sim34.update(16.6);
+assert(sim34.grid[1013] === 1, 'Smaller player attack rejected by strict defense threshold of larger player');
+assert(sim34.activeExpansions[0].remainingTroops < initialRemaining - 5, 'Smaller player suffered higher attrition rate penalty');
+
+testsPassed += 7;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

@@ -609,6 +609,17 @@ requirements:
   statement: The defense threshold check MUST scale down if the defender is a small
     player (based on their land count relative to the attacker) to prevent small enclaved
     players with high balances from becoming unattackable.
+- id: REQ-097
+  kind: functional
+  statement: When a smaller player attacks a larger player, the attack MUST only succeed
+    if the attacking force matches or exceeds the defender's defense allocation, and
+    the smaller player's expansion speed or troop reinforcement rate must face scaling
+    penalty and higher attrition.
+- id: REQ-098
+  kind: functional
+  statement: When a pixel is conquered by an attacker, the defender's adjacent pixels
+    that are now border pixels MUST be immediately added to the defender's frontier
+    list to prevent dead border zones.
 batons:
 - id: BATON-001
   version: 1
@@ -3140,11 +3151,33 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Draft
-    state: draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-094
   objective: Balance the defense threshold logic to prevent small enclaved players
     with high balances from becoming unattackable.
   title: Defense Threshold Balancing for Enclaves
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-098
+  execution:
+    depends_on:
+    - BATON-094
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-095
+  objective: Implement handlePixelCapture and frontier synchronization for defenders
+    during conquest.
+  title: Frontier Synchronization for Defenders
   type: implementation
 releases:
 - id: REL-001

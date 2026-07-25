@@ -112,4 +112,15 @@ decisions:
         verdict: rejected
         rationale: Prone to race conditions and misfires when panning canvas.
 
+  - id: DEC-009
+    statement: Defense Threshold Balancing & Smaller-to-Larger Player Attack Penalties.
+    state: proposed
+    kind: product
+    boundary: Combat resolution and enclave defense threshold logic.
+    gate: GATE-003
+    options_considered:
+      - option: Scale down defense threshold for small defenders attacked by larger players; enforce strict defense requirement and higher attrition when smaller players attack larger ones.
+        verdict: selected
+        rationale: Prevents high-balance small enclaved players from locking out massive players, while keeping realistic combat balance when small players attempt to conquer larger empires.
+
 scope_decisions: []
