@@ -182,6 +182,8 @@ export class TerritorySimulation {
 
     this.players[ownerId].landCount = count;
     this.players[ownerId].balance = 500;
+    this.players[ownerId].capitalX = cx;
+    this.players[ownerId].capitalY = cy;
   }
 
   executeAttack(attackerId, targetPixelIdx, forcePercent = 25) {
@@ -853,6 +855,7 @@ export class TerritorySimulation {
     this.checkPlayerEliminations();
     this.simulateContinuousBorderPressure();
     this.updateExpansions(deltaTimeMs);
+    this.updateCapitalCentroids();
     this.updateBots();
 
     if (this.tickCount % 5 === 0) {
@@ -860,6 +863,32 @@ export class TerritorySimulation {
     }
 
     this.checkGameResolution();
+  }
+
+  updateCapitalCentroids() {
+    if (this.tickCount % 5 !== 0) return;
+
+    const width = this.width;
+    const sumsX = new Float64Array(this.numPlayers + 1);
+    const sumsY = new Float64Array(this.numPlayers + 1);
+    const counts = new Uint32Array(this.numPlayers + 1);
+
+    for (let idx = 0; idx < this.grid.length; idx++) {
+      const ownerId = this.grid[idx];
+      if (ownerId > 0) {
+        sumsX[ownerId] += idx % width;
+        sumsY[ownerId] += Math.floor(idx / width);
+        counts[ownerId]++;
+      }
+    }
+
+    for (let id = 1; id <= this.numPlayers; id++) {
+      const p = this.players[id];
+      if (p && p.isAlive && counts[id] > 0) {
+        p.capitalX = Math.round(sumsX[id] / counts[id]);
+        p.capitalY = Math.round(sumsY[id] / counts[id]);
+      }
+    }
   }
 
   simulateContinuousBorderPressure() {

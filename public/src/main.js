@@ -901,6 +901,7 @@ class TerraApp {
       this.renderer.toasts = this.simulation.toastNotifications;
       this.renderer.radarPulses = this.simulation.radarPulses;
       this.renderer.visibilityBuffer = this.simulation.visibilityBuffer;
+      this.renderer.players = this.simulation.players;
 
       if (this.simulation.state === 'PLAYING') {
         this.matchElapsedSec += delta / 1000;

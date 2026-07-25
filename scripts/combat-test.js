@@ -323,6 +323,27 @@ const defenderBalanceAfter = simCas.players[2].balance;
 const casualties = defenderBalanceBefore - defenderBalanceAfter;
 assert(casualties > 4, `Defender casualties scaled with attacker size (Expected: >4, Actual: ${casualties})`);
 
+// --- Test 13: Real-Time Dynamic Capital Centroid (REQ-051) ---
+console.log('\n[Test 13] Real-Time Dynamic Capital Centroid (REQ-051)');
+const simCent = new TerritorySimulation(100, 100, 10, 'arena');
+simCent.state = 'PLAYING';
+
+// Set human spawn to 5050 (x=50, y=50)
+simCent.spawnCircularSeed(1, 5050, 2);
+assert(simCent.players[1].capitalX === 50, 'Initial capitalX set correctly to spawn X coordinate');
+assert(simCent.players[1].capitalY === 50, 'Initial capitalY set correctly to spawn Y coordinate');
+
+// Capture a cluster of pixels far to the right (x=70 to 80, y=50)
+for (let x = 70; x <= 80; x++) {
+  const idx = 50 * 100 + x;
+  simCent.grid[idx] = 1;
+}
+
+simCent.tickCount = 5; // Trigger threshold
+simCent.updateCapitalCentroids();
+
+assert(simCent.players[1].capitalX > 50, `Capital shifted dynamically to the right (Centroid X: ${simCent.players[1].capitalX})`);
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

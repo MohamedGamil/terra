@@ -2119,8 +2119,10 @@ batons:
     - BATON-053
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-053
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-054
   objective: Implement Real-Time Dynamic Capital Centroid (REQ-051).
   title: Real-Time Dynamic Capital Centroid
@@ -2589,6 +2591,13 @@ evaluations:
 - id: EVAL-053
   layer: outcome
   target: BATON-053
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-054
+  layer: outcome
+  target: BATON-054
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

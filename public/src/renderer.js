@@ -310,6 +310,32 @@ export class TerritoryRenderer {
       this.ctx.fillText('⛵', bx - 6, by + 6);
     }
 
+    // Capital Centroid Crowns / Circles
+    if (this.players) {
+      for (let id = 1; id < this.players.length; id++) {
+        const p = this.players[id];
+        if (p && p.isAlive && p.capitalX !== null && p.capitalX !== undefined) {
+          const cx = this.panX + p.capitalX * this.zoom;
+          const cy = this.panY + p.capitalY * this.zoom;
+
+          this.ctx.fillStyle = p.color || '#00f2fe';
+          this.ctx.beginPath();
+          this.ctx.arc(cx, cy, Math.max(4, 6 * this.zoom), 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.strokeStyle = '#ffffff';
+          this.ctx.lineWidth = 1.5;
+          this.ctx.stroke();
+
+          // Draw small inner core
+          this.ctx.fillStyle = '#ffffff';
+          this.ctx.beginPath();
+          this.ctx.arc(cx, cy, Math.max(1.5, 2.5 * this.zoom), 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+      }
+    }
+
     // Scout Radar Pulse Wave Animations
     for (const pulse of this.radarPulses) {
       const px = this.panX + pulse.x * this.zoom;
