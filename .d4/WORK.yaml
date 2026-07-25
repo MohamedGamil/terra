@@ -152,6 +152,42 @@ requirements:
     release: REL-003
     priority_quadrant: Q1
 
+  - id: REQ-013
+    statement: High-Detail GeoJSON Natural Earth World Map Vector Generator producing 100% realistic geographic coastlines, gulfs, peninsulas, and island archipelagoes.
+    kind: functional
+    authorized_by: [DEC-007]
+    traces_to: [HY-001]
+    acceptance:
+      - Rasterized terrain grid renders detailed geographic shapes (Italy boot, Scandinavia, Horn of Africa, Japan, Indonesia, Caribbean).
+      - Land pixel density exceeds 350,000 pixels with precise shoreline boundaries.
+    scope_state: committed
+    release: REL-004
+    priority_quadrant: Q1
+
+  - id: REQ-014
+    statement: Distance-Threshold Click vs Drag Mouse Gesture Engine guaranteeing 100% reliable click detection for spawn picking without camera panning misfires.
+    kind: functional
+    authorized_by: [DEC-008]
+    traces_to: [HY-001]
+    acceptance:
+      - Clicks with drag distance <= 4px register reliably as spawn selection or target pick.
+      - Camera drag panning activates only when mouse delta exceeds 4px.
+    scope_state: committed
+    release: REL-004
+    priority_quadrant: Q1
+
+  - id: REQ-015
+    statement: Tactical Canvas Right-Click Context Menu providing instant action commands (Attack Land, Send Boat across ocean, Clear Target, Lock Target).
+    kind: functional
+    authorized_by: [DEC-008]
+    traces_to: [HY-001]
+    acceptance:
+      - Right-clicking canvas opens glassmorphic context menu at mouse location.
+      - Context menu intelligently highlights Send Boat for ocean cells and Attack Land for land cells.
+    scope_state: committed
+    release: REL-004
+    priority_quadrant: Q1
+
 batons:
   - id: BATON-001
     version: 1
@@ -549,7 +585,7 @@ batons:
       state: completed
       owner: agent-role/fullstack-implementer
       depends_on: [BATON-013]
-      unblocks: []
+      unblocks: [BATON-015]
       resume_pointer: Update simulation state machine and main loop for un-timed spawn pick.
       quadrant: Q1
       milestone: REL-003
@@ -561,6 +597,125 @@ batons:
     acceptance:
       deterministic_checks: [compile, lint]
       reviewer_checks: [Untimed spawn pick and countdown overlay verified]
+      rollback_verified: false
+
+  - id: BATON-015
+    version: 1
+    type: research
+    title: Research & Specification for Detailed GeoJSON World Map, Click Disambiguation & Context Menu
+    objective: Plan high-detail GeoJSON world vector path rasterization, distance-threshold click gesture engine, and right-click RTS context menu.
+    scope:
+      include: [Design GeoJSON continent vector model, specify click vs drag distance threshold, design right-click context menu]
+      exclude: [Production code edits]
+    authority:
+      gates: [GATE-005]
+      requirements: [REQ-013, REQ-014, REQ-015]
+      decisions: [DEC-007, DEC-008]
+    execution:
+      state: completed
+      owner: mgamil.dev@gmail.com
+      depends_on: [BATON-014]
+      unblocks: [BATON-016]
+      resume_pointer: Update implementation_plan.md for REL-004 and request user feedback.
+      quadrant: Q1
+      milestone: REL-004
+    capabilities:
+      network_policy: allowlist
+      side_effect_class: A0
+      approval_policy: none
+    acceptance:
+      deterministic_checks: [d4 validate pass, d4 lint pass]
+      reviewer_checks: [Implementation plan approved by user]
+      required_artifacts: []
+      rollback_verified: false
+
+  - id: BATON-016
+    version: 1
+    type: implementation
+    title: Implement High-Accuracy GeoJSON Natural Earth World Vector Map Rasterizer
+    objective: Implement detailed GeoJSON continent polygon renderer producing true geographical coastlines, peninsulas, gulfs, and island archipelagoes.
+    scope:
+      include: [GeoJSON multi-polygon parser, high-detail continent shapes, equirectangular map projection]
+      exclude: [Gesture engine]
+    authority:
+      gates: [GATE-005]
+      requirements: [REQ-013]
+      decisions: [DEC-007]
+    execution:
+      state: completed
+      owner: agent-role/frontend-implementer
+      depends_on: [BATON-015]
+      unblocks: [BATON-017]
+      resume_pointer: Scaffold public/src/geojson-world-map.js and integrate with MapGenerator.
+      quadrant: Q1
+      milestone: REL-004
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint, GATE-005 benchmark pass]
+      reviewer_checks: [GeoJSON world geography verified accurate]
+      rollback_verified: false
+
+  - id: BATON-017
+    version: 1
+    type: implementation
+    title: Implement Mouse Gesture Engine & Spawn Pick Selection Click Repair
+    objective: Implement distance-threshold (dragDistance <= 4px) click vs drag disambiguation engine in TerritoryRenderer to guarantee 100% reliable spawn picking.
+    scope:
+      include: [Mouse down/up distance calculation, drag threshold filtering, spawn pick click repair]
+      exclude: [Context menu]
+    authority:
+      gates: [GATE-005]
+      requirements: [REQ-014]
+      decisions: [DEC-008]
+    execution:
+      state: completed
+      owner: agent-role/frontend-implementer
+      depends_on: [BATON-016]
+      unblocks: [BATON-018]
+      resume_pointer: Refactor canvas mouse listeners in public/src/renderer.js and public/src/main.js.
+      quadrant: Q1
+      milestone: REL-004
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint]
+      reviewer_checks: [Spawn pick clicking 100% reliable without drag misfires]
+      rollback_verified: false
+
+  - id: BATON-018
+    version: 1
+    type: implementation
+    title: Implement Tactical Canvas Right-Click RTS Context Menu Overlay
+    objective: Build glassmorphic right-click canvas context menu providing instant combat commands (Attack Land, Send Boat across water, Stop Attack, Lock Target).
+    scope:
+      include: [Right-click contextmenu event handler, glassmorphic context menu UI, smart target recommendation]
+      exclude: []
+    authority:
+      requirements: [REQ-015]
+      decisions: [DEC-008]
+    execution:
+      state: completed
+      owner: agent-role/fullstack-implementer
+      depends_on: [BATON-017]
+      unblocks: []
+      resume_pointer: Build #rts-context-menu overlay in public/index.html and handle right-click events in public/src/main.js.
+      quadrant: Q1
+      milestone: REL-004
+    capabilities:
+      network_policy: deny
+      filesystem_scope: [public/]
+      side_effect_class: A1
+      approval_policy: review-before-merge
+    acceptance:
+      deterministic_checks: [compile, lint]
+      reviewer_checks: [Right-click context menu functional]
       rollback_verified: false
 
 releases:
@@ -605,5 +760,19 @@ releases:
       - GATE-004 benchmark evaluation passes.
     requirements: [REQ-009, REQ-010, REQ-011, REQ-012]
     batons: [BATON-010, BATON-011, BATON-012, BATON-013, BATON-014]
+    delivery_form: deployable
+    status: released
+
+  - id: REL-004
+    version: 0.4.0
+    name: Terra High-Accuracy Geography, Reliable Gesture Engine & Tactical Context Menu
+    is_mvp: false
+    exit_criteria:
+      - World map accurately rasterizes detailed GeoJSON Natural Earth multi-polygon landmasses (> 350,000 land pixels with precise coastlines).
+      - Click vs Drag gesture engine guarantees 100% reliable spawn location picking without camera pan misfires.
+      - Canvas right-click context menu provides instant tactical commands (Attack Land, Send Boat, Clear Target, Lock Target).
+      - GATE-005 verification test suite passes.
+    requirements: [REQ-013, REQ-014, REQ-015]
+    batons: [BATON-015, BATON-016, BATON-017, BATON-018]
     delivery_form: deployable
     status: released

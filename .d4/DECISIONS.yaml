@@ -84,4 +84,32 @@ decisions:
         verdict: rejected
         rationale: Restricts canvas rendering area and crowds tactical combat controls.
 
+  - id: DEC-007
+    statement: High-Detail GeoJSON Natural Earth Continent Polygon Engine with Equirectangular Coordinate Projection.
+    state: accepted
+    kind: architecture
+    boundary: Geographic world map vector data model and terrain rasterizer.
+    gate: GATE-005
+    options_considered:
+      - option: Detailed GeoJSON Natural Earth multi-polygon continent vector dataset projected to canvas terrain grid
+        verdict: selected
+        rationale: Delivers 100% accurate real-world coastlines, peninsulas, gulfs, and island archipelagoes.
+      - option: Low-poly 15-polygon rough SVG paths
+        verdict: rejected
+        rationale: Lacks geographical detail and island accuracy.
+
+  - id: DEC-008
+    statement: Distance-Based Click vs Drag Gesture Disambiguation Engine & Tactical Right-Click Context Menu.
+    state: accepted
+    kind: product
+    boundary: User mouse gesture processing and tactical combat context menu.
+    gate: GATE-005
+    options_considered:
+      - option: Explicit distance threshold (dragDistance <= 4px) to separate clicks from drag-panning, plus right-click glassmorphic context menu
+        verdict: selected
+        rationale: Prevents camera drag panning from swallowing spawn picking clicks; provides authentic RTS context menu options (Attack, Send Boat, Stop Attack).
+      - option: Native browser click event listener
+        verdict: rejected
+        rationale: Prone to race conditions and misfires when panning canvas.
+
 scope_decisions: []

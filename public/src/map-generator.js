@@ -1,10 +1,10 @@
 /**
- * Procedural & SVG Vector Map Generator for Terra.
- * Supports Real World SVG rasterization ('world'), Island Clusters ('archipelago'),
+ * Procedural & GeoJSON Vector Map Generator for Terra.
+ * Supports High-Detail Real World GeoJSON ('world'), Island Clusters ('archipelago'),
  * and Solid Continent Arena ('arena').
  */
 
-import { SVGWorldMap } from './svg-world-map.js';
+import { GeoJSONWorldMap } from './geojson-world-map.js';
 
 export class MapGenerator {
   /**
@@ -13,13 +13,13 @@ export class MapGenerator {
    */
   static generate(mapType = 'world', width = 1000, height = 1000) {
     if (mapType === 'world') {
-      return SVGWorldMap.rasterize(width, height);
+      return GeoJSONWorldMap.rasterize(width, height);
     } else if (mapType === 'archipelago') {
       return this.generateArchipelago(width, height);
     } else if (mapType === 'arena') {
       return this.generateArena(width, height);
     }
-    return SVGWorldMap.rasterize(width, height);
+    return GeoJSONWorldMap.rasterize(width, height);
   }
 
   static generateArchipelago(width, height) {

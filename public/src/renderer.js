@@ -1,7 +1,7 @@
 /**
  * Ultra-Fast Canvas 2D Renderer for Terra.
  * Renders 1000x1000 pixel maps, territory frontiers, spawn pick previews,
- * target crosshairs, and naval boats.
+ * target crosshairs, naval boats, and provides distance-threshold gesture disambiguation.
  */
 
 export class TerritoryRenderer {
@@ -28,7 +28,12 @@ export class TerritoryRenderer {
     this.zoom = 1.0;
     this.panX = 0;
     this.panY = 0;
+
+    // Gesture Disambiguation State (Click vs Drag)
+    this.isMouseDown = false;
     this.isDragging = false;
+    this.mouseDownX = 0;
+    this.mouseDownY = 0;
     this.dragStartX = 0;
     this.dragStartY = 0;
 
@@ -36,6 +41,8 @@ export class TerritoryRenderer {
     this.spawnPickPoint = null;
     this.hoverSpawnPoint = null;
     this.boats = [];
+
+    this.onCanvasClick = null; // Callback: (coords, mouseButton) => void
 
     this.setupInteractions();
     this.resizeCanvas();
@@ -56,19 +63,48 @@ export class TerritoryRenderer {
     window.addEventListener('resize', () => this.resizeCanvas());
 
     this.canvas.addEventListener('mousedown', (e) => {
-      this.isDragging = true;
+      this.isMouseDown = true;
+      this.isDragging = false;
+      this.mouseDownX = e.clientX;
+      this.mouseDownY = e.clientY;
       this.dragStartX = e.clientX - this.panX;
       this.dragStartY = e.clientY - this.panY;
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (!this.isDragging) return;
-      this.panX = e.clientX - this.dragStartX;
-      this.panY = e.clientY - this.dragStartY;
+      if (!this.isMouseDown) return;
+
+      const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
+      if (dist > 5) {
+        this.isDragging = true;
+        this.panX = e.clientX - this.dragStartX;
+        this.panY = e.clientY - this.dragStartY;
+      }
     });
 
     window.addEventListener('mouseup', () => {
-      this.isDragging = false;
+      this.isMouseDown = false;
+    });
+
+    this.canvas.addEventListener('click', (e) => {
+      const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
+      if (dist <= 6 && this.onCanvasClick) {
+        const coords = this.screenToMapCoords(e.clientX, e.clientY);
+        if (coords) {
+          this.onCanvasClick(coords, 'left', e);
+        }
+      }
+    });
+
+    this.canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
+      if (dist <= 6 && this.onCanvasClick) {
+        const coords = this.screenToMapCoords(e.clientX, e.clientY);
+        if (coords) {
+          this.onCanvasClick(coords, 'right', e);
+        }
+      }
     });
 
     this.canvas.addEventListener('wheel', (e) => {
@@ -84,10 +120,7 @@ export class TerritoryRenderer {
     }, { passive: false });
   }
 
-  /**
-   * Auto-center camera viewport on a target map pixel coordinate.
-   */
-  centerOnPixel(pixelIdx, targetZoom = 2.0) {
+  centerOnPixel(pixelIdx, targetZoom = 2.5) {
     if (pixelIdx < 0) return;
     const px = pixelIdx % this.width;
     const py = Math.floor(pixelIdx / this.width);
@@ -152,7 +185,7 @@ export class TerritoryRenderer {
     this.offCtx.putImageData(this.imageData, 0, 0);
 
     // Draw main viewport
-    this.ctx.fillStyle = '#06080c';
+    this.ctx.fillStyle = '#040609';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.imageSmoothingEnabled = this.zoom > 2.0 ? false : true;
@@ -162,7 +195,7 @@ export class TerritoryRenderer {
       this.panX, this.panY, this.width * this.zoom, this.height * this.zoom
     );
 
-    // Overlay 1: Hover Spawn Circle Preview
+    // Hover Spawn Circle Preview
     if (this.hoverSpawnPoint) {
       const hx = this.panX + this.hoverSpawnPoint.x * this.zoom;
       const hy = this.panY + this.hoverSpawnPoint.y * this.zoom;
@@ -175,7 +208,7 @@ export class TerritoryRenderer {
       this.ctx.setLineDash([]);
     }
 
-    // Overlay 2: Selected Spawn Pick Point Indicator
+    // Selected Spawn Pick Point Indicator
     if (this.spawnPickPoint) {
       const sx = this.panX + this.spawnPickPoint.x * this.zoom;
       const sy = this.panY + this.spawnPickPoint.y * this.zoom;
@@ -188,14 +221,13 @@ export class TerritoryRenderer {
       this.ctx.fillStyle = 'rgba(0, 242, 254, 0.4)';
       this.ctx.fill();
 
-      // Label text
       this.ctx.fillStyle = '#ffffff';
       this.ctx.font = 'bold 13px sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.fillText('YOUR SPAWN', sx, sy - 24);
     }
 
-    // Overlay 3: Target Selection Crosshair
+    // Target Selection Crosshair
     if (this.targetPixelIdx >= 0) {
       const tx = (this.targetPixelIdx % this.width);
       const ty = Math.floor(this.targetPixelIdx / this.width);
@@ -216,7 +248,7 @@ export class TerritoryRenderer {
       this.ctx.stroke();
     }
 
-    // Overlay 4: Naval Boat Transport Icons
+    // Naval Boat Transport Icons
     for (const boat of this.boats) {
       const bx = this.panX + boat.x * this.zoom;
       const by = this.panY + boat.y * this.zoom;

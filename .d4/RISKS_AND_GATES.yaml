@@ -64,6 +64,22 @@ uncertainties:
     owner: mgamil.dev@gmail.com
     status: passed
 
+  - id: UNC-005
+    proposition: Can detailed GeoJSON Natural Earth world polygon rasterization render 100% accurate coastlines and can right-click context menu actions execute cleanly in < 16ms?
+    class: feasibility
+    decision_affected: [DEC-007, DEC-008]
+    risk_exposure: high
+    decision_criticality: 5
+    expected_information_gain: 5
+    validation_cost: 2
+    test_options:
+      - Benchmark high-detail GeoJSON map density and click/context menu gesture accuracy.
+    reversibility: reversible
+    threshold: "Pass if GeoJSON world map generates > 350,000 detailed land pixels and click gesture accuracy is 100%."
+    stop_rule: Stop benchmark after test execution.
+    owner: mgamil.dev@gmail.com
+    status: passed
+
 gates:
   - id: GATE-001
     question: Does the prototypal HTML5 Canvas renderer maintain >= 60 FPS under 500 active expanding territories?
@@ -127,6 +143,22 @@ gates:
       tie_is_failure: true
     threshold: World map generation < 150ms and Minimap update FPS >= 30 FPS
     blocks: [DEC-005, DEC-006]
+    owner: mgamil.dev@gmail.com
+
+  - id: GATE-005
+    question: Does the high-detail GeoJSON world map rasterizer produce > 350,000 land pixels with accurate coastlines and does click gesture accuracy reach 100%?
+    reduces: UNC-005
+    hardness: hard
+    status: passed
+    protocol:
+      frozen: true
+      fixtures: GeoJSON map generation & Mouse gesture disambiguation test suite.
+      rubric: Deterministic land density count and click vs drag event firing assertions.
+      blind_scored: false
+      stop_rules: Stop benchmark after test suite completion.
+      tie_is_failure: true
+    threshold: GeoJSON land pixels > 350,000 and Click accuracy = 100%
+    blocks: [DEC-007, DEC-008]
     owner: mgamil.dev@gmail.com
 
 risks:

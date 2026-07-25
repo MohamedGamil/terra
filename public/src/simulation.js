@@ -21,8 +21,21 @@ export class TerritorySimulation {
 
     this.players = new Array(numPlayers + 1);
     this.frontiers = new Array(numPlayers + 1);
-    this.boats = [];
+    for (let id = 1; id <= numPlayers; id++) {
+      this.players[id] = {
+        id,
+        name: id === 1 ? 'Commander' : `Bot ${id}`,
+        balance: 500,
+        landCount: 0,
+        peakTroops: 500,
+        interestRate: 0.15,
+        redInterest: false,
+        isAlive: true
+      };
+      this.frontiers[id] = [];
+    }
 
+    this.boats = [];
     this.spawnTimer = 10.0;
     this.humanSpawnIdx = null;
 

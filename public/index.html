@@ -33,7 +33,7 @@
             <div class="map-card active" data-map="world">
               <div class="map-icon">🌍</div>
               <div class="map-title">World Map</div>
-              <div class="map-desc">Real Earth SVG Vectors</div>
+              <div class="map-desc">GeoJSON Natural Earth</div>
             </div>
             <div class="map-card" data-map="archipelago">
               <div class="map-icon">🏝️</div>
@@ -134,11 +134,21 @@
     <main class="rts-viewport">
       <canvas id="game-canvas"></canvas>
 
+      <!-- Floating Glassmorphic Canvas Right-Click Context Menu -->
+      <div id="rts-context-menu" class="rts-context-menu" style="display: none;">
+        <div class="ctx-header" id="ctx-target-title">Target Action</div>
+        <div class="ctx-item highlight" id="ctx-attack">⚔️ Attack Land</div>
+        <div class="ctx-item" id="ctx-boat">⛵ Send Boat Across Ocean</div>
+        <div class="ctx-item" id="ctx-lock">🎯 Lock Target Crosshair</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item ctx-cancel" id="ctx-cancel">🛑 Clear Target / Stop</div>
+      </div>
+
       <!-- Floating Bottom Tactical Combat Action Bar -->
       <div class="rts-action-bar" id="rts-action-bar">
         <div class="target-card">
           <div class="target-label">Attack Target</div>
-          <div id="target-status-text" class="target-text">Click any territory on map to lock target.</div>
+          <div id="target-status-text" class="target-text">Click or right-click any territory on map.</div>
         </div>
 
         <div class="action-divider"></div>
