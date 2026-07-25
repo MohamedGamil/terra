@@ -1223,8 +1223,10 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Ready after BATON-024
-    state: draft
+    state: completed
     unblocks: []
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-021
   objective: Implement distinct bot personalities (Rusher, Balancer, Expansionist,
     Adaptive).
@@ -1547,6 +1549,13 @@ evaluations:
 - id: EVAL-021
   layer: outcome
   target: BATON-022
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-022
+  layer: outcome
+  target: BATON-021
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

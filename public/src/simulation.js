@@ -6,6 +6,7 @@
  */
 
 import { MapGenerator } from './map-generator.js';
+import { AIEngine } from './ai-engine.js';
 
 export class TerritorySimulation {
   constructor(width = 1000, height = 1000, numPlayers = 100, mapType = 'world') {
@@ -18,6 +19,7 @@ export class TerritorySimulation {
 
     this.terrainGrid = MapGenerator.generate(mapType, width, height);
     this.grid = new Uint16Array(width * height);
+    this.aiEngine = new AIEngine(numPlayers);
 
     this.players = new Array(numPlayers + 1);
     this.frontiers = new Array(numPlayers + 1);
@@ -362,55 +364,16 @@ export class TerritorySimulation {
   }
 
   updateBots() {
-    const width = this.width;
-    const height = this.height;
-
-    for (let id = 2; id <= this.numPlayers; id++) {
-      const bot = this.players[id];
-      if (!bot || !bot.isAlive || bot.balance < 20) continue;
-
-      const frontier = this.frontiers[id];
-      if (frontier.length === 0) continue;
-
-      const expansionRate = Math.min(Math.floor(bot.balance * 0.04), 15);
-      let count = 0;
-
-      for (let i = frontier.length - 1; i >= 0 && count < expansionRate; i--) {
-        const fIdx = frontier[i];
-        const cx = fIdx % width;
-        const cy = Math.floor(fIdx / width);
-
-        const neighbors = [
-          cy > 0 ? fIdx - width : -1,
-          cy < height - 1 ? fIdx + width : -1,
-          cx > 0 ? fIdx - 1 : -1,
-          cx < width - 1 ? fIdx + 1 : -1
-        ];
-
-        let expanded = false;
-        for (const nIdx of neighbors) {
-          if (nIdx < 0) continue;
-          if (this.terrainGrid[nIdx] === 0 || this.terrainGrid[nIdx] === 2) continue;
-
-          const targetOwner = this.grid[nIdx];
-          if (targetOwner === 0) {
-            const cost = 2;
-            if (bot.balance >= cost) {
-              bot.balance -= cost;
-              bot.landCount++;
-              this.grid[nIdx] = id;
-              frontier.push(nIdx);
-              count++;
-              expanded = true;
-            }
-          }
-        }
-
-        if (!expanded && Math.random() < 0.2) {
-          frontier.splice(i, 1);
-        }
-      }
-    }
+    this.aiEngine.updateBots(
+      this.players,
+      this.frontiers,
+      this.terrainGrid,
+      this.grid,
+      this.boats,
+      this.width,
+      this.height,
+      this.botDifficulty || 'easy'
+    );
   }
 
   processInterest() {
