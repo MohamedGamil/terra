@@ -344,6 +344,58 @@ simCent.updateCapitalCentroids();
 
 assert(simCent.players[1].capitalX > 50, `Capital shifted dynamically to the right (Centroid X: ${simCent.players[1].capitalX})`);
 
+// --- Test 14: Resolve Viewport Click Coordinates Offsets (REQ-052) ---
+console.log('\n[Test 14] Resolve Viewport Click Coordinates Offsets (REQ-052)');
+
+const mockCanvasBorders = {
+  width: 1000,
+  height: 1000,
+  getContext: () => ({
+    createImageData: () => ({ data: new Uint8Array(4) })
+  }),
+  getBoundingClientRect: () => ({
+    left: 50,
+    top: 50,
+    width: 430, // 400 content + 20 border + 10 padding
+    height: 330 // 300 content + 20 border + 10 padding
+  }),
+  addEventListener: () => {}
+};
+
+// Simulate global window with borders and padding style
+global.window = {
+  addEventListener: () => {},
+  getComputedStyle: () => ({
+    borderLeftWidth: '10px',
+    borderTopWidth: '10px',
+    borderRightWidth: '10px',
+    borderBottomWidth: '10px',
+    paddingLeft: '5px',
+    paddingTop: '5px',
+    paddingRight: '5px',
+    paddingBottom: '5px'
+  })
+};
+
+const rendererBorders = new TerritoryRenderer(mockCanvasBorders, 1000, 1000, { colors: {} });
+rendererBorders.zoom = 2.0;
+rendererBorders.panX = 100;
+rendererBorders.panY = 100;
+
+// Screen click coordinate screenX=265, screenY=215
+// Subtractions:
+// screenX - left - borderLeft - paddingLeft = 265 - 50 - 10 - 5 = 200 CSS pixels
+// scaleX = 1000 / 400 = 2.5
+// clientX = 200 * 2.5 = 500 canvas pixels
+// mapX = (clientX - panX) / zoom = (500 - 100) / 2.0 = 200 map coordinate
+const mappedBorders = rendererBorders.screenToMapCoords(265, 215);
+
+assert(mappedBorders !== null, 'Mapped coordinates returned successfully with CSS borders and padding');
+assert(mappedBorders.mapX === 200, `Calculated mapX matches layout subtraction (Expected: 200, Actual: ${mappedBorders.mapX})`);
+
+// Clean up global mock
+delete global.window;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

@@ -409,16 +409,20 @@ requirements:
     in real time.
 - id: REQ-052
   kind: functional
-  statement: Screen-to-world click coordinate precision MUST resolve offsets and discrepancies under all canvas zoom levels and CSS layouts.
+  statement: Screen-to-world click coordinate precision MUST resolve offsets and discrepancies
+    under all canvas zoom levels and CSS layouts.
 - id: REQ-053
   kind: functional
-  statement: AI bot naval attacks MUST perform water-only pathfinding and collision checks, preventing travel over land segments.
+  statement: AI bot naval attacks MUST perform water-only pathfinding and collision
+    checks, preventing travel over land segments.
 - id: REQ-054
   kind: functional
-  statement: Player naval attacks launched to accessible shorelines MUST be accurately identified as valid and accessible.
+  statement: Player naval attacks launched to accessible shorelines MUST be accurately
+    identified as valid and accessible.
 - id: REQ-055
   kind: functional
-  statement: Land capture expansion MUST incrementally branch and spread from the frontier to the target coordinate rather than instant distant captures.
+  statement: Land capture expansion MUST incrementally branch and spread from the
+    frontier to the target coordinate rather than instant distant captures.
 batons:
 - id: BATON-001
   version: 1
@@ -2151,8 +2155,10 @@ batons:
     - BATON-054
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-054
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-055
   title: Resolve Viewport Click Coordinates Offsets
   objective: Eliminate click-to-attack discrepancy offsets under zoom and scale.
@@ -2173,7 +2179,8 @@ batons:
     state: draft
   id: BATON-056
   title: AI Bot Water-Only Naval Pathfinding
-  objective: Restrict AI bot naval transports to water/ocean paths without crossing land.
+  objective: Restrict AI bot naval transports to water/ocean paths without crossing
+    land.
   type: implementation
 - acceptance:
     deterministic_checks:
@@ -2191,7 +2198,8 @@ batons:
     state: draft
   id: BATON-057
   title: Robust Shoreline Naval Access Checks
-  objective: Resolve false negatives in shoreline accessibility checks for player boat attacks.
+  objective: Resolve false negatives in shoreline accessibility checks for player
+    boat attacks.
   type: implementation
 - acceptance:
     deterministic_checks:
@@ -2209,7 +2217,8 @@ batons:
     state: draft
   id: BATON-058
   title: Incremental Area Expansion Routing
-  objective: Branch and expand land capture incrementally along the path leading to the target coordinate.
+  objective: Branch and expand land capture incrementally along the path leading to
+    the target coordinate.
   type: implementation
 releases:
 - id: REL-001
@@ -2682,6 +2691,13 @@ evaluations:
 - id: EVAL-054
   layer: outcome
   target: BATON-054
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-055
+  layer: outcome
+  target: BATON-055
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

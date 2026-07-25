@@ -165,11 +165,31 @@ export class TerritoryRenderer {
 
   screenToMapCoords(screenX, screenY) {
     const rect = this.canvas.getBoundingClientRect();
-    const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
-    const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
+    
+    let borderLeft = 0, borderTop = 0, paddingLeft = 0, paddingTop = 0;
+    let contentWidth = rect.width;
+    let contentHeight = rect.height;
 
-    const clientX = (screenX - rect.left) * scaleX;
-    const clientY = (screenY - rect.top) * scaleY;
+    if (typeof window !== 'undefined' && window.getComputedStyle) {
+      const style = window.getComputedStyle(this.canvas);
+      borderLeft = parseFloat(style.borderLeftWidth) || 0;
+      borderTop = parseFloat(style.borderTopWidth) || 0;
+      paddingLeft = parseFloat(style.paddingLeft) || 0;
+      paddingTop = parseFloat(style.paddingTop) || 0;
+      const paddingRight = parseFloat(style.paddingRight) || 0;
+      const paddingBottom = parseFloat(style.paddingBottom) || 0;
+      const borderRight = parseFloat(style.borderRightWidth) || 0;
+      const borderBottom = parseFloat(style.borderBottomWidth) || 0;
+
+      contentWidth = rect.width - borderLeft - borderRight - paddingLeft - paddingRight;
+      contentHeight = rect.height - borderTop - borderBottom - paddingTop - paddingBottom;
+    }
+
+    const scaleX = contentWidth > 0 ? (this.canvas.width / contentWidth) : 1;
+    const scaleY = contentHeight > 0 ? (this.canvas.height / contentHeight) : 1;
+
+    const clientX = (screenX - rect.left - borderLeft - paddingLeft) * scaleX;
+    const clientY = (screenY - rect.top - borderTop - paddingTop) * scaleY;
 
     const mapX = Math.floor((clientX - this.panX) / this.zoom);
     const mapY = Math.floor((clientY - this.panY) / this.zoom);
