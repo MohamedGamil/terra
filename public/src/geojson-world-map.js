@@ -47,17 +47,32 @@ export class GeoJSONWorldMap {
     const grid = new Uint8Array(width * height);
     grid.fill(0); // Ocean Water default
 
+    let drawn = false;
     if (typeof OffscreenCanvas !== 'undefined') {
-      const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      this.drawPolygonsToContext(ctx, width, height, grid);
-    } else if (typeof document !== 'undefined') {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      this.drawPolygonsToContext(ctx, width, height, grid);
-    } else {
+      try {
+        const canvas = new OffscreenCanvas(width, height);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (ctx && typeof ctx.fillRect === 'function') {
+          this.drawPolygonsToContext(ctx, width, height, grid);
+          drawn = true;
+        }
+      } catch (e) {}
+    }
+    
+    if (!drawn && typeof document !== 'undefined' && typeof document.createElement === 'function') {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (ctx && typeof ctx.fillRect === 'function') {
+          this.drawPolygonsToContext(ctx, width, height, grid);
+          drawn = true;
+        }
+      } catch (e) {}
+    }
+
+    if (!drawn) {
       this.rasterizeScanline(width, height, grid);
     }
 

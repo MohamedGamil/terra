@@ -4,8 +4,22 @@
  * Red Interest decay, 50px bot spawn radius buffer, and state machine transitions.
  */
 
+globalThis.document = {
+  createElement: () => ({
+    width: 0,
+    height: 0,
+    getContext: () => ({
+      createImageData: () => ({ data: new Uint8Array(4) })
+    })
+  })
+};
+globalThis.window = {
+  addEventListener: () => {}
+};
+
 import { TerritorySimulation } from '../public/src/simulation.js';
 import { MapGenerator } from '../public/src/map-generator.js';
+import { TerritoryRenderer } from '../public/src/renderer.js';
 
 console.log('=== Terra GATE-003 Automated Combat & Game Loop Test Suite ===\n');
 
@@ -173,6 +187,33 @@ for (let x = 30; x < 50; x++) {
 MapGenerator.cleanupGrid(100, 100, testGrid);
 assert(testGrid[10 * 100 + 10] === 0, 'Isolated tiny 5-pixel island pruned to ocean');
 assert(testGrid[30 * 100 + 30] === 1, 'Large contiguous land segment preserved');
+
+// --- Test 9: High-Precision Viewport Coordinate Mapping (REQ-047) ---
+console.log('\n[Test 9] High-Precision Viewport Coordinate Mapping (REQ-047)');
+const mockCanvas = {
+  width: 800,
+  height: 600,
+  getContext: () => ({
+    createImageData: () => ({ data: new Uint8Array(4) })
+  }),
+  getBoundingClientRect: () => ({
+    left: 50,
+    top: 50,
+    width: 400,
+    height: 300
+  }),
+  addEventListener: () => {}
+};
+
+const renderer = new TerritoryRenderer(mockCanvas, 1000, 1000, { colors: {} });
+renderer.zoom = 2.0;
+renderer.panX = 100;
+renderer.panY = 100;
+
+const mapped = renderer.screenToMapCoords(250, 200);
+assert(mapped !== null, 'Mapped coordinates returned successfully');
+assert(mapped.mapX === 150, `Calculated mapX matches high-precision layout translation (Expected: 150, Actual: ${mapped.mapX})`);
+assert(mapped.mapY === 100, `Calculated mapY matches high-precision layout translation (Expected: 100, Actual: ${mapped.mapY})`);
 
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);

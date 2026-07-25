@@ -67,12 +67,19 @@ export class TerritoryRenderer {
     window.addEventListener('resize', () => this.resizeCanvas());
 
     this.canvas.addEventListener('mousedown', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
+      const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
+
+      const canvasX = (e.clientX - rect.left) * scaleX;
+      const canvasY = (e.clientY - rect.top) * scaleY;
+
       this.isMouseDown = true;
       this.isDragging = false;
       this.mouseDownX = e.clientX;
       this.mouseDownY = e.clientY;
-      this.dragStartX = e.clientX - this.panX;
-      this.dragStartY = e.clientY - this.panY;
+      this.dragStartX = canvasX - this.panX;
+      this.dragStartY = canvasY - this.panY;
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -81,8 +88,15 @@ export class TerritoryRenderer {
       const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
       if (dist > 5) {
         this.isDragging = true;
-        this.panX = e.clientX - this.dragStartX;
-        this.panY = e.clientY - this.dragStartY;
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
+        const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
+
+        const canvasX = (e.clientX - rect.left) * scaleX;
+        const canvasY = (e.clientY - rect.top) * scaleY;
+
+        this.panX = canvasX - this.dragStartX;
+        this.panY = canvasY - this.dragStartY;
       }
     });
 
@@ -123,13 +137,18 @@ export class TerritoryRenderer {
 
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
+      const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
 
+      const canvasX = (e.clientX - rect.left) * scaleX;
+      const canvasY = (e.clientY - rect.top) * scaleY;
+
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
       const newZoom = Math.min(Math.max(0.2, this.zoom * zoomFactor), 8.0);
-      this.panX = mouseX - (mouseX - this.panX) * (newZoom / this.zoom);
-      this.panY = mouseY - (mouseY - this.panY) * (newZoom / this.zoom);
+      
+      this.panX = canvasX - (canvasX - this.panX) * (newZoom / this.zoom);
+      this.panY = canvasY - (canvasY - this.panY) * (newZoom / this.zoom);
       this.zoom = newZoom;
     }, { passive: false });
   }

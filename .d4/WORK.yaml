@@ -2039,8 +2039,10 @@ batons:
     - BATON-049
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-049
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-050
   objective: Implement High-Precision Viewport Coordinate Mapping (REQ-047).
   title: High-Precision Viewport Coordinate Mapping
@@ -2553,6 +2555,13 @@ evaluations:
 - id: EVAL-049
   layer: outcome
   target: BATON-049
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-050
+  layer: outcome
+  target: BATON-050
   method: mcp-agent-eval
   result: pass
   false_success_checked: true
