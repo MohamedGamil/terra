@@ -818,15 +818,22 @@ export class TerritorySimulation {
         let minDist = Infinity;
         let bestArrayIdx = -1;
 
-        for (let i = frontier.length - 1; i >= 0; i--) {
-          const fIdx = frontier[i];
-          const fx = fIdx % width;
-          const fy = Math.floor(fIdx / width);
-          const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
-          if (distSq < minDist) {
-            minDist = distSq;
-            bestIdx = fIdx;
-            bestArrayIdx = i;
+        if (exp.path !== null) {
+          for (let i = frontier.length - 1; i >= 0; i--) {
+            const fIdx = frontier[i];
+            const fx = fIdx % width;
+            const fy = Math.floor(fIdx / width);
+            const distSq = (fx - exp.targetX) * (fx - exp.targetX) + (fy - exp.targetY) * (fy - exp.targetY);
+            if (distSq < minDist) {
+              minDist = distSq;
+              bestIdx = fIdx;
+              bestArrayIdx = i;
+            }
+          }
+        } else {
+          if (frontier.length > 0) {
+            bestArrayIdx = Math.floor(Math.random() * frontier.length);
+            bestIdx = frontier[bestArrayIdx];
           }
         }
 
@@ -860,7 +867,7 @@ export class TerritorySimulation {
             if (Math.max(dx, dy) > exp.squareSize) continue;
           } else {
             const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
-            if (distFromLaunch > exp.currentRadius) continue;
+            if (exp.path !== null && distFromLaunch > exp.currentRadius) continue;
 
             if (!exp.isRivalAttack) {
               let distToPath = Infinity;
@@ -970,7 +977,7 @@ export class TerritorySimulation {
         }
       }
 
-      const isFinished = (exp.remainingTroops <= 2 || frontier.length === 0 || (exp.targetReached && exp.squareSize >= exp.maxRadius) || (!exp.targetReached && exp.currentRadius >= exp.maxRadius && !expandedAny));
+      const isFinished = (exp.remainingTroops <= 2 || frontier.length === 0 || (exp.targetReached && exp.squareSize >= exp.maxRadius) || (!exp.targetReached && exp.path !== null && exp.currentRadius >= exp.maxRadius && !expandedAny));
       if (isFinished) {
         if (player && player.isAlive && exp.remainingTroops > 0) {
           player.balance += exp.remainingTroops;

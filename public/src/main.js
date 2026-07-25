@@ -641,7 +641,7 @@ class TerraApp {
         let idx = coords.idx;
         const initialOwner = this.simulation.grid[idx];
         if (initialOwner <= 1) {
-          const rivalIdx = this.findClosestRivalPixel(idx, 25);
+          const rivalIdx = this.findClosestRivalPixel(idx, 12);
           if (rivalIdx !== -1) {
             idx = rivalIdx;
           }
@@ -676,7 +676,7 @@ class TerraApp {
         let idx = coords.idx;
         const initialOwner = this.simulation.grid[idx];
         if (initialOwner <= 1) {
-          const rivalIdx = this.findClosestRivalPixel(idx, 25);
+          const rivalIdx = this.findClosestRivalPixel(idx, 12);
           if (rivalIdx !== -1) {
             idx = rivalIdx;
           }
@@ -876,7 +876,10 @@ class TerraApp {
   launchMatchWithCountdown() {
     const overlay = document.getElementById('countdown-overlay');
     const numEl = document.getElementById('countdown-num');
-    if (overlay) overlay.style.display = 'flex';
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      overlay.style.display = 'flex';
+    }
 
     if (this.simulation.humanSpawnIdx !== null) {
       this.renderer.centerOnPixel(this.simulation.humanSpawnIdx, 2.5);
@@ -893,7 +896,10 @@ class TerraApp {
         if (numEl) numEl.textContent = 'GO!';
       } else {
         clearInterval(interval);
-        if (overlay) overlay.style.display = 'none';
+        if (overlay) {
+          overlay.classList.add('hidden');
+          overlay.style.display = 'none';
+        }
         this.updateSceneVisibility('PLAYING');
 
         this.simulation.confirmSpawnsAndStart();
