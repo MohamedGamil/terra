@@ -489,6 +489,15 @@ requirements:
   kind: functional
   statement: Neutral land expansions MUST expand in all available directions starting
     outward from the player's border relative to their capital/centroid.
+- id: REQ-072
+  kind: functional
+  statement: The simulation pathfinder MUST use a guided A-star search with a Min-Heap
+    priority queue to find paths up to 1000 pixels long with high performance and
+    zero garbage collection overhead.
+- id: REQ-073
+  kind: functional
+  statement: The wavefront propagation speed MUST scale to at least 1.0 pixel per
+    tick for long-distance attacks, ensuring invasions travel at a responsive rate.
 batons:
 - id: BATON-001
   version: 1
@@ -2566,6 +2575,48 @@ batons:
     state: completed
     lease_owner: null
     lease_expires_at: null
+- id: BATON-072
+  title: Guided A-Star Pathfinder
+  objective: Implement guided A-star search with a Min-Heap priority queue to replace
+    the slow BFS pathfinder.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-072
+  execution:
+    depends_on:
+    - BATON-071
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-073
+  title: Wavefront Propagation Speed Tuning
+  objective: Scale wavefront propagation speed minimum and scale factor to travel
+    responsively.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-073
+  execution:
+    depends_on:
+    - BATON-072
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2716,6 +2767,22 @@ releases:
   batons:
   - BATON-070
   - BATON-071
+  delivery_form: deployable
+  status: released
+- id: REL-008
+  version: 0.8.0
+  name: 'Terra Pathfinding & Wavefront Speed Refinements: A-Star Optimization & Invasion
+    Speedup'
+  is_mvp: false
+  exit_criteria:
+  - Guided A-Star pathfinder replaces the slow 5000-cap BFS pathfinder.
+  - Invasions wavefront propagation travels at a responsive rate.
+  requirements:
+  - REQ-072
+  - REQ-073
+  batons:
+  - BATON-072
+  - BATON-073
   delivery_form: deployable
   status: released
 evaluations:
@@ -3212,6 +3279,20 @@ evaluations:
 - id: EVAL-071
   layer: outcome
   target: BATON-071
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-072
+  layer: outcome
+  target: BATON-072
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-073
+  layer: outcome
+  target: BATON-073
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

@@ -63,23 +63,49 @@ export class TerritoryRenderer {
     }
   }
 
+  getCanvasContentCoords(screenX, screenY) {
+    const rect = this.canvas.getBoundingClientRect();
+    
+    let borderLeft = 0, borderTop = 0, paddingLeft = 0, paddingTop = 0;
+    let contentWidth = rect.width;
+    let contentHeight = rect.height;
+
+    if (typeof window !== 'undefined' && window.getComputedStyle) {
+      const style = window.getComputedStyle(this.canvas);
+      borderLeft = parseFloat(style.borderLeftWidth) || 0;
+      borderTop = parseFloat(style.borderTopWidth) || 0;
+      paddingLeft = parseFloat(style.paddingLeft) || 0;
+      paddingTop = parseFloat(style.paddingTop) || 0;
+      const paddingRight = parseFloat(style.paddingRight) || 0;
+      const paddingBottom = parseFloat(style.paddingBottom) || 0;
+      const borderRight = parseFloat(style.borderRightWidth) || 0;
+      const borderBottom = parseFloat(style.borderBottomWidth) || 0;
+
+      contentWidth = rect.width - borderLeft - borderRight - paddingLeft - paddingRight;
+      contentHeight = rect.height - borderTop - borderBottom - paddingTop - paddingBottom;
+    }
+
+    const scaleX = contentWidth > 0 ? (this.canvas.width / contentWidth) : 1;
+    const scaleY = contentHeight > 0 ? (this.canvas.height / contentHeight) : 1;
+
+    const canvasX = (screenX - rect.left - borderLeft - paddingLeft) * scaleX;
+    const canvasY = (screenY - rect.top - borderTop - paddingTop) * scaleY;
+
+    return { x: canvasX, y: canvasY };
+  }
+
   setupInteractions() {
     window.addEventListener('resize', () => this.resizeCanvas());
 
     this.canvas.addEventListener('mousedown', (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
-      const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
-
-      const canvasX = (e.clientX - rect.left) * scaleX;
-      const canvasY = (e.clientY - rect.top) * scaleY;
+      const coords = this.getCanvasContentCoords(e.clientX, e.clientY);
 
       this.isMouseDown = true;
       this.isDragging = false;
       this.mouseDownX = e.clientX;
       this.mouseDownY = e.clientY;
-      this.dragStartX = canvasX - this.panX;
-      this.dragStartY = canvasY - this.panY;
+      this.dragStartX = coords.x - this.panX;
+      this.dragStartY = coords.y - this.panY;
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -88,15 +114,10 @@ export class TerritoryRenderer {
       const dist = Math.hypot(e.clientX - this.mouseDownX, e.clientY - this.mouseDownY);
       if (dist > 5) {
         this.isDragging = true;
-        const rect = this.canvas.getBoundingClientRect();
-        const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
-        const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
+        const coords = this.getCanvasContentCoords(e.clientX, e.clientY);
 
-        const canvasX = (e.clientX - rect.left) * scaleX;
-        const canvasY = (e.clientY - rect.top) * scaleY;
-
-        this.panX = canvasX - this.dragStartX;
-        this.panY = canvasY - this.dragStartY;
+        this.panX = coords.x - this.dragStartX;
+        this.panY = coords.y - this.dragStartY;
       }
     });
 
@@ -137,18 +158,13 @@ export class TerritoryRenderer {
 
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const rect = this.canvas.getBoundingClientRect();
-      const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
-      const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
-
-      const canvasX = (e.clientX - rect.left) * scaleX;
-      const canvasY = (e.clientY - rect.top) * scaleY;
+      const coords = this.getCanvasContentCoords(e.clientX, e.clientY);
 
       const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
       const newZoom = Math.min(Math.max(0.2, this.zoom * zoomFactor), 8.0);
       
-      this.panX = canvasX - (canvasX - this.panX) * (newZoom / this.zoom);
-      this.panY = canvasY - (canvasY - this.panY) * (newZoom / this.zoom);
+      this.panX = coords.x - (coords.x - this.panX) * (newZoom / this.zoom);
+      this.panY = coords.y - (coords.y - this.panY) * (newZoom / this.zoom);
       this.zoom = newZoom;
     }, { passive: false });
   }
@@ -164,35 +180,10 @@ export class TerritoryRenderer {
   }
 
   screenToMapCoords(screenX, screenY) {
-    const rect = this.canvas.getBoundingClientRect();
-    
-    let borderLeft = 0, borderTop = 0, paddingLeft = 0, paddingTop = 0;
-    let contentWidth = rect.width;
-    let contentHeight = rect.height;
+    const coords = this.getCanvasContentCoords(screenX, screenY);
 
-    if (typeof window !== 'undefined' && window.getComputedStyle) {
-      const style = window.getComputedStyle(this.canvas);
-      borderLeft = parseFloat(style.borderLeftWidth) || 0;
-      borderTop = parseFloat(style.borderTopWidth) || 0;
-      paddingLeft = parseFloat(style.paddingLeft) || 0;
-      paddingTop = parseFloat(style.paddingTop) || 0;
-      const paddingRight = parseFloat(style.paddingRight) || 0;
-      const paddingBottom = parseFloat(style.paddingBottom) || 0;
-      const borderRight = parseFloat(style.borderRightWidth) || 0;
-      const borderBottom = parseFloat(style.borderBottomWidth) || 0;
-
-      contentWidth = rect.width - borderLeft - borderRight - paddingLeft - paddingRight;
-      contentHeight = rect.height - borderTop - borderBottom - paddingTop - paddingBottom;
-    }
-
-    const scaleX = contentWidth > 0 ? (this.canvas.width / contentWidth) : 1;
-    const scaleY = contentHeight > 0 ? (this.canvas.height / contentHeight) : 1;
-
-    const clientX = (screenX - rect.left - borderLeft - paddingLeft) * scaleX;
-    const clientY = (screenY - rect.top - borderTop - paddingTop) * scaleY;
-
-    const mapX = Math.floor((clientX - this.panX) / this.zoom);
-    const mapY = Math.floor((clientY - this.panY) / this.zoom);
+    const mapX = Math.floor((coords.x - this.panX) / this.zoom);
+    const mapY = Math.floor((coords.y - this.panY) / this.zoom);
 
     if (mapX >= 0 && mapX < this.width && mapY >= 0 && mapY < this.height) {
       return { mapX, mapY, idx: mapY * this.width + mapX };

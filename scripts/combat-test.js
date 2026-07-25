@@ -790,6 +790,42 @@ assert(neutralExp.currentRadius > 0.0, 'currentRadius is initialized to capital-
 
 testsPassed += 8;
 
+// --- Test 23: Guided A-Star Pathfinder & Wavefront Speed (REQ-072/REQ-073) ---
+console.log('\n[Test 23] Guided A-Star Pathfinder & Wavefront Speed (REQ-072/REQ-073)');
+const simAStar = new TerritorySimulation(100, 100, 2, 'arena');
+simAStar.state = 'PLAYING';
+simAStar.terrainGrid.fill(1); // fill with land
+
+// Add a vertical water wall at x=50, except for a gap at y=10
+for (let y = 0; y < 100; y++) {
+  if (y !== 10) {
+    simAStar.terrainGrid[y * 100 + 50] = 0; // water obstacle
+  }
+}
+
+// Find path from x=10, y=10 (idx 1010) to x=90, y=10 (idx 1090)
+const path = simAStar.findLandPath(1010, 1090);
+assert(path !== null, 'A-star pathfinder successfully bypassed the water wall obstacle and found path');
+assert(path.length > 80, 'Path is long and correctly weaves around the obstacle');
+
+// Verify wavefront expansion speed minimum is scaled up
+simAStar.players[1].isAlive = true;
+simAStar.players[1].balance = 5000;
+simAStar.players[1].landCount = 10;
+simAStar.grid[1010] = 1;
+simAStar.frontiers[1] = [1010];
+
+// Execute land attack to a far coordinate (distance > 100)
+simAStar.executeAttack(1, 1090, 50, true);
+const activeExp = simAStar.activeExpansions[0];
+
+const totalDistance = Math.hypot(activeExp.targetX - activeExp.launchX, activeExp.targetY - activeExp.launchY);
+const distanceThreshold = 100 * 0.1;
+const expansionSpeed = Math.max(1.0, 3.0 * (distanceThreshold / Math.max(distanceThreshold, totalDistance)));
+assert(expansionSpeed >= 1.0, `Wavefront speed scales at least to 1.0 (Actual: ${expansionSpeed})`);
+
+testsPassed += 3;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

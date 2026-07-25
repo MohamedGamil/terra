@@ -698,38 +698,101 @@ export class TerritorySimulation {
     if (startIdx === endIdx) return [startIdx];
     const width = this.width;
     const height = this.height;
-    
-    const queue = [startIdx];
-    const parent = new Map();
-    parent.set(startIdx, -1);
-    
+
+    const targetX = endIdx % width;
+    const targetY = Math.floor(endIdx / width);
+
+    // Min-Heap implementation for priority queue
+    const heap = [];
+    const heapPush = (item) => {
+      heap.push(item);
+      let idx = heap.length - 1;
+      while (idx > 0) {
+        const pIdx = (idx - 1) >> 1;
+        if (heap[idx].f >= heap[pIdx].f) break;
+        const tmp = heap[idx];
+        heap[idx] = heap[pIdx];
+        heap[pIdx] = tmp;
+        idx = pIdx;
+      }
+    };
+    const heapPop = () => {
+      if (heap.length === 0) return null;
+      const top = heap[0];
+      const bottom = heap.pop();
+      if (heap.length > 0) {
+        heap[0] = bottom;
+        let idx = 0;
+        const len = heap.length;
+        while (true) {
+          let left = (idx << 1) + 1;
+          let right = left + 1;
+          let smallest = idx;
+          if (left < len && heap[left].f < heap[smallest].f) smallest = left;
+          if (right < len && heap[right].f < heap[smallest].f) smallest = right;
+          if (smallest === idx) break;
+          const tmp = heap[idx];
+          heap[idx] = heap[smallest];
+          heap[smallest] = tmp;
+          idx = smallest;
+        }
+      }
+      return top;
+    };
+
+    // Typed arrays for visited/cost/parent to optimize memory and GC overhead
+    const gScore = new Float32Array(width * height);
+    gScore.fill(Infinity);
+    gScore[startIdx] = 0;
+
+    const parent = new Int32Array(width * height);
+    parent.fill(-1);
+
+    // Heuristic: Manhattan distance is fast and sufficient for grids
+    const h = (idx) => {
+      const x = idx % width;
+      const y = Math.floor(idx / width);
+      return Math.abs(x - targetX) + Math.abs(y - targetY);
+    };
+
+    heapPush({ idx: startIdx, f: h(startIdx) });
+
     let found = false;
     let iterations = 0;
-    const maxIterations = 5000;
+    const maxIterations = 25000;
 
-    while (queue.length > 0 && iterations++ < maxIterations) {
-      const curr = queue.shift();
-      if (curr === endIdx) {
+    while (heap.length > 0 && iterations++ < maxIterations) {
+      const curr = heapPop();
+      if (!curr) break;
+      const currIdx = curr.idx;
+
+      if (currIdx === endIdx) {
         found = true;
         break;
       }
 
-      const cx = curr % width;
-      const cy = Math.floor(curr / width);
+      const cx = currIdx % width;
+      const cy = Math.floor(currIdx / width);
 
       const neighbors = [
-        cy > 0 ? curr - width : -1,
-        cy < height - 1 ? curr + width : -1,
-        cx > 0 ? curr - 1 : -1,
-        cx < width - 1 ? curr + 1 : -1
+        cy > 0 ? currIdx - width : -1,
+        cy < height - 1 ? currIdx + width : -1,
+        cx > 0 ? currIdx - 1 : -1,
+        cx < width - 1 ? currIdx + 1 : -1
       ];
 
+      const currentG = gScore[currIdx];
+
       for (const n of neighbors) {
-        if (n >= 0 && !parent.has(n)) {
+        if (n >= 0) {
           const terrain = this.terrainGrid[n];
-          if (terrain !== 0 && terrain !== 2) {
-            parent.set(n, curr);
-            queue.push(n);
+          if (terrain !== 0 && terrain !== 2) { // Land only
+            const tentativeG = currentG + 1;
+            if (tentativeG < gScore[n]) {
+              gScore[n] = tentativeG;
+              parent[n] = currIdx;
+              heapPush({ idx: n, f: tentativeG + h(n) });
+            }
           }
         }
       }
@@ -741,7 +804,7 @@ export class TerritorySimulation {
     let curr = endIdx;
     while (curr !== -1) {
       path.push(curr);
-      curr = parent.get(curr);
+      curr = parent[curr];
     }
     return path.reverse();
   }
@@ -805,7 +868,7 @@ export class TerritorySimulation {
 
       const totalDistance = Math.hypot(exp.targetX - exp.launchX, exp.targetY - exp.launchY);
       const distanceThreshold = Math.max(width, height) * 0.1;
-      const expansionSpeed = Math.max(0.2, 1.5 * (distanceThreshold / Math.max(distanceThreshold, totalDistance)));
+      const expansionSpeed = Math.max(1.0, 3.0 * (distanceThreshold / Math.max(distanceThreshold, totalDistance)));
 
       if (exp.targetReached) {
         exp.squareSize = (exp.squareSize || 0.0) + expansionSpeed;
