@@ -570,6 +570,11 @@ requirements:
   statement: The renderer and minimap engines MUST implement and invoke destroy()
     to clean up all event listeners from canvas and window upon lobby transitions,
     preventing handler duplication.
+- id: REQ-089
+  kind: functional
+  statement: The water pathfinder MUST exclude the start and end coordinates from
+    the water check, enabling close-range shoreline-to-shoreline naval attacks to
+    succeed.
 batons:
 - id: BATON-001
   version: 1
@@ -2952,6 +2957,26 @@ batons:
   objective: Clean up duplicate event listeners in renderer and minimap on game start/recreate.
   title: Listener Memory Leak Fix
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-089
+  execution:
+    depends_on:
+    - BATON-086
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-087
+  objective: Exclude start and end pixels in isWaterPath to permit adjacent/diagonal
+    boat attacks.
+  title: Adjacent Water Path Permissiveness
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3753,6 +3778,13 @@ evaluations:
 - id: EVAL-086
   layer: outcome
   target: BATON-086
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-087
+  layer: outcome
+  target: BATON-087
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

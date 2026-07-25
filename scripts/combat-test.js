@@ -1054,6 +1054,23 @@ assert(sim28.boats.length === 0, 'Land attack did not fall back to naval attack'
 
 testsPassed += 2;
 
+// --- Test 29: Close-Range Adjacent Shoreline-to-Shoreline Water Path Check ---
+console.log('\n[Test 29] Close-Range Adjacent Shoreline-to-Shoreline Water Path Check (REQ-089)');
+
+const sim29 = new TerritorySimulation(100, 100, 10, 'arena');
+sim29.state = 'PLAYING';
+sim29.terrainGrid.fill(0); // fill with water
+
+// Set start and end as land (shorelines)
+sim29.terrainGrid[10 * 100 + 10] = 1;
+sim29.terrainGrid[11 * 100 + 11] = 1;
+
+// Verify that isWaterPath returns true because it skips checking start/end land coordinates
+const hasClearPath = sim29.aiEngine.isWaterPath(10, 10, 11, 11, sim29.terrainGrid, 100, 100);
+assert(hasClearPath === true, 'Adjacent diagonal shoreline-to-shoreline has a clear water path');
+
+testsPassed += 1;
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

@@ -233,8 +233,13 @@ export class AIEngine {
       const px = Math.round(x1 + dx * t);
       const py = Math.round(y1 + dy * t);
       if (px < 0 || px >= width || py < 0 || py >= height) return false;
-      const idx = py * width + px;
 
+      // Skip checking the start and end pixels themselves (they are shorelines/land)
+      if ((px === x1 && py === y1) || (px === x2 && py === y2)) {
+        continue;
+      }
+
+      const idx = py * width + px;
       if (terrainGrid[idx] !== 0) {
         return false;
       }
