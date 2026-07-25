@@ -538,19 +538,19 @@ requirements:
   statement: naval attacks still can go over land terrain, its path finding and firing
     is still mishandled
   kind: functional
-  scope_state: proposed
-  state: proposed
+  scope_state: committed
+  state: committed
 - id: REQ-083
   statement: some rivals territories seem to switch colors instantanously hinting
     at 2 rivals occupying the same tile/pixel
   kind: functional
-  scope_state: proposed
-  state: proposed
+  scope_state: committed
+  state: committed
 - id: REQ-084
   statement: victory screen is still not visible after achieving victory conditions
   kind: functional
-  scope_state: proposed
-  state: proposed
+  scope_state: committed
+  state: committed
 - id: REQ-085
   kind: functional
   statement: The simulation's land pathfinder MUST be able to traverse player-owned
@@ -2891,6 +2891,10 @@ batons:
     its path findi...'
   objective: 'Fulfill proposed requirement REQ-082: naval attacks still can go over
     land terrain, its path finding and firing is still mishandled'
+  authority:
+    gates: []
+    requirements:
+    - REQ-082
   execution:
     state: completed
     resume_pointer: Fulfill proposed requirement REQ-082
@@ -2916,6 +2920,10 @@ batons:
     instantanously...'
   objective: 'Fulfill proposed requirement REQ-083: some rivals territories seem to
     switch colors instantanously hinting at 2 rivals occupying the same tile/pixel'
+  authority:
+    gates: []
+    requirements:
+    - REQ-083
   execution:
     state: completed
     resume_pointer: Fulfill proposed requirement REQ-083
@@ -2932,6 +2940,10 @@ batons:
     achieving victory ...'
   objective: 'Fulfill proposed requirement REQ-084: victory screen is still not visible
     after achieving victory conditions'
+  authority:
+    gates: []
+    requirements:
+    - REQ-084
   execution:
     state: completed
     resume_pointer: Fulfill proposed requirement REQ-084
@@ -3145,6 +3157,7 @@ batons:
   authority:
     requirements:
     - REQ-096
+    - REQ-097
   execution:
     depends_on:
     - BATON-093
@@ -3380,7 +3393,7 @@ releases:
   - BATON-075
   - BATON-076
   delivery_form: deployable
-  status: draft
+  status: released
 evaluations:
 - id: EVAL-001
   layer: outcome
@@ -4029,6 +4042,20 @@ evaluations:
 - id: EVAL-093
   layer: outcome
   target: BATON-093
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-094
+  layer: outcome
+  target: BATON-094
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-095
+  layer: outcome
+  target: BATON-095
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

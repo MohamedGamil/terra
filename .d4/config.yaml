@@ -26,4 +26,4 @@ collections:
 ui:
   auth:
     username: mohamed
-    password_hash: scrypt:92e44cbe27904acb1b64f33b5ceef7fd:fc3a594d99d68921575f88bdf8ec8e50f388f5f93f5ea7cb285c8f13c5620b46
+    password_hash: scrypt:b7856b406323f4efad96d3ac19f79b22:a1b4cf38439ea7b3d85e1265a2e7c4fc5c8a7ca37c8734ca57978695954eadfd

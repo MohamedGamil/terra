@@ -114,7 +114,7 @@ decisions:
 
   - id: DEC-009
     statement: Defense Threshold Balancing & Smaller-to-Larger Player Attack Penalties.
-    state: proposed
+    state: accepted
     kind: product
     boundary: Combat resolution and enclave defense threshold logic.
     gate: GATE-003
