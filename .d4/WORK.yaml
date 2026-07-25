@@ -423,6 +423,36 @@ requirements:
   kind: functional
   statement: Land capture expansion MUST incrementally branch and spread from the
     frontier to the target coordinate rather than instant distant captures.
+- id: REQ-056
+  kind: functional
+  statement: Attacking an active target area twice MUST reinforce the campaign with
+    additional troops, and target capture MUST switch to a square area expansion centered
+    on the target coordinate with remaining troops refunded.
+- id: REQ-057
+  kind: functional
+  statement: The simulation MUST enforce a maximum troop limit based on the total
+    available land to conquer, and reset NaN or negative troop balances back to a
+    default value of 500.
+- id: REQ-058
+  kind: functional
+  statement: The maximum troop cap MUST be amplified by the number of isolated landmasses
+    (islands and continents) detected on the map.
+- id: REQ-059
+  kind: functional
+  statement: Attacking a target player territory MUST expand across all their accessible
+    connected territories, excluding disconnected areas requiring naval transport.
+- id: REQ-060
+  kind: functional
+  statement: Invasions into player territories MUST require attacker forces to exceed
+    a proportion of the defender's balance to break through fortified defenses.
+- id: REQ-061
+  kind: functional
+  statement: Troop values on the UI and game metrics MUST be formatted using human-readable
+    abbreviations (e.g., K, M, B).
+- id: REQ-062
+  kind: functional
+  statement: The procedural map generator MUST normalize land bridges and connected
+    continents to prevent pixel-level shredding or tearing.
 batons:
 - id: BATON-001
   version: 1
@@ -2226,6 +2256,111 @@ batons:
   objective: Branch and expand land capture incrementally along the path leading to
     the target coordinate.
   type: implementation
+- id: BATON-059
+  title: Attack Reinforcement and Square Expansion
+  objective: Implement attack reinforcement on click and square target area expansion
+    with surplus refund.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-056
+  execution:
+    depends_on:
+    - BATON-058
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-060
+  title: Maximum Troop Cap and NaN Defense
+  objective: Implement maximum troop capping and NaN troop balance defense mechanisms.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-057
+  execution:
+    depends_on:
+    - BATON-059
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-061
+  title: Continent-Amplified Troop Cap & Island Detection
+  objective: Implement isolated landmass/continent detection and scale the max troops
+    limit by the count of detected continents.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-058
+  execution:
+    depends_on:
+    - BATON-060
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-062
+  title: Multi-Territory Invasion & Fortification Defense
+  objective: Expand attacks to cover all connected rival landmasses and implement
+    defense thresholds based on rival's balance.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-059
+    - REQ-060
+  execution:
+    depends_on:
+    - BATON-061
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+- id: BATON-063
+  title: Readable Troop UI Formatting & Map Normalization
+  objective: Implement human-friendly troop formatting and smooth/normalize map continents.
+  type: implementation
+  acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    gates: []
+    requirements:
+    - REQ-061
+    - REQ-062
+  execution:
+    depends_on:
+    - BATON-062
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
 releases:
 - id: REL-001
   version: 0.1.0
@@ -2725,6 +2860,41 @@ evaluations:
 - id: EVAL-058
   layer: outcome
   target: BATON-058
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-059
+  layer: outcome
+  target: BATON-059
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-060
+  layer: outcome
+  target: BATON-060
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-061
+  layer: outcome
+  target: BATON-061
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-062
+  layer: outcome
+  target: BATON-062
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-063
+  layer: outcome
+  target: BATON-063
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

@@ -154,11 +154,11 @@ class TerraApp {
       if (type === 'ATTACK_LAUNCH') {
         this.sound.playAttack();
         this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 22);
-        this.particles.spawnFloatingText(data.x, data.y, `-${data.troops}`, '#ff0055');
+        this.particles.spawnFloatingText(data.x, data.y, `-${TerritorySimulation.formatTroops(data.troops)}`, '#ff0055');
       } else if (type === 'BOAT_LAUNCH') {
         this.sound.playBoat();
         this.particles.spawnShockwave(data.x, data.y, '#00f2fe', 16);
-        this.particles.spawnFloatingText(data.x, data.y, `⛵ BOAT (${data.troops})`, '#00f2fe');
+        this.particles.spawnFloatingText(data.x, data.y, `⛵ BOAT (${TerritorySimulation.formatTroops(data.troops)})`, '#00f2fe');
       }
     };
   }
@@ -933,7 +933,7 @@ class TerraApp {
       if (activeBotsEl) activeBotsEl.textContent = `${stats.activePlayers} Bots`;
 
       const troopsEl = document.getElementById('hud-troops');
-      if (troopsEl) troopsEl.textContent = stats.playerBalance.toLocaleString();
+      if (troopsEl) troopsEl.textContent = TerritorySimulation.formatTroops(stats.playerBalance);
 
       const landEl = document.getElementById('hud-land');
       if (landEl) landEl.textContent = `${stats.playerLandCount.toLocaleString()} px² (${((stats.playerLandCount / (1000 * 1000)) * 100).toFixed(1)}%)`;

@@ -606,6 +606,77 @@ simCap.players[1].balance = NaN;
 simCap.update(16.6);
 assert(simCap.players[1].balance === 500, 'Player balance successfully recovered from NaN to 500');
 
+// --- Test 20: Continent Amplified Cap, Multi-Territory Invasion, Fortification, Formatting, & Normalization ---
+console.log('\n[Test 20] Continent Cap, Multi-Territory, Fortification, Formatting, & Normalization');
+
+// 1. Continent Amplified Cap
+const simCont = new TerritorySimulation(100, 100, 10, 'arena');
+// Manually create two separate islands of size 60 each
+simCont.terrainGrid.fill(0); // Make all water
+for (let i = 0; i < 60; i++) {
+  simCont.terrainGrid[i] = 1; // Island 1
+  simCont.terrainGrid[1000 + i] = 1; // Island 2
+}
+const detectedContinents = simCont.detectIsolatedLandmasses();
+assert(detectedContinents >= 2, 'detectIsolatedLandmasses correctly identified multiple isolated landmasses');
+const baseCapExpected = simCont.totalLandToConquer * 200000;
+const multiplierExpected = 1.0 + (detectedContinents * 0.15);
+const expectedMaxLimit = Math.min(2000000000, Math.floor(baseCapExpected * multiplierExpected));
+assert(simCont.maxTroopsLimit > baseCapExpected, 'maxTroopsLimit is successfully amplified by continent multiplier');
+
+// 2. Fortification Defense Threshold
+const simFort = new TerritorySimulation(100, 100, 10, 'arena');
+simFort.state = 'PLAYING';
+simFort.players[1].isAlive = true;
+simFort.players[1].balance = 50;
+simFort.grid[1010] = 1;
+simFort.frontiers[1] = [1010];
+
+// Setup highly fortified enemy at x=11, y=10 (idx 1011)
+simFort.players[2].isAlive = true;
+simFort.players[2].balance = 10000; // high balance
+simFort.grid[1011] = 2;
+simFort.frontiers[2] = [1011];
+simFort.terrainGrid.fill(1);
+
+// Attacker has 20 troops (defense threshold is 20% of 10000 = 2000 troops)
+simFort.activeExpansions.push({
+  ownerId: 1,
+  targetX: 11,
+  targetY: 10,
+  launchX: 10,
+  launchY: 10,
+  remainingTroops: 20,
+  isCounterPush: false,
+  path: [1010, 1011],
+  isRivalAttack: true,
+  targetOwner: 2
+});
+
+simFort.update(16.6);
+// Verify that the rival pixel at 1011 was NOT captured because of the fortification threshold
+assert(simFort.grid[1011] === 2, 'Rival pixel was NOT captured because attack force was below defender fortification threshold');
+
+// 3. Readable Formatting
+assert(TerritorySimulation.formatTroops(1500) === '1.5K', 'formatTroops formatted 1500 to 1.5K');
+assert(TerritorySimulation.formatTroops(2300000) === '2.3M', 'formatTroops formatted 2.3M');
+assert(TerritorySimulation.formatTroops(1000000000) === '1.0B', 'formatTroops formatted 1.0B');
+
+// 4. Map Landmass Normalization
+const mockGrid = new Uint8Array(100);
+// fill index 0 to 30 with land (size 31)
+for (let i = 0; i <= 30; i++) {
+  mockGrid[i] = 1;
+}
+// Set up diagonal tear at (x=0, y=3) and (x=1, y=4)
+mockGrid[30] = 1;
+mockGrid[31] = 0;
+mockGrid[40] = 0;
+mockGrid[41] = 1;
+// Tearing diagonal connection should be normalized by MapGenerator.cleanupGrid
+MapGenerator.cleanupGrid(10, 10, mockGrid);
+assert(mockGrid[40] === 1 || mockGrid[31] === 1, 'Diagonal tearing land connections normalized to solid orthogonal land bridge');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

@@ -26,7 +26,10 @@ export class TerritorySimulation {
       if (this.terrainGrid[i] === 1) landCount++;
     }
     this.totalLandToConquer = landCount || (width * height);
-    this.maxTroopsLimit = Math.min(2000000000, this.totalLandToConquer * 200000);
+    this.numContinents = this.detectIsolatedLandmasses();
+    const baseCap = this.totalLandToConquer * 200000;
+    const multiplier = 1.0 + (this.numContinents * 0.15);
+    this.maxTroopsLimit = Math.min(2000000000, Math.floor(baseCap * multiplier));
 
     this.grid = new Uint16Array(width * height);
     this.aiEngine = new AIEngine(numPlayers);
@@ -225,6 +228,9 @@ export class TerritorySimulation {
           attacker.balance -= forceTroops;
           existing.remainingTroops += forceTroops;
           existing.targetReached = false; // Reset target reached flag to resume path push
+          const targetOwner = this.grid[targetPixelIdx];
+          existing.targetOwner = targetOwner;
+          existing.isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);
           if (this.onParticleEvent) {
             this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
           }
@@ -272,6 +278,9 @@ export class TerritorySimulation {
       return this.launchBoatAttack(attackerId, targetPixelIdx, forcePercent);
     }
 
+    const targetOwner = this.grid[targetPixelIdx];
+    const isRivalAttack = (targetOwner > 0 && targetOwner !== attackerId);
+
     this.activeExpansions.push({
       ownerId: attackerId,
       targetX: targetX,
@@ -280,7 +289,9 @@ export class TerritorySimulation {
       launchY: launchY,
       remainingTroops: forceTroops,
       isCounterPush: false,
-      path: path
+      path: path,
+      isRivalAttack: isRivalAttack,
+      targetOwner: targetOwner
     });
     return true;
   }
@@ -452,7 +463,7 @@ export class TerritorySimulation {
     pFrom.balance -= rawAid;
     pTo.balance += netAid;
 
-    this.addToast(`Sent ${netAid.toLocaleString()} troops aid to ${pTo.name} (5% tax).`, 'info');
+    this.addToast(`Sent ${TerritorySimulation.formatTroops(netAid)} troops aid to ${pTo.name} (5% tax).`, 'info');
     return true;
   }
 
@@ -820,19 +831,21 @@ export class TerritorySimulation {
             const distFromLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
             if (distFromLaunch > exp.currentRadius) continue;
 
-            let distToPath = Infinity;
-            if (exp.path) {
-              for (let i = 0; i < exp.path.length; i++) {
-                const px = exp.path[i] % width;
-                const py = Math.floor(exp.path[i] / width);
-                const d = Math.hypot(nx - px, ny - py);
-                if (d < distToPath) {
-                  distToPath = d;
+            if (!exp.isRivalAttack) {
+              let distToPath = Infinity;
+              if (exp.path) {
+                for (let i = 0; i < exp.path.length; i++) {
+                  const px = exp.path[i] % width;
+                  const py = Math.floor(exp.path[i] / width);
+                  const d = Math.hypot(nx - px, ny - py);
+                  if (d < distToPath) {
+                    distToPath = d;
+                  }
+                  if (distToPath <= 3.0) break;
                 }
-                if (distToPath <= 3.0) break;
               }
+              if (exp.path && distToPath > 3.0) continue;
             }
-            if (exp.path && distToPath > 3.0) continue;
           }
 
           if (defenderOwner === 0) {
@@ -856,6 +869,14 @@ export class TerritorySimulation {
           } else {
             if (this.hasPact(exp.ownerId, defenderOwner)) continue;
             const defender = this.players[defenderOwner];
+
+            if (defender) {
+              const defenseThreshold = Math.max(10, Math.floor(defender.balance * 0.20));
+              if (exp.remainingTroops < defenseThreshold) {
+                exp.remainingTroops = Math.max(0, exp.remainingTroops - 5);
+                continue;
+              }
+            }
 
             const distToLaunch = Math.hypot(nx - exp.launchX, ny - exp.launchY);
             const scaleMultiplier = 1.0 + (distToLaunch * 0.002);
@@ -1028,6 +1049,64 @@ export class TerritorySimulation {
         frontier.splice(bestArrayIdx, 1);
       }
     }
+  }
+
+  detectIsolatedLandmasses() {
+    const width = this.width;
+    const height = this.height;
+    const visited = new Uint8Array(width * height);
+    let continentCount = 0;
+
+    for (let i = 0; i < this.terrainGrid.length; i++) {
+      if (this.terrainGrid[i] === 0 || visited[i] === 1) continue;
+
+      let size = 0;
+      const queue = [i];
+      visited[i] = 1;
+      let head = 0;
+
+      while (head < queue.length) {
+        const curr = queue[head++];
+        size++;
+
+        const cx = curr % width;
+        const cy = Math.floor(curr / width);
+
+        const neighbors = [
+          cy > 0 ? curr - width : -1,
+          cy < height - 1 ? curr + width : -1,
+          cx > 0 ? curr - 1 : -1,
+          cx < width - 1 ? curr + 1 : -1
+        ];
+
+        for (const n of neighbors) {
+          if (n >= 0 && visited[n] === 0 && this.terrainGrid[n] !== 0) {
+            visited[n] = 1;
+            queue.push(n);
+          }
+        }
+      }
+
+      if (size >= 50) {
+        continentCount++;
+      }
+    }
+
+    return continentCount || 1;
+  }
+
+  static formatTroops(value) {
+    if (isNaN(value) || value === undefined || value === null) return '0';
+    if (value >= 1e9) {
+      return (value / 1e9).toFixed(1) + 'B';
+    }
+    if (value >= 1e6) {
+      return (value / 1e6).toFixed(1) + 'M';
+    }
+    if (value >= 1e3) {
+      return (value / 1e3).toFixed(1) + 'K';
+    }
+    return Math.floor(value).toString();
   }
 
   pruneAllFrontiers() {

@@ -4,6 +4,8 @@
  * and 2D canvas time-series territory expansion chart with interactive tooltips.
  */
 
+import { TerritorySimulation } from './simulation.js';
+
 export class StatsDashboard {
   constructor(overlayId = 'post-match-overlay', canvasId = 'chart-canvas') {
     this.overlay = document.getElementById(overlayId);
@@ -79,7 +81,7 @@ export class StatsDashboard {
           <td><strong>#${p.rank}</strong></td>
           <td style="color: ${p.color}; font-weight: 600;">${p.name} ${p.isHuman ? ' (You)' : ''}</td>
           <td>${p.peakLandPct}%</td>
-          <td>${p.peakTroops.toLocaleString()}</td>
+          <td>${TerritorySimulation.formatTroops(p.peakTroops)}</td>
           <td>${p.eliminationTime !== null ? `${Math.round(p.eliminationTime)}s` : 'Survived'}</td>
         `;
         tbody.appendChild(tr);
