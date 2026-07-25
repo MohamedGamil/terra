@@ -510,10 +510,20 @@ for (let y = 0; y < 100; y++) {
 
 const disconnectedTargetIdx = 10 * 100 + 30; // x=30, y=10 (across the water wall)
 const landAttackBlocked = simRoute.executeAttack(1, disconnectedTargetIdx, 25);
-assert(landAttackBlocked === false, 'Land attack targeting disconnected landmass was blocked on launch');
+assert(landAttackBlocked === false, 'Land attack without shoreline and without path is blocked');
+
+// Now give the player a shoreline adjacent to the water wall (x=19, y=10)
+simRoute.grid[10 * 100 + 19] = 1;
+simRoute.frontiers[1].push(10 * 100 + 19);
+
+const landAttackFallback = simRoute.executeAttack(1, disconnectedTargetIdx, 25);
+assert(landAttackFallback === true, 'Land attack targeting disconnected landmass with shoreline automatically fell back to naval attack');
+assert(simRoute.boats.length === 1, 'Naval boat spawned from automatic fallback attack');
+simRoute.boats = []; // clear spawned boat for subsequent assertions
 
 // 2. Target is connected (clear the water wall at y=10)
 simRoute.terrainGrid[10 * 100 + 20] = 1; // restore land bridge at y=10
+simRoute.players[1].balance = 500; // Reset balance to ensure sufficient funds
 
 const connectedTargetIdx = 10 * 100 + 30; // x=30, y=10
 const landAttackOk = simRoute.executeAttack(1, connectedTargetIdx, 25);

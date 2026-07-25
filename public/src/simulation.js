@@ -260,10 +260,8 @@ export class TerritorySimulation {
 
     const path = this.findLandPath(launchIdx, targetPixelIdx);
     if (!path) {
-      if (attackerId === 1) {
-        this.addToast('⚠️ No contiguous land path to target! Use a Naval Attack.', 'warning');
-      }
-      return false;
+      attacker.balance += tax + forceTroops;
+      return this.launchBoatAttack(attackerId, targetPixelIdx, forcePercent);
     }
 
     this.activeExpansions.push({
@@ -315,19 +313,15 @@ export class TerritorySimulation {
       let bestShorelineIdx = -1;
       let minSearchDist = Infinity;
 
-      for (let dy = -5; dy <= 5; dy++) {
-        for (let dx = -5; dx <= 5; dx++) {
-          const nx = startX + dx;
-          const ny = startY + dy;
-          if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
-            const checkIdx = ny * this.width + nx;
-            if (this.isShorelinePixel(checkIdx)) {
-              const d = Math.hypot(dx, dy);
-              if (d < minSearchDist) {
-                minSearchDist = d;
-                bestShorelineIdx = checkIdx;
-              }
-            }
+      for (let idx = 0; idx < this.grid.length; idx++) {
+        if (this.terrainGrid[idx] === 0 || this.terrainGrid[idx] === 2) continue;
+        if (this.isShorelinePixel(idx)) {
+          const sx = idx % this.width;
+          const sy = Math.floor(idx / this.width);
+          const d = Math.hypot(sx - startX, sy - startY);
+          if (d < minSearchDist) {
+            minSearchDist = d;
+            bestShorelineIdx = idx;
           }
         }
       }
@@ -616,14 +610,14 @@ export class TerritorySimulation {
   }
 
   findClosestCoastalPixelTo(ownerId, tx, ty) {
-    const frontier = this.frontiers[ownerId];
-    if (!frontier) return null;
     const width = this.width;
     const height = this.height;
     let bestPixel = null;
     let minDistance = Infinity;
 
-    for (const idx of frontier) {
+    for (let idx = 0; idx < this.grid.length; idx++) {
+      if (this.grid[idx] !== ownerId) continue;
+
       const cx = idx % width;
       const cy = Math.floor(idx / width);
       
