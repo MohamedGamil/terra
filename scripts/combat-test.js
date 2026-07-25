@@ -146,6 +146,15 @@ assert(sortedLeaderboard[0].id === 2, 'Top rank empire has largest land count (1
 assert(sortedLeaderboard[1].id === 3, 'Second rank empire has second largest land count (800)');
 assert(sortedLeaderboard[2].id === 1, 'Third rank empire is player (500)');
 
+// --- Test 7: 0px Land Defeat & Elimination State (REQ-045) ---
+console.log('\n[Test 7] 0px Land Defeat & Elimination State (REQ-045)');
+const bot2 = sim.players[2];
+assert(bot2.isAlive === true, 'Bot 2 is initially alive');
+bot2.landCount = 0;
+sim.checkPlayerEliminations();
+assert(bot2.isAlive === false, 'Bot 2 is eliminated when landCount reduced to 0px');
+assert(bot2.balance === 0, 'Bot 2 balance set to 0 upon elimination');
+
 // --- Final Evaluation ---
 console.log(`\n--- GATE-003 Verification Summary ---`);
 console.log(`Tests Passed: ${testsPassed}`);

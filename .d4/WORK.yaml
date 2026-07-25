@@ -1999,8 +1999,10 @@ batons:
     - BATON-047
     owner: mgamil.dev@gmail.com
     quadrant: Q2
-    resume_pointer: Ready after BATON-047
-    state: draft
+    resume_pointer: Completed
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
   id: BATON-048
   objective: Implement 0px Land Defeat & Elimination State (REQ-045).
   title: 0px Land Defeat & Elimination State
@@ -2535,6 +2537,13 @@ evaluations:
 - id: EVAL-047
   layer: outcome
   target: BATON-047
+  method: mcp-agent-eval
+  result: pass
+  false_success_checked: true
+  metrics: {}
+- id: EVAL-048
+  layer: outcome
+  target: BATON-048
   method: mcp-agent-eval
   result: pass
   false_success_checked: true

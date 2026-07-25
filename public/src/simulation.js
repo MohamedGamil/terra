@@ -674,6 +674,7 @@ export class TerritorySimulation {
 
     this.updateBoats(deltaTimeMs);
     this.updateRadarPulses(deltaTimeMs);
+    this.checkPlayerEliminations();
     this.updateBots();
 
     if (this.tickCount % 5 === 0) {
@@ -681,6 +682,25 @@ export class TerritorySimulation {
     }
 
     this.checkGameResolution();
+  }
+
+  checkPlayerEliminations() {
+    for (let id = 1; id <= this.numPlayers; id++) {
+      const p = this.players[id];
+      if (p && p.isAlive) {
+        if (p.landCount <= 0) {
+          p.isAlive = false;
+          p.balance = 0;
+          this.frontiers[id] = [];
+          if (id === 1) {
+            this.addToast('💀 You have been defeated!', 'danger');
+            this.state = 'GAME_OVER';
+          } else {
+            this.addToast(`💀 Bot ${p.name || id} has been eliminated!`, 'info');
+          }
+        }
+      }
+    }
   }
 
   updateBoats(deltaTimeMs) {
