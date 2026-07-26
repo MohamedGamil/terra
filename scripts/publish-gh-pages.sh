@@ -54,7 +54,11 @@ touch .nojekyll
 # 7. Stage and commit
 echo "Staging files..."
 git add assets/ index.html .nojekyll
-git commit -m "deploy: compile static single-player build for GitHub Pages"
+if git diff --cached --quiet; then
+  echo "No changes detected. Everything is up-to-date."
+else
+  git commit -m "deploy: compile static single-player build for GitHub Pages"
+fi
 
 # 8. Try to push
 echo "Attempting to push to origin gh-pages..."
