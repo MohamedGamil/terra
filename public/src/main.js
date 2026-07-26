@@ -239,6 +239,15 @@ class TerraApp {
   }
 
   initMultiplayerUI() {
+    if (import.meta.env && import.meta.env.VITE_SINGLE_PLAYER_ONLY === 'true') {
+      const modeSelector = document.querySelector('.diff-btn-group');
+      if (modeSelector) {
+        modeSelector.style.display = 'none';
+      }
+      this.gameMode = 'single';
+      return;
+    }
+
     const tabSingle = document.getElementById('tab-mode-single');
     const tabMulti = document.getElementById('tab-mode-multi');
     const multiSection = document.getElementById('multiplayer-room-section');
