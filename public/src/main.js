@@ -240,9 +240,9 @@ class TerraApp {
 
   initMultiplayerUI() {
     if (import.meta.env && import.meta.env.VITE_SINGLE_PLAYER_ONLY === 'true') {
-      const modeSelector = document.querySelector('.diff-btn-group');
-      if (modeSelector) {
-        modeSelector.style.display = 'none';
+      const tabSingle = document.getElementById('tab-mode-single');
+      if (tabSingle && tabSingle.parentElement) {
+        tabSingle.parentElement.style.display = 'none';
       }
       this.gameMode = 'single';
       return;
