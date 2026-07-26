@@ -126,23 +126,65 @@ function rasterizeScanline(polygons, width, height, grid) {
   }
 }
 
-function applyMountains(width, height, grid) {
-  for (let i = 0; i < grid.length; i++) {
-    if (grid[i] === 1) {
-      const y = Math.floor(i / width);
-      const x = i % width;
+function drawMountainRidge(x1, y1, x2, y2, radius, width, height, grid) {
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+  const sx = (x1 < x2) ? 1 : -1;
+  const sy = (y1 < y2) ? 1 : -1;
+  let err = dx - dy;
 
-      const isHimalayas = (x >= 650 && x <= 780 && y >= 320 && y <= 400);
-      const isAndes = (x >= 280 && x <= 330 && y >= 620 && y <= 920);
-      const isRockies = (x >= 150 && x <= 240 && y >= 200 && y <= 400);
-      const isAlps = (x >= 490 && x <= 550 && y >= 260 && y <= 310);
-      const isUrals = (x >= 600 && x <= 630 && y >= 150 && y <= 320);
+  let cx = x1;
+  let cy = y1;
 
-      if ((isHimalayas || isAndes || isRockies || isAlps || isUrals) && ((x + y * 13) % 7 === 0)) {
-        grid[i] = 2; // Impassable Mountain
+  while (true) {
+    const rSq = radius * radius;
+    for (let dy2 = -radius; dy2 <= radius; dy2++) {
+      const ny = cy + dy2;
+      if (ny < 0 || ny >= height) continue;
+      for (let dx2 = -radius; dx2 <= radius; dx2++) {
+        const nx = cx + dx2;
+        if (nx < 0 || nx >= width) continue;
+        if (dx2 * dx2 + dy2 * dy2 <= rSq) {
+          const idx = ny * width + nx;
+          if (grid[idx] === 1) {
+            grid[idx] = 2; // Impassable Mountain
+          }
+        }
       }
     }
+
+    if (cx === x2 && cy === y2) break;
+    const e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      cx += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      cy += sy;
+    }
   }
+}
+
+function applyMountains(width, height, grid) {
+  // Rockies
+  drawMountainRidge(160, 220, 240, 320, 4, width, height, grid);
+  drawMountainRidge(240, 320, 220, 420, 4, width, height, grid);
+
+  // Andes
+  drawMountainRidge(270, 560, 310, 680, 4, width, height, grid);
+  drawMountainRidge(310, 680, 290, 800, 4, width, height, grid);
+
+  // Alps
+  drawMountainRidge(470, 260, 520, 280, 4, width, height, grid);
+  drawMountainRidge(520, 280, 550, 270, 4, width, height, grid);
+
+  // Himalayas
+  drawMountainRidge(700, 320, 780, 340, 4, width, height, grid);
+  drawMountainRidge(780, 340, 760, 370, 4, width, height, grid);
+
+  // Urals
+  drawMountainRidge(615, 150, 615, 320, 4, width, height, grid);
 }
 
 console.log("Rasterizing world map grid...");

@@ -620,6 +620,12 @@ requirements:
   statement: When a pixel is conquered by an attacker, the defender's adjacent pixels
     that are now border pixels MUST be immediately added to the defender's frontier
     list to prevent dead border zones.
+- id: REQ-099
+  kind: functional
+  statement: Impassable mountain areas on the world map MUST be rasterized as contiguous solid mountain ridges rather than alternating diagonal pattern stripes to maintain proper expansion connectivity.
+- id: REQ-100
+  kind: functional
+  statement: The main canvas renderer MUST automatically resize and auto-fit to scale and center within the browser window viewport boundaries, maintaining correct screen-to-simulation coordinates snapped coordinate precision.
 batons:
 - id: BATON-001
   version: 1
@@ -3192,6 +3198,45 @@ batons:
     during conquest.
   title: Frontier Synchronization for Defenders
   type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run build:map
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-099
+  execution:
+    depends_on:
+    - BATON-095
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: assigned
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-096
+  objective: Replace hatched mountain generation formula with Bresenham-based contiguous solid mountain ridge lines to eliminate the parallel diagonal lines issue.
+  title: Solid Mountain Ridge Rasterization
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-100
+  execution:
+    depends_on:
+    - BATON-096
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: assigned
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-097
+  objective: Scale the initial canvas zoom to fit the entire map viewport dynamically on resize without affecting the canvas coordinate transformation system.
+  title: Responsive Viewport Sizing Auto-Fit
+  type: implementation
 releases:
 - id: REL-001
   version: 0.1.0
@@ -3394,6 +3439,21 @@ releases:
   - BATON-076
   delivery_form: deployable
   status: released
+- id: REL-011
+  version: 1.1.0
+  name: 'Terra Mountain Geometry & Viewport Auto-Fit Sizing'
+  is_mvp: false
+  exit_criteria:
+  - Mountains rasterize as contiguous, thick solid ridges, resolving parallel diagonal stripes.
+  - Canvas scales and centers on startup and resize to auto-fit viewport cleanly.
+  requirements:
+  - REQ-099
+  - REQ-100
+  batons:
+  - BATON-096
+  - BATON-097
+  delivery_form: deployable
+  status: assigned
 evaluations:
 - id: EVAL-001
   layer: outcome

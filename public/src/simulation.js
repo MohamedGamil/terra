@@ -21,6 +21,13 @@ export class TerritorySimulation {
 
     this.terrainGrid = MapGenerator.generate(mapType, width, height, seed, customMapData);
     
+    // Normalize and flatten all mountain ridges (2) as passable land (1)
+    for (let i = 0; i < this.terrainGrid.length; i++) {
+      if (this.terrainGrid[i] === 2) {
+        this.terrainGrid[i] = 1;
+      }
+    }
+    
     let landCount = 0;
     for (let i = 0; i < this.terrainGrid.length; i++) {
       if (this.terrainGrid[i] === 1) landCount++;

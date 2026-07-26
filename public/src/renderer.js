@@ -58,6 +58,7 @@ export class TerritoryRenderer {
     this.canvas.width = parent.clientWidth;
     this.canvas.height = parent.clientHeight;
     if (this.panX === 0 && this.panY === 0) {
+      this.zoom = Math.min(this.canvas.width / this.width, this.canvas.height / this.height);
       this.panX = (this.canvas.width - this.width * this.zoom) / 2;
       this.panY = (this.canvas.height - this.height * this.zoom) / 2;
     }
