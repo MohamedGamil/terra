@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terra — Tactical RTS Conquest Engine</title>
+  <script type="module" crossorigin src="./assets/index-B7mcy5BJ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-3X2WXNR6.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Step 1: Main Lobby Menu Overlay -->
+    <div id="lobby-screen" class="lobby-overlay">
+      <div class="lobby-card">
+        <div class="brand-header">
+          <div class="brand-icon">T</div>
+          <div>
+            <div class="brand-title">TERRA</div>
+            <span class="brand-badge">Tactical Conquest</span>
+          </div>
+        </div>
+
+        <div class="lobby-section">
+          <div class="diff-btn-group" style="margin-bottom: 12px;">
+            <button class="btn-diff active" id="tab-mode-single" data-mode="single">🎮 Singleplayer vs Bots</button>
+            <button class="btn-diff" id="tab-mode-multi" data-mode="multi">🌐 Online Multiplayer</button>
+          </div>
+        </div>
+
+        <!-- Online Room Code Section -->
+        <div id="multiplayer-room-section" class="lobby-section hidden" style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.2); padding: 12px; border-radius: 8px;">
+          <label class="input-label" style="color: var(--accent-cyan);">Multiplayer Room Code</label>
+          <div class="player-custom-row">
+            <input type="text" id="input-room-code" class="text-input" placeholder="TERRA-XXXX" style="font-family: var(--font-mono); text-transform: uppercase;">
+            <button class="btn btn-primary" id="btn-join-room" style="width: auto; padding: 10px 16px;">🔑 Join Room</button>
+            <button class="btn btn-secondary" id="btn-create-room" style="width: auto; padding: 10px 16px;">🌐 Create Room</button>
+          </div>
+          <div id="online-room-badge" style="display: none; margin-top: 8px; font-size: 13px; font-family: var(--font-mono); color: var(--accent-emerald);">
+            Active Room: <strong id="lbl-active-room-code">TERRA-8F92</strong> (<span id="lbl-room-player-count">1</span> Players)
+          </div>
+          <div id="online-players-list" style="margin-top: 6px; font-size: 12px; color: var(--text-secondary);"></div>
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Player Name & Color</label>
+          <div class="player-custom-row">
+            <input type="text" id="input-player-name" class="text-input" value="Rome" placeholder="Enter name...">
+            <input type="color" id="input-player-color" class="color-picker" value="#00f2fe">
+          </div>
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Map Seed & Reproducibility</label>
+          <div class="player-custom-row">
+            <input type="text" id="input-map-seed" class="text-input" value="12345" placeholder="Enter seed...">
+            <button class="btn btn-secondary" id="btn-random-seed" style="width: auto; padding: 10px 14px;">🎲 Random</button>
+          </div>
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Select Map Layout</label>
+          <div class="map-selector-grid">
+            <div class="map-card active" data-map="world">
+              <div class="map-icon">🌍</div>
+              <div class="map-title">World Map</div>
+              <div class="map-desc">GeoJSON Full World</div>
+            </div>
+            <div class="map-card" data-map="europe">
+              <div class="map-icon">🏰</div>
+              <div class="map-title">Europe</div>
+              <div class="map-desc">Regional GeoJSON</div>
+            </div>
+            <div class="map-card" data-map="asia">
+              <div class="map-icon">⛩️</div>
+              <div class="map-title">Asia & Pacific</div>
+              <div class="map-desc">Regional GeoJSON</div>
+            </div>
+            <div class="map-card" data-map="archipelago">
+              <div class="map-icon">🏝️</div>
+              <div class="map-title">Archipelago</div>
+              <div class="map-desc">Seeded Islands</div>
+            </div>
+            <div class="map-card" data-map="ring_of_fire">
+              <div class="map-icon">🌋</div>
+              <div class="map-title">Ring of Fire</div>
+              <div class="map-desc">Volcanic Ring Bay</div>
+            </div>
+            <div class="map-card" data-map="arena">
+              <div class="map-icon">⚔️</div>
+              <div class="map-title">Black Arena</div>
+              <div class="map-desc">Solid Continent</div>
+            </div>
+            <div class="map-card" data-map="custom" id="map-card-custom">
+              <div class="map-icon">🎨</div>
+              <div class="map-title">Custom Map</div>
+              <div class="map-desc">User Designed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lobby-section" style="margin-top: 10px; margin-bottom: 20px;">
+          <button class="btn btn-secondary" id="btn-open-map-editor" style="width: 100%; padding: 12px; font-weight: 600;">🎨 Open Interactive Map Editor</button>
+        </div>
+
+        <div class="lobby-section">
+          <div class="control-label">
+            <span>Bot Count</span>
+            <span id="lbl-bot-count" style="color: var(--accent-cyan); font-family: var(--font-mono);">100 Bots</span>
+          </div>
+          <input type="range" id="slider-bot-count" min="10" max="500" value="100" step="10">
+        </div>
+
+        <div class="lobby-section">
+          <label class="input-label">Bot Difficulty</label>
+          <div class="diff-btn-group">
+            <button class="btn-diff active" data-diff="easy">Easy</button>
+            <button class="btn-diff" data-diff="hard">Hard</button>
+            <button class="btn-diff" data-diff="impossible">Impossible</button>
+          </div>
+        </div>
+
+        <div class="lobby-footer">
+          <button class="btn btn-primary" id="btn-start-match">🚀 START CONQUEST MATCH</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Spawn Selection Banner -->
+    <div id="spawn-banner" class="spawn-banner-overlay" style="display: none;">
+      <div class="spawn-banner-card">
+        <div class="spawn-header">
+          <span class="spawn-title">📍 SELECT STARTING SPAWN LOCATION</span>
+          <span class="spawn-badge">Untimed Phase</span>
+        </div>
+        <p class="spawn-desc" id="spawn-sub-text">Click anywhere on neutral land to choose your starting kingdom</p>
+        <div class="spawn-controls">
+          <button class="btn btn-secondary" id="btn-random-spawn">🎲 RANDOM LOCATION</button>
+          <button class="btn btn-primary" id="btn-confirm-spawn" disabled style="opacity: 0.5;">🔒 LOCK SPAWN & START MATCH</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Left Player HUD Panel -->
+    <div id="player-hud" class="hud-panel hud-top-left">
+      <div class="hud-brand">
+        <span class="hud-dot"></span>
+        <span class="hud-title">TERRA</span>
+        <span class="hud-ver">v0.3.0</span>
+      </div>
+
+      <div class="hud-metrics">
+        <div class="hud-metric-row">
+          <span class="hud-label">TROOPS</span>
+          <span class="hud-val highlight-cyan" id="hud-troops">0</span>
+        </div>
+        <div class="hud-metric-row">
+          <span class="hud-label">LAND AREA</span>
+          <span class="hud-val highlight-emerald" id="hud-land">0 px² (0.0%)</span>
+        </div>
+        <div class="hud-metric-row">
+          <span class="hud-label">WORLD RANK</span>
+          <span class="hud-val highlight-amber" id="hud-rank">#1 / 100</span>
+        </div>
+        <div class="hud-metric-row">
+          <span class="hud-label">RED INTEREST</span>
+          <span class="hud-val" id="hud-interest">NORMAL (1.0%)</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Attack Percentage Slider -->
+      <div class="hud-attack-controls">
+        <div class="control-label">
+          <span>ATTACK FORCE</span>
+          <span id="attack-val" style="color: var(--accent-cyan); font-family: var(--font-mono);">25%</span>
+        </div>
+        <input type="range" id="attack-slider" min="1" max="100" value="25">
+        <div class="quick-btn-group">
+          <button class="btn-quick" data-force="10">10%</button>
+          <button class="btn-quick active" data-force="25">25%</button>
+          <button class="btn-quick" data-force="50">50%</button>
+          <button class="btn-quick" data-force="100">ALL IN</button>
+        </div>
+      </div>
+
+      <!-- Live Top Players Leaderboard Widget (Top-Left under Player HUD) -->
+      <div id="leaderboard-widget" class="leaderboard-widget">
+        <div class="lb-header">
+          <span>🏆 LEADERBOARD</span>
+          <span class="lb-sub">TOP EMPIRES</span>
+        </div>
+        <div id="lb-rows" class="lb-rows">
+          <!-- Dynamically populated rows -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Right Performance & Control Buttons HUD -->
+    <div id="hud-top-right" class="hud-panel hud-top-right">
+      <div class="sys-metrics">
+        <span class="metric-pill"><span class="pill-dot emerald"></span> <span id="sys-fps">60 FPS</span></span>
+        <span class="metric-pill"><span class="pill-dot cyan"></span> <span id="sys-render-ms">1.2ms</span></span>
+        <span class="metric-pill"><span class="pill-dot amber"></span> <span id="sys-active-bots">100 Bots</span></span>
+      </div>
+      <div class="hud-btn-row">
+        <button class="hud-btn" id="btn-emote-wheel" title="Open Emotes (E)">💬 Emotes</button>
+        <button class="hud-btn" id="btn-toggle-audio" title="Toggle Sound">🔊 Sound</button>
+        <button class="hud-btn" id="btn-toggle-minimap" title="Toggle Minimap">🗺️ Minimap</button>
+        <button class="hud-btn" id="btn-toggle-fog" title="Toggle Fog of War">👁️ Fog</button>
+        <!-- <button class="hud-btn" id="btn-run-benchmark" title="Run GATE-001 Benchmark">⚡ Benchmark</button> -->
+        <button class="hud-btn hud-btn-danger" id="btn-leave-match" title="Leave Match">🚪 Leave</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Countdown Overlay -->
+    <div id="countdown-overlay" class="lobby-overlay hidden" style="background: rgba(0, 0, 0, 0.6); z-index: 95;">
+      <div style="text-align: center;">
+        <div id="countdown-num" style="font-size: 96px; font-weight: 900; font-family: var(--font-mono); color: var(--accent-cyan); text-shadow: 0 0 40px rgba(0, 242, 254, 0.8);">3</div>
+        <div style="font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary); margin-top: 8px;">GET READY FOR CONQUEST</div>
+      </div>
+    </div>
+
+    <!-- Emote Wheel radial selection overlay -->
+    <div id="emote-wheel-overlay" class="lobby-overlay hidden" style="background: rgba(0, 0, 0, 0.45); z-index: 100;">
+      <div class="emote-wheel-card">
+        <div class="emote-wheel-header">📢 CHOOSE AN EMOTE</div>
+        <div class="emote-wheel-grid">
+          <button class="btn-emote" data-emote="🤝"><span class="emote-icon">🤝</span> Pact</button>
+          <button class="btn-emote" data-emote="⚔️"><span class="emote-icon">⚔️</span> Attack</button>
+          <button class="btn-emote" data-emote="💔"><span class="emote-icon">💔</span> Break</button>
+          <button class="btn-emote" data-emote="👑"><span class="emote-icon">👑</span> Win</button>
+          <button class="btn-emote" data-emote="😂"><span class="emote-icon">😂</span> Laugh</button>
+          <button class="btn-emote" data-emote="😡"><span class="emote-icon">😡</span> Angry</button>
+          <button class="btn-emote" data-emote="😭"><span class="emote-icon">😭</span> Sad</button>
+          <button class="btn-emote" data-emote="👍"><span class="emote-icon">👍</span> Thumbs</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-close-emotes" style="margin-top: 16px; width: 100%; padding: 10px; font-weight: 600;">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Scrolling Emote Chat Log Overlay -->
+    <div id="emote-chat-feed" class="emote-chat-feed"></div>
+
+    <!-- Center RTS Canvas Viewport -->
+    <div id="canvas-container" class="rts-viewport">
+      <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Bottom Right Tactical Minimap Overlay -->
+    <div id="minimap-container" class="minimap-widget">
+      <canvas id="minimap-canvas" width="200" height="200"></canvas>
+    </div>
+
+    <!-- Bottom Center Target Status Bar -->
+    <div id="target-bar" class="target-bar-panel">
+      <span class="target-icon">🎯</span>
+      <span class="target-text" id="target-status-text">Click or right-click any territory on map to command forces.</span>
+      <div class="target-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-attack-execute">⚔️ ATTACK</button>
+        <button class="btn btn-secondary btn-sm" id="btn-boat-execute">🚤 NAVAL</button>
+        <button class="btn btn-secondary btn-sm" id="btn-radar-execute">📡 RADAR (R)</button>
+      </div>
+    </div>
+
+    <!-- RTS Right-Click Context Menu -->
+    <div id="rts-context-menu" class="rts-context-menu" style="display: none;">
+      <div class="context-item highlight" id="ctx-attack">⚔️ Execute Land Attack</div>
+      <div class="context-item" id="ctx-boat">🚤 Launch Naval Invasion</div>
+      <div class="context-divider"></div>
+      <div class="context-item highlight-cyan" id="ctx-nap-propose">🤝 Propose Non-Aggression Pact</div>
+      <div class="context-item text-danger" id="ctx-nap-break">💔 Break Non-Aggression Pact</div>
+      <div class="context-item" id="ctx-send-aid">🎁 Send Troop Aid (10%)</div>
+      <div class="context-divider"></div>
+      <div class="context-item" id="ctx-lock">🔒 Focus Camera View</div>
+      <div class="context-item text-danger" id="ctx-cancel">✕ Cancel Selection</div>
+    </div>
+
+    <!-- Post-Match Telemetry & Analytics Dashboard Overlay -->
+    <div id="post-match-overlay" class="lobby-overlay hidden">
+      <div class="lobby-card post-match-card">
+        <div class="brand-header">
+          <div class="brand-icon">📊</div>
+          <div>
+            <div class="brand-title">MATCH ANALYTICS DASHBOARD</div>
+            <span class="brand-badge" id="pm-outcome-badge">VICTORY</span>
+          </div>
+        </div>
+
+        <div class="pm-summary-grid">
+          <div class="pm-summary-card">
+            <span class="pm-card-title">Match Duration</span>
+            <span class="pm-card-val highlight-cyan" id="pm-duration">04:12</span>
+          </div>
+          <div class="pm-summary-card">
+            <span class="pm-card-title">Peak Land Area</span>
+            <span class="pm-card-val highlight-emerald" id="pm-peak-land">42.5%</span>
+          </div>
+          <div class="pm-summary-card">
+            <span class="pm-card-title">Average APM</span>
+            <span class="pm-card-val highlight-amber" id="pm-apm">48 APM</span>
+          </div>
+          <div class="pm-summary-card">
+            <span class="pm-card-title">Rivals Eliminated</span>
+            <span class="pm-card-val highlight-rose" id="pm-eliminated">14</span>
+          </div>
+        </div>
+
+        <div class="pm-chart-section">
+          <div class="pm-chart-header">
+            <span class="pm-chart-title">Land Area Time-Series Evolution</span>
+            <div class="pm-chart-legend">
+              <span class="legend-item"><span class="legend-dot cyan"></span> You</span>
+              <span class="legend-item"><span class="legend-dot amber"></span> Leader</span>
+              <span class="legend-item"><span class="legend-dot rose"></span> Avg Bot</span>
+            </div>
+          </div>
+          <canvas id="chart-canvas" class="pm-chart-canvas"></canvas>
+        </div>
+
+        <!-- Leaderboard Standings Table -->
+        <div class="pm-leaderboard-section">
+          <table class="pm-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Peak Land</th>
+                <th>Peak Balance</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pm-actions">
+          <button class="btn btn-primary btn-large" id="btn-play-again">🔄 PLAY AGAIN (SAME SEED)</button>
+          <button class="btn btn-secondary" id="btn-back-lobby">🏠 BACK TO LOBBY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="gameover-modal" class="lobby-overlay hidden">
+      <div class="benchmark-card">
+        <div class="benchmark-header">
+          <h3 style="font-size: 20px; font-weight: 800;" id="gameover-title">VICTORY!</h3>
+          <span class="result-badge result-pass" id="gameover-badge">CONQUEROR</span>
+        </div>
+        <p id="gameover-desc" style="font-size: 13px; color: var(--text-secondary);">
+          You have successfully conquered all territories on the map!
+        </p>
+        <div class="benchmark-metrics">
+          <div class="metric-box"><div class="metric-title">Territory %</div><div class="metric-val highlight-emerald" id="gov-final-pct">100%</div></div>
+          <div class="metric-box"><div class="metric-title">Peak Troops</div><div class="metric-val highlight-cyan" id="gov-peak-troops">1.2M</div></div>
+          <div class="metric-box"><div class="metric-title">Bots Defeated</div><div class="metric-val highlight-amber" id="gov-bots-killed">100</div></div>
+        </div>
+        <button class="btn btn-primary" id="btn-restart-game" style="margin-top: 12px; width: 100%;">🔄 PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <!-- Map Editor Modal -->
+    <div id="map-editor-modal" class="lobby-overlay hidden" style="background: rgba(10, 15, 30, 0.95); z-index: 100;">
+      <div class="lobby-card" style="max-width: 900px; width: 95%;">
+        <div class="brand-header" style="justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="brand-icon">🎨</div>
+            <div>
+              <div class="brand-title">TERRA MAP EDITOR</div>
+              <span class="brand-badge">Interactive Territory Designer</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary" id="btn-close-map-editor" style="width: auto; padding: 6px 12px; font-size: 14px;">✕ Close</button>
+        </div>
+
+        <div style="display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;">
+          <!-- Editor Controls Sidebar -->
+          <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 14px;">
+            <div class="lobby-section">
+              <label class="input-label">Drawing Tools</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn-diff editor-tool-btn active" data-tool="land">🌱 Land</button>
+                <button class="btn-diff editor-tool-btn" data-tool="ocean">🌊 Ocean</button>
+                <button class="btn-diff editor-tool-btn" data-tool="mountain">⛰️ Mountain</button>
+                <button class="btn-diff editor-tool-btn" data-tool="eraser">🧹 Eraser</button>
+                <button class="btn-diff editor-tool-btn" data-tool="spawn">📍 Spawn</button>
+                <button class="btn-diff editor-tool-btn" data-tool="fill">🪣 Bucket</button>
+              </div>
+            </div>
+
+            <div class="lobby-section">
+              <div class="control-label">
+                <span>Brush Radius</span>
+                <span id="editor-brush-val" style="color: var(--accent-cyan); font-family: var(--font-mono);">8px</span>
+              </div>
+              <input type="range" id="editor-brush-slider" min="1" max="25" value="8">
+            </div>
+
+            <div class="lobby-section" style="background: rgba(255, 255, 255, 0.04); padding: 12px; border-radius: 8px;">
+              <label class="input-label" style="margin-bottom: 6px;">Geography Statistics</label>
+              <div style="font-size: 12px; display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono);">
+                <div>Land Area: <span id="stat-land-pct" style="color: var(--accent-emerald);">0.0%</span></div>
+                <div>Ocean Water: <span id="stat-ocean-pct" style="color: var(--accent-cyan);">100.0%</span></div>
+                <div>Mountains: <span id="stat-mountain-pct" style="color: var(--accent-amber);">0.0%</span></div>
+                <div>Spawn Points: <span id="stat-spawn-count" style="color: #ff0055;">0</span></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-secondary" id="btn-editor-clear" style="padding: 10px;">🗑️ Clear Canvas</button>
+              <button class="btn btn-secondary" id="btn-editor-export" style="padding: 10px;">💾 Export Map JSON</button>
+              <label class="btn btn-secondary" style="padding: 10px; text-align: center; cursor: pointer; margin: 0;">
+                📂 Import Map JSON
+                <input type="file" id="input-editor-import" accept=".json" style="display: none;">
+              </label>
+              <button class="btn btn-primary" id="btn-editor-use-map" style="padding: 12px; margin-top: 8px; font-size: 15px;">🎮 PLAY THIS MAP</button>
+            </div>
+          </div>
+
+          <!-- Canvas Preview -->
+          <div style="flex: 2; min-width: 320px; display: flex; justify-content: center; align-items: center; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); aspect-ratio: 1 / 1;">
+            <canvas id="editor-canvas" width="1000" height="1000" style="width: 100%; height: 100%; object-fit: contain; cursor: crosshair;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GATE Benchmark Result Modal -->
+    <div id="benchmark-modal" class="lobby-overlay hidden">
+      <div class="benchmark-card">
+        <div class="benchmark-header">
+          <h3 style="font-size: 18px; font-weight: 700;">GATE-001 Benchmark Evaluation</h3>
+          <span class="result-badge result-pass" id="modal-result-badge">GATE-001 PASSED</span>
+        </div>
+        <p id="benchmark-status" style="font-size: 13px; color: var(--text-secondary);">Running benchmark...</p>
+        <div style="font-size: 12px; font-family: var(--font-mono); color: var(--accent-cyan);" id="benchmark-progress"></div>
+        <div class="benchmark-metrics">
+          <div class="metric-box"><div class="metric-title">Average FPS</div><div class="metric-val highlight-emerald" id="val-avg-fps">60.0</div></div>
+          <div class="metric-box"><div class="metric-title">Render Time</div><div class="metric-val highlight-cyan" id="val-render-ms">1.1ms</div></div>
+          <div class="metric-box"><div class="metric-title">p99 Latency</div><div class="metric-val highlight-amber" id="val-p99-ms">2.4ms</div></div>
+        </div>
+        <button class="btn btn-secondary" id="btn-close-modal" style="margin-top: 12px; width: 100%;">✕ Close Benchmark</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
