@@ -716,7 +716,7 @@ class TerraApp {
           for (let i = 0; i < 6; i++) {
             this.particles.spawnSpark(tx, ty, '#ff00aa');
           }
-          this.particles.spawnFloatingText(tx, ty - 5, '🎯 TARGET', '#ff00aa');
+          this.particles.spawnFloatingText(tx, ty - 5, '🎯', '#ff00aa');
         }
 
         if (terrainType === 0) {
@@ -956,15 +956,31 @@ class TerraApp {
     this.simulation.onParticleEvent = (eventType, data) => {
       if (!this.particles) return;
       if (eventType === 'ATTACK_LAUNCH') {
+        if (data.ownerId === 1) {
+          this.sound.playAttack();
+        }
         this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 24);
         for (let i = 0; i < 5; i++) {
           this.particles.spawnSpark(data.x, data.y, data.color || '#00f2fe');
         }
       } else if (eventType === 'BOAT_LAUNCH') {
+        if (data.ownerId === 1) {
+          this.sound.playBoat();
+        }
         this.particles.spawnShockwave(data.x, data.y, '#00f2fe', 30);
         this.particles.spawnFloatingText(data.x, data.y, '🚤 NAVAL', '#00f2fe');
       } else if (eventType === 'CONQUEST') {
         this.particles.spawnShockwave(data.x, data.y, data.color || '#00f2fe', 16);
+      }
+    };
+
+    this.simulation.onIncomeTick = () => {
+      // this.sound.playInterestChime();
+    };
+
+    this.simulation.onPlayerEliminated = (eliminatedId, killerId) => {
+      if (killerId === 1) {
+        this.sound.playElimination();
       }
     };
 

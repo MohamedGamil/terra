@@ -394,7 +394,7 @@ export class TerritorySimulation {
           }
 
           if (this.onParticleEvent) {
-            this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
+            this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops, ownerId: attackerId });
           }
           return true;
         }
@@ -419,7 +419,7 @@ export class TerritorySimulation {
     attacker.balance -= forceTroops;
 
     if (this.onParticleEvent) {
-      this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops });
+      this.onParticleEvent('ATTACK_LAUNCH', { x: targetX, y: targetY, color: attacker.color || '#00f2fe', troops: forceTroops, ownerId: attackerId });
     }
 
     let launchIdx = -1;
@@ -548,6 +548,12 @@ export class TerritorySimulation {
   }
 
   handlePixelCapture(nIdx, attackerId, defenderOwner) {
+    if (defenderOwner > 0) {
+      const defender = this.players[defenderOwner];
+      if (defender && defender.isAlive && defender.landCount <= 0) {
+        defender.killedById = attackerId;
+      }
+    }
     if (defenderOwner > 0 && this.frontiers[defenderOwner]) {
       const fIdx = this.frontiers[defenderOwner].indexOf(nIdx);
       if (fIdx !== -1) {
@@ -851,7 +857,7 @@ export class TerritorySimulation {
     const departure = { x: departureX, y: departureY };
 
     if (this.onParticleEvent) {
-      this.onParticleEvent('BOAT_LAUNCH', { x: departure.x, y: departure.y, color: attacker.color || '#00f2fe', troops: forceTroops });
+      this.onParticleEvent('BOAT_LAUNCH', { x: departure.x, y: departure.y, color: attacker.color || '#00f2fe', troops: forceTroops, ownerId: attackerId });
     }
     const distanceThreshold = Math.max(this.width, this.height) * 0.15;
     const speedScale = Math.max(0.2, distanceThreshold / Math.max(distanceThreshold, totalDistance));
@@ -2186,6 +2192,9 @@ export class TerritorySimulation {
           } else {
             this.addToast(`💀 ${p.name} has been eliminated!`, 'info');
           }
+          if (this.onPlayerEliminated) {
+            this.onPlayerEliminated(id, p.killedById);
+          }
         }
       }
     }
@@ -2423,6 +2432,9 @@ export class TerritorySimulation {
       p.interestRate = rate;
       p.balance += Math.floor(p.balance * rate);
       p.peakTroops = Math.max(p.peakTroops, p.balance);
+    }
+    if (this.onIncomeTick) {
+      this.onIncomeTick();
     }
   }
 
