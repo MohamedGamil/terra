@@ -42,6 +42,7 @@ export class TerritoryRenderer {
     this.hoverSpawnPoint = null;
     this.boats = [];
     this.radarPulses = [];
+    this.activeEmotes = [];
     this.visibilityBuffer = null;
     this.fogOfWarEnabled = true;
 
@@ -58,10 +59,16 @@ export class TerritoryRenderer {
     this.canvas.width = parent.clientWidth;
     this.canvas.height = parent.clientHeight;
     if (this.panX === 0 && this.panY === 0) {
-      this.zoom = Math.min(this.canvas.width / this.width, this.canvas.height / this.height);
+      this.zoom = Math.max(this.canvas.width / this.width, this.canvas.height / this.height);
       this.panX = (this.canvas.width - this.width * this.zoom) / 2;
       this.panY = (this.canvas.height - this.height * this.zoom) / 2;
     }
+  }
+
+  forceFitViewport() {
+    this.panX = 0;
+    this.panY = 0;
+    this.resizeCanvas();
   }
 
   getCanvasContentCoords(screenX, screenY) {
@@ -241,7 +248,7 @@ export class TerritoryRenderer {
     this.offCtx.putImageData(this.imageData, 0, 0);
 
     // Draw main viewport
-    this.ctx.fillStyle = '#040609';
+    this.ctx.fillStyle = '#081428';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.imageSmoothingEnabled = this.zoom > 2.0 ? false : true;
@@ -280,7 +287,8 @@ export class TerritoryRenderer {
       this.ctx.fillStyle = '#ffffff';
       this.ctx.font = 'bold 11px sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('YOUR SPAWN', sx, sy - 16);
+      const label = (this.players && this.players[1]) ? this.players[1].name.toUpperCase() : 'YOUR SPAWN';
+      this.ctx.fillText(label, sx, sy - 16);
     }
 
     // Compact High-Precision Target Selection Crosshair
@@ -368,19 +376,20 @@ export class TerritoryRenderer {
           const cx = this.panX + p.capitalX * this.zoom;
           const cy = this.panY + p.capitalY * this.zoom;
 
-          this.ctx.fillStyle = p.color || '#00f2fe';
+          // Draw outer high-contrast ring
+          this.ctx.fillStyle = '#ffffff';
           this.ctx.beginPath();
-          this.ctx.arc(cx, cy, Math.max(4, 6 * this.zoom), 0, Math.PI * 2);
+          this.ctx.arc(cx, cy, Math.max(2.5, 4 * this.zoom), 0, Math.PI * 2);
           this.ctx.fill();
 
-          this.ctx.strokeStyle = '#ffffff';
+          this.ctx.strokeStyle = 'rgba(15, 23, 42, 0.8)';
           this.ctx.lineWidth = 1.5;
           this.ctx.stroke();
 
-          // Draw small inner core
-          this.ctx.fillStyle = '#ffffff';
+          // Draw contrasting inner core in player color
+          this.ctx.fillStyle = p.color || '#00f2fe';
           this.ctx.beginPath();
-          this.ctx.arc(cx, cy, Math.max(1.5, 2.5 * this.zoom), 0, Math.PI * 2);
+          this.ctx.arc(cx, cy, Math.max(1, 1.8 * this.zoom), 0, Math.PI * 2);
           this.ctx.fill();
         }
       }
@@ -403,6 +412,31 @@ export class TerritoryRenderer {
       this.ctx.fillStyle = 'rgba(0, 242, 254, 0.08)';
       this.ctx.fill();
       this.ctx.restore();
+    }
+
+    // Render Floating Emotes
+    if (this.activeEmotes && this.activeEmotes.length > 0) {
+      for (const emote of this.activeEmotes) {
+        const ex = this.panX + emote.x * this.zoom;
+        const ey = this.panY + emote.y * this.zoom;
+        const progress = emote.age / emote.duration;
+        const opacity = Math.max(0, 1 - progress);
+        
+        this.ctx.save();
+        this.ctx.globalAlpha = opacity;
+        
+        const size = Math.max(12, 16 * this.zoom);
+        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+        this.ctx.beginPath();
+        this.ctx.arc(ex, ey, size * 0.75, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.font = `${size}px sans-serif`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(emote.emoji, ex, ey);
+        this.ctx.restore();
+      }
     }
 
     // Render Toast Notifications

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  --bg-primary: #040609;
+  --bg-primary: #122341;
   --bg-surface: #0e121a;
   --bg-glass: rgba(14, 18, 26, 0.88);
   --border-glass: rgba(255, 255, 255, 0.14);
@@ -121,7 +121,7 @@ body {
   height: 100vh;
   position: relative;
   overflow: hidden;
-  background-color: #040609;
+  background-color: #081428;
   cursor: grab;
 }
 
@@ -698,7 +698,7 @@ canvas#game-canvas {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  z-index: 40;
+  z-index: 80;
   box-shadow: var(--shadow-lg);
 }
 
@@ -711,8 +711,8 @@ canvas#game-canvas {
 }
 
 canvas#minimap-canvas {
-  width: 220px;
-  height: 135px;
+  width: 180px;
+  height: 180px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: crosshair;
@@ -805,7 +805,7 @@ canvas#minimap-canvas {
 }
 
 .lobby-card {
-  width: 480px;
+  width: 540px;
   background: var(--bg-surface);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
@@ -858,7 +858,7 @@ canvas#minimap-canvas {
 
 .map-selector-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -1219,5 +1219,108 @@ input[type="range"] {
   display: flex;
   gap: 14px;
   justify-content: flex-end;
+}
+
+/* Glassmorphic Emote Wheel Selection Dialog */
+.emote-wheel-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 320px;
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.emote-wheel-header {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.emote-wheel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* Make grid layout nice (3 columns, 3 items per row, thumbs up spans center or 8 items fits nicely in 3 columns) */
+.emote-wheel-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 12px 6px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.emote-wheel-grid button:hover {
+  background: rgba(0, 242, 254, 0.12);
+  border-color: rgba(0, 242, 254, 0.3);
+  transform: translateY(-2px);
+}
+
+.emote-wheel-grid button:active {
+  transform: translateY(0);
+}
+
+.emote-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+/* Scrolling Emote Chat Log Overlay (Bottom Left) */
+.emote-chat-feed {
+  position: absolute;
+  bottom: 110px;
+  left: 24px;
+  width: 280px;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  z-index: 85;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.chat-message {
+  background: rgba(14, 18, 26, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--accent-cyan);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideInLeft 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 

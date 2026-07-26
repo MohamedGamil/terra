@@ -8,6 +8,7 @@ export class AIEngine {
   constructor(numPlayers = 100) {
     this.numPlayers = numPlayers;
     this.botProfiles = new Map();
+    this.lastLeaderId = null;
     this.initBotProfiles();
   }
 
@@ -68,10 +69,20 @@ export class AIEngine {
     let maxLand = 0;
     for (let id = 1; id <= this.numPlayers; id++) {
       const p = players[id];
-      if (p && p.landCount > maxLand) {
+      if (p && p.isAlive && p.landCount > maxLand) {
         maxLand = p.landCount;
         leaderId = id;
       }
+    }
+
+    if (leaderId !== this.lastLeaderId) {
+      if (simulation && this.lastLeaderId !== null) {
+        const newLeader = players[leaderId];
+        if (newLeader && newLeader.isAlive && leaderId > 1 && Math.random() < 0.35) {
+          simulation.broadcastEmote(leaderId, '👑');
+        }
+      }
+      this.lastLeaderId = leaderId;
     }
 
     // Tick cooldown per difficulty (Easy = 8 ticks [400ms], Hard = 5 ticks [250ms], Impossible = 2 ticks [100ms])
@@ -170,6 +181,12 @@ export class AIEngine {
                 grid[nIdx] = id;
                 if (simulation) {
                   simulation.handlePixelCapture(nIdx, id, targetOwner);
+                  if (Math.random() < 0.004) {
+                    simulation.broadcastEmote(id, Math.random() < 0.5 ? '⚔️' : '😂');
+                    if (targetPlayer.isAlive) {
+                      simulation.broadcastEmote(targetOwner, Math.random() < 0.5 ? '😡' : '😭');
+                    }
+                  }
                 }
                 if (!botFrontierSet.has(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
                   frontier.push(nIdx);

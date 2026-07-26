@@ -8,6 +8,41 @@
 import { MapGenerator } from './map-generator.js';
 import { AIEngine } from './ai-engine.js';
 
+const CIVILIZATIONS = [
+  "Carthage", "Byzantium", "Sparta", "Athens", "Macedon", "Egypt", "Persia", "Babylon", "Assyria", "Sumer",
+  "Aztec", "Maya", "Inca", "Olmec", "Zapotec", "Toltec", "Iroquois", "Cherokee", "Sioux", "Apache",
+  "Navajo", "Comanche", "Seminole", "Choctaw", "Shoshone", "Cheyenne", "Mongols", "Huns", "Goths", "Vandals",
+  "Vikings", "Normandy", "Gaul", "Saxony", "Anglia", "Francia", "Lombardy", "Burgundy", "Venice", "Genoa",
+  "Florence", "Maurya", "Gupta", "Chola", "Mughal", "Maratha", "Han", "Tang", "Song", "Ming",
+  "Qing", "Yamato", "Kamakura", "Muromachi", "Edo", "Joseon", "Goguryeo", "Baekje", "Silla", "Khmer",
+  "Srivijaya", "Majapahit", "Siam", "Burma", "Lan Xang", "Aksum", "Nubia", "Mali", "Songhai", "Ghana",
+  "Kongo", "Zimbabwe", "Ethiopia", "Troy", "Mycenae", "Phrygia", "Lydia",
+  "Numidia", "Mauretania", "Bactria", "Scythia", "Sarmatia", "Thrace", "Dacia", "Illyria", "Epirus", "Pontus",
+  "Armenia", "Iberia", "Colchis", "Media", "Parthia", "Kushan", "Sogdiana", "Sassanids", "Ghaznavids", "Seljuks",
+  "Ottomans", "Mamluks", "Fatimids", "Abbasids", "Umayyads", "Ghurids", "Delhi Sultanate", "Vijayanagara", "Rashtrakuta", "Chalukya",
+  "Pallava", "Pandya", "Chera", "Kadamba", "Ganga", "Satavahana", "Kalinga", "Harsha", "Gurjara", "Pratihara",
+  "Pala", "Sena", "Ahom", "Sukhothai", "Ayutthaya", "Thonburi", "Champa", "Dai Viet", "Funan", "Pagan",
+  "Taungoo", "Konbaung", "Mataram", "Singhasari", "Kediri", "Jangala", "Kahuripan", "Sunda", "Galuh", "Tarumanagara"
+];
+
+function seededShuffle(array, seed) {
+  let s = typeof seed === 'string' ? [...seed].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 0) : seed;
+  if (s === 0) s = 12345;
+  const prng = () => {
+    let t = s += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(prng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export class TerritorySimulation {
   constructor(width = 1000, height = 1000, numPlayers = 100, mapType = 'world', seed = 12345, customMapData = null) {
     this.width = width;
@@ -51,10 +86,18 @@ export class TerritorySimulation {
 
     this.players = new Array(numPlayers + 1);
     this.frontiers = new Array(numPlayers + 1);
+    const shuffledCivs = seededShuffle(CIVILIZATIONS, this.seed);
     for (let id = 1; id <= numPlayers; id++) {
+      let name = 'Rome';
+      if (id > 1) {
+        const civIdx = (id - 2) % shuffledCivs.length;
+        const loopCount = Math.floor((id - 2) / shuffledCivs.length);
+        const suffix = loopCount > 0 ? ` ${loopCount + 1}` : '';
+        name = `${shuffledCivs[civIdx]}${suffix}`;
+      }
       this.players[id] = {
         id,
-        name: id === 1 ? 'Commander' : `Bot ${id}`,
+        name,
         isHuman: id === 1,
         balance: 500,
         landCount: 0,
@@ -68,6 +111,8 @@ export class TerritorySimulation {
 
     this.boats = [];
     this.activeExpansions = [];
+    this.activeEmotes = [];
+    this.onEmoteBroadcast = null;
     this.spawnTimer = 10.0;
     this.isMultiplayer = false;
     this.humanSpawnIdx = null;
@@ -95,6 +140,7 @@ export class TerritorySimulation {
     this.grid.fill(0);
     this.visibilityBuffer.fill(0);
     this.boats = [];
+    this.activeEmotes = [];
     this.radarPulses = [];
     this.humanSpawnIdx = null;
     this.pacts.clear();
@@ -102,10 +148,18 @@ export class TerritorySimulation {
     this.jointTargets.clear();
     this.toastNotifications = [];
 
+    const shuffledCivs = seededShuffle(CIVILIZATIONS, this.seed);
     for (let id = 1; id <= this.numPlayers; id++) {
+      let name = 'Rome';
+      if (id > 1) {
+        const civIdx = (id - 2) % shuffledCivs.length;
+        const loopCount = Math.floor((id - 2) / shuffledCivs.length);
+        const suffix = loopCount > 0 ? ` ${loopCount + 1}` : '';
+        name = `${shuffledCivs[civIdx]}${suffix}`;
+      }
       this.players[id] = {
         id,
-        name: id === 1 ? 'Commander' : `Bot ${id}`,
+        name,
         isHuman: id === 1,
         balance: 500,
         landCount: 0,
@@ -142,7 +196,7 @@ export class TerritorySimulation {
       this.humanSpawnIdx = rIdx;
     }
 
-    // Seed Human Player Spawn Blob (radius 6px)
+    this.players[1].spawnIdx = this.humanSpawnIdx;
     this.spawnCircularSeed(1, this.humanSpawnIdx, 6);
 
     const humanX = this.humanSpawnIdx % width;
@@ -170,6 +224,7 @@ export class TerritorySimulation {
       }
 
       if (valid) {
+        this.players[id].spawnIdx = botIdx;
         this.spawnCircularSeed(id, botIdx, 6);
       } else {
         this.players[id].isAlive = false;
@@ -842,6 +897,8 @@ export class TerritorySimulation {
       if (accepted) {
         this.pacts.set(this.getPactKey(fromId, toId), 'ACTIVE');
         this.addToast(`${pTo.name} accepted your Non-Aggression Pact!`, 'success');
+        this.broadcastEmote(fromId, '🤝');
+        this.broadcastEmote(toId, '🤝');
         return true;
       } else {
         this.addToast(`${pTo.name} declined your Non-Aggression Pact proposal.`, 'warning');
@@ -852,6 +909,8 @@ export class TerritorySimulation {
     // Direct pact formation for multiplayer/bots
     this.pacts.set(this.getPactKey(fromId, toId), 'ACTIVE');
     this.addToast(`Non-Aggression Pact established with ${pTo.name}!`, 'success');
+    this.broadcastEmote(fromId, '🤝');
+    this.broadcastEmote(toId, '🤝');
     return true;
   }
 
@@ -872,6 +931,11 @@ export class TerritorySimulation {
     const breakerName = breaker ? breaker.name : `Player ${fromId}`;
     const targetName = target ? target.name : `Player ${toId}`;
     this.addToast(`${breakerName} BROKE Non-Aggression Pact with ${targetName}!`, 'error');
+
+    this.broadcastEmote(fromId, '💔');
+    if (target && target.isAlive) {
+      this.broadcastEmote(toId, '😡');
+    }
     return true;
   }
 
@@ -889,6 +953,8 @@ export class TerritorySimulation {
     pTo.balance += netAid;
 
     this.addToast(`Sent ${TerritorySimulation.formatTroops(netAid)} troops aid to ${pTo.name} (5% tax).`, 'info');
+    this.broadcastEmote(fromId, '👍');
+    this.broadcastEmote(toId, '👍');
     return true;
   }
 
@@ -1893,6 +1959,55 @@ export class TerritorySimulation {
     }
   }
 
+  getPlayerCentroid(playerId) {
+    const p = this.players[playerId];
+    if (!p) return null;
+    
+    const frontier = this.frontiers[playerId];
+    if (frontier && frontier.length > 0) {
+      let sumX = 0, sumY = 0;
+      const step = Math.max(1, Math.floor(frontier.length / 20));
+      let count = 0;
+      for (let i = 0; i < frontier.length; i += step) {
+        const idx = frontier[i];
+        sumX += idx % this.width;
+        sumY += Math.floor(idx / this.width);
+        count++;
+      }
+      return { x: sumX / count, y: sumY / count };
+    }
+    
+    if (p.spawnIdx !== undefined) {
+      return { x: p.spawnIdx % this.width, y: Math.floor(p.spawnIdx / this.width) };
+    }
+    
+    return null;
+  }
+
+  broadcastEmote(playerId, emoji) {
+    const p = this.players[playerId];
+    if (!p || !p.isAlive) return;
+
+    const pos = this.getPlayerCentroid(playerId);
+    if (!pos) return;
+
+    this.activeEmotes.push({
+      id: Math.random().toString(36).substr(2, 9),
+      playerId,
+      playerName: p.name,
+      playerColor: p.color || '#00f2fe',
+      x: pos.x,
+      y: pos.y,
+      emoji,
+      age: 0,
+      duration: 2.0
+    });
+
+    if (this.onEmoteBroadcast) {
+      this.onEmoteBroadcast(p.name, p.color || '#00f2fe', emoji);
+    }
+  }
+
   update(deltaTimeMs = 16.6) {
     if (this.state === 'SPAWN_PICK') {
       if (this.isMultiplayer) {
@@ -1905,6 +2020,16 @@ export class TerritorySimulation {
     }
 
     if (this.state !== 'PLAYING') return;
+
+    const dt = deltaTimeMs / 1000;
+    for (let i = this.activeEmotes.length - 1; i >= 0; i--) {
+      const emote = this.activeEmotes[i];
+      emote.age += dt;
+      emote.y -= dt * 35;
+      if (emote.age >= emote.duration) {
+        this.activeEmotes.splice(i, 1);
+      }
+    }
 
     this.tickCount++;
 
@@ -2051,6 +2176,7 @@ export class TerritorySimulation {
       const p = this.players[id];
       if (p && p.isAlive) {
         if (p.landCount <= 0) {
+          this.broadcastEmote(id, '😭');
           p.isAlive = false;
           p.balance = 0;
           this.frontiers[id] = [];
@@ -2058,7 +2184,7 @@ export class TerritorySimulation {
             this.addToast('💀 You have been defeated!', 'danger');
             this.state = 'GAME_OVER';
           } else {
-            this.addToast(`💀 Bot ${p.name || id} has been eliminated!`, 'info');
+            this.addToast(`💀 ${p.name} has been eliminated!`, 'info');
           }
         }
       }

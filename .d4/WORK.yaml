@@ -622,10 +622,31 @@ requirements:
     list to prevent dead border zones.
 - id: REQ-099
   kind: functional
-  statement: Impassable mountain areas on the world map MUST be rasterized as contiguous solid mountain ridges rather than alternating diagonal pattern stripes to maintain proper expansion connectivity.
+  statement: Impassable mountain areas on the world map MUST be rasterized as contiguous
+    solid mountain ridges rather than alternating diagonal pattern stripes to maintain
+    proper expansion connectivity.
 - id: REQ-100
   kind: functional
-  statement: The main canvas renderer MUST automatically resize and auto-fit to scale and center within the browser window viewport boundaries, maintaining correct screen-to-simulation coordinates snapped coordinate precision.
+  statement: The main canvas renderer MUST automatically resize and auto-fit to scale
+    and center within the browser window viewport boundaries, maintaining correct
+    screen-to-simulation coordinates snapped coordinate precision.
+- id: REQ-101
+  kind: functional
+  statement: The game client MUST provide an interactive emote selection overlay (Emote
+    Wheel) for the player to broadcast animated emojis over their territory, and bots
+    MUST autonomously emit reactive emojis based on game events (e.g. alliance proposals,
+    attacks, or defeats), displaying in a scrolling chat feed.
+- id: REQ-102
+  kind: functional
+  statement: The game canvas size MUST fill the full viewport on page load/resize,
+    body background color during gameplay MUST match the canvas default background
+    color (#040609), and the minimap MUST float on top of the canvas viewport area
+    with no label.
+- id: REQ-103
+  kind: functional
+  statement: AI bots and the player MUST have human-readable names based on historical
+    or known civilizations (e.g. Rome, Carthage, Byzantium, Aztec) instead of default
+    numerical designations.
 batons:
 - id: BATON-001
   version: 1
@@ -3211,11 +3232,12 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Draft
-    state: assigned
+    state: completed
     lease_owner: null
     lease_expires_at: null
   id: BATON-096
-  objective: Replace hatched mountain generation formula with Bresenham-based contiguous solid mountain ridge lines to eliminate the parallel diagonal lines issue.
+  objective: Replace hatched mountain generation formula with Bresenham-based contiguous
+    solid mountain ridge lines to eliminate the parallel diagonal lines issue.
   title: Solid Mountain Ridge Rasterization
   type: implementation
 - acceptance:
@@ -3230,12 +3252,73 @@ batons:
     owner: mgamil.dev@gmail.com
     quadrant: Q2
     resume_pointer: Draft
-    state: assigned
+    state: completed
     lease_owner: null
     lease_expires_at: null
   id: BATON-097
-  objective: Scale the initial canvas zoom to fit the entire map viewport dynamically on resize without affecting the canvas coordinate transformation system.
+  objective: Scale the initial canvas zoom to fit the entire map viewport dynamically
+    on resize without affecting the canvas coordinate transformation system.
   title: Responsive Viewport Sizing Auto-Fit
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-101
+  execution:
+    depends_on:
+    - BATON-097
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-098
+  objective: Implement the interactive Emote Wheel UI overlay, map-based animated
+    emoji renderers, and AI bot reactive emote triggers.
+  title: Interactive Emote Wheel & Bot Reaction System
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-102
+  execution:
+    depends_on:
+    - BATON-098
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-099
+  objective: Implement canvas full-viewport scaling on startup/resize, align body
+    background with canvas background color, and float minimap on top without label.
+  title: Canvas Viewport Sizing & Minimap Floating
+  type: implementation
+- acceptance:
+    deterministic_checks:
+    - npm run test:combat
+  authority:
+    requirements:
+    - REQ-103
+  execution:
+    depends_on:
+    - BATON-099
+    owner: mgamil.dev@gmail.com
+    quadrant: Q2
+    resume_pointer: Draft
+    state: completed
+    lease_owner: null
+    lease_expires_at: null
+  id: BATON-100
+  objective: Populate historical civilization names for all bots and default player
+    in game simulation.
+  title: Historical Civilization Bot Names
   type: implementation
 releases:
 - id: REL-001
@@ -3441,10 +3524,11 @@ releases:
   status: released
 - id: REL-011
   version: 1.1.0
-  name: 'Terra Mountain Geometry & Viewport Auto-Fit Sizing'
+  name: Terra Mountain Geometry & Viewport Auto-Fit Sizing
   is_mvp: false
   exit_criteria:
-  - Mountains rasterize as contiguous, thick solid ridges, resolving parallel diagonal stripes.
+  - Mountains rasterize as contiguous, thick solid ridges, resolving parallel diagonal
+    stripes.
   - Canvas scales and centers on startup and resize to auto-fit viewport cleanly.
   requirements:
   - REQ-099
@@ -3453,7 +3537,31 @@ releases:
   - BATON-096
   - BATON-097
   delivery_form: deployable
-  status: assigned
+  status: released
+- id: REL-012
+  version: 1.2.0
+  name: Terra Emote Wheel & Bot Reaction System
+  is_mvp: false
+  exit_criteria:
+  - Player can open a circular Glassmorphism Emote Wheel UI to broadcast animated
+    emojis.
+  - Emojis render as rising, fading animations above the player's territory centroid.
+  - AI bots autonomously emit reactive emojis in response to alliances, attacks, and
+    defeats.
+  - Emotes display in a scrolling live event chat log on the side of the screen.
+  - Game canvas fills full viewport, body background aligns with canvas background,
+    and minimap floats on top without a label.
+  - Bots and default player use random historical civilization names rather than numbers.
+  requirements:
+  - REQ-101
+  - REQ-102
+  - REQ-103
+  batons:
+  - BATON-098
+  - BATON-099
+  - BATON-100
+  delivery_form: deployable
+  status: released
 evaluations:
 - id: EVAL-001
   layer: outcome
@@ -4120,3 +4228,33 @@ evaluations:
   result: pass
   false_success_checked: true
   metrics: {}
+- target: BATON-096
+  layer: outcome
+  result: pass
+  method: npm run build:map && npm run test:combat
+  false_success_checked: true
+  id: EVAL-096
+- target: BATON-097
+  layer: outcome
+  result: pass
+  method: npm run test:combat
+  false_success_checked: true
+  id: EVAL-097
+- target: BATON-098
+  layer: outcome
+  result: pass
+  method: npm run test:combat
+  false_success_checked: true
+  id: EVAL-098
+- target: BATON-099
+  layer: outcome
+  result: pass
+  method: npm run test:combat
+  false_success_checked: true
+  id: EVAL-099
+- target: BATON-100
+  layer: outcome
+  result: pass
+  method: npm run test:combat
+  false_success_checked: true
+  id: EVAL-100

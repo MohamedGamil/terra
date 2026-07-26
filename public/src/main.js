@@ -51,6 +51,7 @@ class TerraApp {
     this.initCombatUI();
     this.initSpawnButtons();
     this.initContextMenuUI();
+    this.initEmoteUI();
     this.setupRendererCallbacks();
 
     this.updateSceneVisibility('LOBBY');
@@ -805,6 +806,73 @@ class TerraApp {
     });
   }
 
+  initEmoteUI() {
+    const emoteBtn = document.getElementById('btn-emote-wheel');
+    const overlay = document.getElementById('emote-wheel-overlay');
+    const closeBtn = document.getElementById('btn-close-emotes');
+    const feed = document.getElementById('emote-chat-feed');
+
+    const toggleWheel = () => {
+      if (this.simulation && this.simulation.state === 'PLAYING') {
+        overlay.classList.toggle('hidden');
+        overlay.style.display = overlay.classList.contains('hidden') ? 'none' : 'flex';
+      }
+    };
+
+    if (emoteBtn) {
+      emoteBtn.addEventListener('click', toggleWheel);
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+      });
+    }
+
+    const emoteButtons = overlay.querySelectorAll('.btn-emote');
+    emoteButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emote = btn.getAttribute('data-emote');
+        if (this.simulation) {
+          this.simulation.broadcastEmote(1, emote);
+        }
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'e') {
+        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          toggleWheel();
+        }
+      } else if (e.key === 'Escape') {
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+      }
+    });
+
+    this.appendChatMessage = (name, color, emoji) => {
+      if (!feed) return;
+      const msgEl = document.createElement('div');
+      msgEl.className = 'chat-message';
+      msgEl.style.borderLeftColor = color;
+      msgEl.innerHTML = `<span style="color: ${color}; font-weight: 700;">${name}</span> <span>${emoji}</span>`;
+      
+      feed.appendChild(msgEl);
+      feed.scrollTop = feed.scrollHeight;
+
+      setTimeout(() => {
+        msgEl.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        msgEl.style.opacity = '0';
+        msgEl.style.transform = 'translateX(-20px)';
+        setTimeout(() => msgEl.remove(), 500);
+      }, 5500);
+    };
+  }
+
   findClosestRivalPixel(idx, maxRadius = 25) {
     if (!this.simulation) return -1;
     const width = this.simulation.width;
@@ -868,6 +936,11 @@ class TerraApp {
     this.palette = new ColorPalette(this.botCount + 1, this.playerColorHex);
     this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed, this.customMapData);
     this.simulation.isMultiplayer = (this.gameMode === 'multi');
+    this.simulation.onEmoteBroadcast = (name, color, emoji) => {
+      if (this.appendChatMessage) {
+        this.appendChatMessage(name, color, emoji);
+      }
+    };
     
     // Start Step 2 Untimed Spawn Selection Phase FIRST
     this.simulation.startSpawnPhase();
@@ -917,6 +990,12 @@ class TerraApp {
     const confirmBtn = document.getElementById('btn-confirm-spawn');
     confirmBtn.disabled = true;
     confirmBtn.style.opacity = '0.5';
+
+    requestAnimationFrame(() => {
+      if (this.renderer) {
+        this.renderer.forceFitViewport();
+      }
+    });
   }
 
   launchMatchWithCountdown() {
@@ -1009,6 +1088,7 @@ class TerraApp {
       this.renderer.radarPulses = this.simulation.radarPulses;
       this.renderer.visibilityBuffer = this.simulation.visibilityBuffer;
       this.renderer.players = this.simulation.players;
+      this.renderer.activeEmotes = this.simulation.activeEmotes;
 
       if (this.simulation.state === 'PLAYING') {
         this.matchElapsedSec += delta / 1000;

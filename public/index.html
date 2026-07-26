@@ -43,7 +43,7 @@
         <div class="lobby-section">
           <label class="input-label">Player Name & Color</label>
           <div class="player-custom-row">
-            <input type="text" id="input-player-name" class="text-input" value="Commander" placeholder="Enter name...">
+            <input type="text" id="input-player-name" class="text-input" value="Rome" placeholder="Enter name...">
             <input type="color" id="input-player-color" class="color-picker" value="#00f2fe">
           </div>
         </div>
@@ -201,6 +201,7 @@
         <span class="metric-pill"><span class="pill-dot amber"></span> <span id="sys-active-bots">100 Bots</span></span>
       </div>
       <div class="hud-btn-row">
+        <button class="hud-btn" id="btn-emote-wheel" title="Open Emotes (E)">💬 Emotes</button>
         <button class="hud-btn" id="btn-toggle-audio" title="Toggle Sound">🔊 Sound</button>
         <button class="hud-btn" id="btn-toggle-minimap" title="Toggle Minimap">🗺️ Minimap</button>
         <button class="hud-btn" id="btn-toggle-fog" title="Toggle Fog of War">👁️ Fog</button>
@@ -217,15 +218,35 @@
       </div>
     </div>
 
+    <!-- Emote Wheel radial selection overlay -->
+    <div id="emote-wheel-overlay" class="lobby-overlay hidden" style="background: rgba(0, 0, 0, 0.45); z-index: 100;">
+      <div class="emote-wheel-card">
+        <div class="emote-wheel-header">📢 CHOOSE AN EMOTE</div>
+        <div class="emote-wheel-grid">
+          <button class="btn-emote" data-emote="🤝"><span class="emote-icon">🤝</span> Pact</button>
+          <button class="btn-emote" data-emote="⚔️"><span class="emote-icon">⚔️</span> Attack</button>
+          <button class="btn-emote" data-emote="💔"><span class="emote-icon">💔</span> Break</button>
+          <button class="btn-emote" data-emote="👑"><span class="emote-icon">👑</span> Win</button>
+          <button class="btn-emote" data-emote="😂"><span class="emote-icon">😂</span> Laugh</button>
+          <button class="btn-emote" data-emote="😡"><span class="emote-icon">😡</span> Angry</button>
+          <button class="btn-emote" data-emote="😭"><span class="emote-icon">😭</span> Sad</button>
+          <button class="btn-emote" data-emote="👍"><span class="emote-icon">👍</span> Thumbs</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-close-emotes" style="margin-top: 16px; width: 100%; padding: 10px; font-weight: 600;">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Scrolling Emote Chat Log Overlay -->
+    <div id="emote-chat-feed" class="emote-chat-feed"></div>
+
     <!-- Center RTS Canvas Viewport -->
     <div id="canvas-container" class="rts-viewport">
       <canvas id="game-canvas"></canvas>
     </div>
 
     <!-- Bottom Right Tactical Minimap Overlay -->
-    <div id="minimap-container">
+    <div id="minimap-container" class="minimap-widget">
       <canvas id="minimap-canvas" width="200" height="200"></canvas>
-      <div class="minimap-label">WORLD TACTICAL MINIMAP</div>
     </div>
 
     <!-- Bottom Center Target Status Bar -->
