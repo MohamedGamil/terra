@@ -4,13 +4,7 @@ Terra is a high-performance, real-time multiplayer territorial conquest game ins
 
 ---
 
-## Short Description
-
-**Terra** is a fast-paced, real-time multiplayer strategy game clone of *territorial.io*. Players pick spawn locations on procedurally generated or real-world maps, manage troop balances, grow their territory, establish diplomatic pacts, and execute land or naval invasions to eliminate rivals and achieve global dominance.
-
----
-
-## Detailed Description
+## What is Terra?
 
 Terra brings authentic real-time strategy to the browser. The game challenges players' spatial awareness, risk assessment, and reflex efficiency. 
 
@@ -22,7 +16,7 @@ Terra brings authentic real-time strategy to the browser. The game challenges pl
 - **Naval Invasions**: Launch troop-laden boats across water bodies to colonize distant islands or stage flank attacks. Island-snap calculations correctly budget naval forces based on island size and distance.
 - **Diplomatic Pacts**: Forge non-aggression treaties or mutual defense agreements with AI bots to secure your borders, or break them when the time is right.
 
-### Advanced Tech Stack & Optimization
+### Advanced Optimization
 - **High-FPS Canvas Renderer**: Runs at **250+ FPS** on a 1000x1000 grid, updating thousands of frontier borders and animating particle shockwaves smoothly.
 - **Compact World Map Pre-Rasterization**: Uses custom build scripts to compile complex GeoJSON Natural Earth shapefiles into compressed Run-Length Encoded (RLE) files, reducing the world map weight by **90%** and boosting client loading speed from 180ms to **1.4ms**.
 - **Optimized Pathfinding**: Incorporates a guided A-Star search engine that replaces slow breadth-first searches (BFS) to prevent performance stutters during long-distance attacks.
