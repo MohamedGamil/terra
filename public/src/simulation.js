@@ -31,6 +31,14 @@ export class TerritorySimulation {
     const multiplier = 1.0 + (this.numContinents * 0.15);
     this.maxTroopsLimit = Math.min(2000000000, Math.floor(baseCap * multiplier));
 
+    // Precompute all shoreline pixels on the map
+    this.mapShoreline = [];
+    for (let idx = 0; idx < this.terrainGrid.length; idx++) {
+      if (this.isShorelinePixel(idx)) {
+        this.mapShoreline.push(idx);
+      }
+    }
+
     this.grid = new Uint16Array(width * height);
     this.aiEngine = new AIEngine(numPlayers);
 
@@ -53,6 +61,7 @@ export class TerritorySimulation {
     this.boats = [];
     this.activeExpansions = [];
     this.spawnTimer = 10.0;
+    this.isMultiplayer = false;
     this.humanSpawnIdx = null;
 
     this.pacts = new Map();
@@ -618,12 +627,22 @@ export class TerritorySimulation {
 
     // 3. Find Player occupied shoreline pixels
     const playerShoreline = [];
-    const frontier = this.frontiers[attackerId];
-    if (frontier) {
-      for (let i = 0; i < frontier.length; i++) {
-        const idx = frontier[i];
-        if (this.grid[idx] === attackerId && this.isShorelinePixel(idx)) {
-          playerShoreline.push(idx);
+    for (let i = 0; i < this.mapShoreline.length; i++) {
+      const idx = this.mapShoreline[i];
+      if (this.grid[idx] === attackerId) {
+        playerShoreline.push(idx);
+      }
+    }
+
+    // Fallback for test scripts that dynamically override terrainGrid after constructor
+    if (playerShoreline.length === 0) {
+      const frontier = this.frontiers[attackerId];
+      if (frontier) {
+        for (let i = 0; i < frontier.length; i++) {
+          const idx = frontier[i];
+          if (this.grid[idx] === attackerId && this.isShorelinePixel(idx)) {
+            playerShoreline.push(idx);
+          }
         }
       }
     }
@@ -1867,9 +1886,11 @@ export class TerritorySimulation {
 
   update(deltaTimeMs = 16.6) {
     if (this.state === 'SPAWN_PICK') {
-      this.spawnTimer -= deltaTimeMs / 1000;
-      if (this.spawnTimer <= 0) {
-        this.confirmSpawnsAndStart();
+      if (this.isMultiplayer) {
+        this.spawnTimer -= deltaTimeMs / 1000;
+        if (this.spawnTimer <= 0) {
+          this.confirmSpawnsAndStart();
+        }
       }
       return;
     }

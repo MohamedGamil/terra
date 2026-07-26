@@ -867,6 +867,7 @@ class TerraApp {
 
     this.palette = new ColorPalette(this.botCount + 1, this.playerColorHex);
     this.simulation = new TerritorySimulation(1000, 1000, this.botCount, this.selectedMap, this.mapSeed, this.customMapData);
+    this.simulation.isMultiplayer = (this.gameMode === 'multi');
     
     // Start Step 2 Untimed Spawn Selection Phase FIRST
     this.simulation.startSpawnPhase();
