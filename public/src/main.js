@@ -1089,7 +1089,7 @@ class TerraApp {
         const overlay = document.getElementById('post-match-overlay');
         if (overlay && overlay.style.display !== 'flex') {
           this.updateSceneVisibility('GAME_OVER');
-          if (this.simulation.gameResult === 'VICTORY') {
+          if (this.simulation.gameResult && this.simulation.gameResult.outcome === 'VICTORY') {
             this.sound.playVictoryFanfare();
           } else {
             this.sound.playDefeatStinger();

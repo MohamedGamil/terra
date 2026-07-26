@@ -75,8 +75,10 @@ export class MatchRecorder {
         if (landPct > stats.peakLandPct) stats.peakLandPct = landPct;
         if (troops > stats.peakTroops) stats.peakTroops = troops;
 
+        const isDead = p.isDead !== undefined ? p.isDead : (p.isAlive === false);
+
         // Track elimination timestamp
-        if (p.isDead && stats.eliminationTime === null) {
+        if (isDead && stats.eliminationTime === null) {
           stats.eliminationTime = elapsedSec;
         }
 
@@ -85,7 +87,7 @@ export class MatchRecorder {
           name: p.name,
           color: p.color,
           isHuman: !!p.isHuman,
-          isDead: !!p.isDead,
+          isDead: isDead,
           landPct: parseFloat(landPct.toFixed(2)),
           troops: Math.floor(troops)
         });
