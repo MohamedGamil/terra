@@ -1190,9 +1190,10 @@ export class TerritorySimulation {
       const exp = this.activeExpansions[idx];
       const player = this.players[exp.ownerId];
 
-      if (exp.ownerId === 1 && exp.isRivalAttack) {
-        console.log(`[UPDATE DEBUG] activeExpansion loop: target=(${exp.targetX}, ${exp.targetY}), remainingTroops=${exp.remainingTroops}, targetReached=${exp.targetReached}, maxRadius=${exp.maxRadius}, currentRadius=${exp.currentRadius}`);
-      }
+      try {
+        if (exp.ownerId === 1 && exp.isRivalAttack) {
+          console.log(`[UPDATE DEBUG] activeExpansion loop: target=(${exp.targetX}, ${exp.targetY}), remainingTroops=${exp.remainingTroops}, targetReached=${exp.targetReached}, maxRadius=${exp.maxRadius}, currentRadius=${exp.currentRadius}`);
+        }
 
       if (!player || !player.isAlive || exp.remainingTroops <= 2) {
         if (player && player.isAlive && exp.remainingTroops > 0) {
@@ -1202,7 +1203,21 @@ export class TerritorySimulation {
         continue;
       }
 
-      const frontier = this.frontiers[exp.ownerId];
+      let frontier = this.frontiers[exp.ownerId];
+      if (frontier) {
+        // Clean up any stale pixels in the frontier that are no longer owned by the attacker
+        const cleanFrontier = [];
+        for (let i = 0; i < frontier.length; i++) {
+          if (this.grid[frontier[i]] === exp.ownerId) {
+            cleanFrontier.push(frontier[i]);
+          }
+        }
+        if (cleanFrontier.length !== frontier.length) {
+          this.frontiers[exp.ownerId] = cleanFrontier;
+          frontier = cleanFrontier;
+        }
+      }
+
       if (!frontier || frontier.length === 0) {
         if (player && player.isAlive && exp.remainingTroops > 0) {
           player.balance += exp.remainingTroops;
@@ -1301,7 +1316,7 @@ export class TerritorySimulation {
             
             let isAdjacentToPocket = false;
             for (const n of neighbors) {
-              if (n >= 0 && exp.pocketPixels.has(n)) {
+              if (n >= 0 && exp.pocketPixels && exp.pocketPixels.has && exp.pocketPixels.has(n)) {
                 isAdjacentToPocket = true;
                 break;
               }
@@ -1458,7 +1473,7 @@ export class TerritorySimulation {
             }
           }
 
-          if (exp.isInward && !exp.pocketPixels.has(nIdx)) {
+          if (exp.isInward && (!exp.pocketPixels || !exp.pocketPixels.has || !exp.pocketPixels.has(nIdx))) {
             continue;
           }
 
@@ -1471,7 +1486,7 @@ export class TerritorySimulation {
               exp.remainingTroops -= cost;
               player.landCount++;
               this.grid[nIdx] = exp.ownerId;
-              if (exp.isInward) {
+              if (exp.isInward && exp.pocketPixels && exp.pocketPixels.delete) {
                 exp.pocketPixels.delete(nIdx);
               }
 
@@ -1568,7 +1583,7 @@ export class TerritorySimulation {
               }
               this.grid[nIdx] = exp.ownerId;
               this.handlePixelCapture(nIdx, exp.ownerId, defenderOwner);
-              if (exp.isInward) {
+              if (exp.isInward && exp.pocketPixels && exp.pocketPixels.delete) {
                 exp.pocketPixels.delete(nIdx);
               }
 
@@ -1645,19 +1660,30 @@ export class TerritorySimulation {
       const cond2 = frontier.length === 0;
       const cond3 = !!(exp.targetReached && exp.squareSize >= exp.maxRadius);
       const cond4 = !!(!exp.targetReached && exp.path !== null && exp.currentRadius >= exp.maxRadius && !expandedAny);
-      const cond5 = !!(exp.isInward && exp.pocketPixels.size === 0);
+      const cond5 = !!(exp.isInward && exp.pocketPixels && exp.pocketPixels.size === 0);
       const isFinished = cond1 || cond2 || cond3 || cond4 || hasNoCandidates || cond5;
 
       if (exp.ownerId === 1 && exp.isRivalAttack) {
         console.log(`[UPDATE DEBUG] isFinished check: result=${isFinished}, cond1(remainingTroops<=2)=${cond1}, cond2(frontierEmpty)=${cond2}, cond3(squareSize>=maxRadius)=${cond3}, cond4(currentRadius>=maxRadius && !expandedAny)=${cond4}, expandedAny=${expandedAny}`);
       }
 
-      if (isFinished) {
+        if (isFinished) {
+          if (player && player.isAlive && exp.remainingTroops > 0) {
+            player.balance += exp.remainingTroops;
+          }
+          if (exp.ownerId === 1 && exp.isRivalAttack) {
+            console.warn(`[UPDATE DEBUG] activeExpansion pruned/finished.`);
+          }
+          this.activeExpansions.splice(idx, 1);
+        }
+      } catch (error) {
+        if (exp.ownerId === 1) {
+          console.error(`[UPDATE DEBUG ERROR] Exception in updateExpansions for player 1 attack:`, error);
+        } else {
+          console.error(`[UPDATE DEBUG ERROR] Exception in updateExpansions for ownerId ${exp.ownerId}:`, error);
+        }
         if (player && player.isAlive && exp.remainingTroops > 0) {
           player.balance += exp.remainingTroops;
-        }
-        if (exp.ownerId === 1 && exp.isRivalAttack) {
-          console.warn(`[UPDATE DEBUG] activeExpansion pruned/finished.`);
         }
         this.activeExpansions.splice(idx, 1);
       }

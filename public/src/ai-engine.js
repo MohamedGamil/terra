@@ -168,6 +168,9 @@ export class AIEngine {
                 targetPlayer.landCount = Math.max(0, targetPlayer.landCount - 1);
                 bot.landCount++;
                 grid[nIdx] = id;
+                if (simulation) {
+                  simulation.handlePixelCapture(nIdx, id, targetOwner);
+                }
                 if (!botFrontierSet.has(nIdx) && this.isBorderPixel(nIdx, grid, terrainGrid, width, height, id)) {
                   frontier.push(nIdx);
                   botFrontierSet.add(nIdx);
