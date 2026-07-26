@@ -140,6 +140,14 @@ export class MatchRecorder {
     const humanStats = Array.from(this.playerStats.values()).find(p => p.isHuman) || null;
     const humanRank = humanStats ? standings.findIndex(p => p.id === humanStats.id) + 1 : null;
 
+    console.log('[RECORDER DEBUG] getSummary() invoked.', {
+      playerStatsSize: this.playerStats.size,
+      allPlayers: Array.from(this.playerStats.values()).map(p => ({ id: p.id, name: p.name, isHuman: p.isHuman, eliminationTime: p.eliminationTime, peakLandPct: p.peakLandPct })),
+      humanStats,
+      humanRank,
+      standings: standings.map((p, idx) => ({ rank: idx + 1, id: p.id, name: p.name, eliminationTime: p.eliminationTime, peakLandPct: p.peakLandPct }))
+    });
+
     return {
       durationSeconds: Math.round(this.elapsedSeconds),
       humanAPM: this.getAPM(),

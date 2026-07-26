@@ -56,6 +56,13 @@ export class StatsDashboard {
       rankEl.textContent = `#${summaryData.humanRank} of ${summaryData.totalPlayers}`;
     }
 
+    console.log('[DASHBOARD DEBUG] show() invoked.', {
+      humanRank: summaryData.humanRank,
+      winner: summaryData.winner,
+      standingsCount: summaryData.standings ? summaryData.standings.length : 0,
+      summaryData
+    });
+
     const outcomeBadge = document.getElementById('pm-outcome-badge');
     if (outcomeBadge && summaryData.humanRank !== undefined) {
       if (summaryData.humanRank === 1) {

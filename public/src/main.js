@@ -874,6 +874,11 @@ class TerraApp {
     if (this.simulation.players && this.simulation.players[1]) {
       this.simulation.players[1].name = playerName;
     }
+    for (let id = 1; id <= this.botCount; id++) {
+      if (this.simulation.players[id]) {
+        this.simulation.players[id].color = this.palette.getHex(id);
+      }
+    }
 
     this.simulation.onParticleEvent = (eventType, data) => {
       if (!this.particles) return;

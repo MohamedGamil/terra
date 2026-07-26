@@ -99,6 +99,7 @@ export class TerritorySimulation {
       this.players[id] = {
         id,
         name: id === 1 ? 'Commander' : `Bot ${id}`,
+        isHuman: id === 1,
         balance: 500,
         landCount: 0,
         peakTroops: 500,
